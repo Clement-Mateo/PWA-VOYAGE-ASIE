@@ -512,7 +512,7 @@
                     
                     if (isOnline) {
                         // Mode en ligne: essayer Geocoding API uniquement (pas de serveur proxy sur GitHub Pages)
-                        const apiKey = 'AIzaSyD5264kcW9Yzf4Okvm3Weat-fquYwnJ7Nw';
+                        const apiKey = 'GOOGLE_API_KEY_PLACEHOLDER';
                         const geocodingResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`);
                         const geocodingData = await geocodingResponse.json();
                         
