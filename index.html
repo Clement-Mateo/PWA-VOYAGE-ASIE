@@ -308,6 +308,183 @@
                 gap: 10px;
             }
         }
+        
+        /* Styles pour l'authentification */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: #007cba;
+            color: white;
+            border-color: #007cba;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: #005a87;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .auth-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        
+        .auth-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .auth-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .user-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #userEmail {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .menu-item {
+            background: #f9f9f9;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: background 0.3s;
+        }
+        
+        .menu-item:hover {
+            background: #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -327,8 +504,70 @@
     <div class="popup-overlay" id="menuPopup" onclick="closePopupOutside(event, 'menuPopup')">
         <div class="popup-menu">
             <button class="close-btn" onclick="closePopup('menuPopup')">×</button>
-            <h3 class="popup-title">Style de carte</h3>
-            <div class="control-group">
+            <h3 class="popup-title">Menu</h3>
+            <div class="menu-items">
+                <button class="menu-item" onclick="openAuthModal()">
+                    🔐 Connexion / Inscription
+                </button>
+                <button class="menu-item" onclick="closePopup('menuPopup')">
+                    ❌ Fermer
+                </button>
+            </div>
+            <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Connexion / Inscription</h2>
+                <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="switchAuthTab('login')">Connexion</button>
+                    <button class="tab-btn" onclick="switchAuthTab('register')">Inscription</button>
+                </div>
+                
+                <!-- Formulaire de connexion -->
+                <div id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="loginEmail" placeholder="votre@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Mot de passe:</label>
+                        <input type="password" id="loginPassword" placeholder="Votre mot de passe">
+                    </div>
+                    <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
+                </div>
+                
+                <!-- Formulaire d'inscription -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="registerEmail" placeholder="votre@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Mot de passe:</label>
+                        <input type="password" id="registerPassword" placeholder="Min 6 caractères">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmer mot de passe:</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirmez le mot de passe">
+                    </div>
+                    <button class="btn-primary" onclick="handleRegister()">S'inscrire</button>
+                </div>
+                
+                <div id="authMessage" class="auth-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="userPanel" class="user-panel" style="display: none;">
+        <div class="user-info">
+            <span id="userEmail">Utilisateur</span>
+            <button class="btn-secondary" onclick="handleLogout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <div id="controls" class="controls">
                 <select id="mapStyle" onchange="changeMapStyle()">
                     <option value="osm">OpenStreetMap</option>
                     <option value="satellite">Satellite</option>
@@ -388,6 +627,72 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
     
+    <!-- Firebase SDK v12 -->
+    <script type="module">
+        // Importer les modules Firebase nécessaires
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, getDoc, getDocs, query, where, orderBy, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdO1hs92ZlaVNeefwu2Yqhdb-2nDLo4Vk",
+            authDomain: "pwa-voyage-asie.firebaseapp.com",
+            projectId: "pwa-voyage-asie",
+            storageBucket: "pwa-voyage-asie.firebasestorage.app",
+            messagingSenderId: "952612056038",
+            appId: "1:952612056038:web:318e446aa787783f77c427",
+            measurementId: "G-E0WFHDHCST"
+        };
+        
+        // Initialiser Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Exporter globalement pour notre service
+        window.firebase = {
+            app,
+            db,
+            auth,
+            initializeApp,
+            getFirestore,
+            collection,
+            doc,
+            addDoc,
+            updateDoc,
+            getDoc,
+            getDocs,
+            query,
+            where,
+            orderBy,
+            serverTimestamp,
+            arrayUnion,
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        };
+        
+        // Initialiser notre service Firebase
+        console.log('Modules Firebase chargés, initialisation du service...');
+        if (window.firebaseService) {
+            window.firebaseService.initialize();
+        }
+        
+        // Test de configuration Firebase
+        setTimeout(() => {
+            console.log('=== TEST CONFIGURATION FIREBASE ===');
+            console.log('Firebase disponible:', typeof window.firebase !== 'undefined');
+            console.log('Service initialisé:', window.firebaseService.isInitialized);
+            console.log('Auth disponible:', typeof window.firebase.auth !== 'undefined');
+            console.log('getDoc disponible:', typeof window.firebase.getDoc !== 'undefined');
+            console.log('User connecté:', window.firebaseService.isAuthenticated());
+            console.log('=====================================');
+        }, 2000);
+    </script>
+    
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -400,7 +705,20 @@
     <!-- Search Service -->
     <script src="searchService.js"></script>
     
+    <!-- Firebase Service -->
+    <script src="firebaseService.js"></script>
+    
+    <!-- Itineraries Service -->
+    <script src="itinerariesService.js"></script>
+    
     <script>
+        // Variables globales
+        let searchTimeout;
+        let currentSelectedResult;
+        let isSearching = false;
+        let isOnline = navigator.onLine;
+        let destinationMarkers = []; // Stocker les marqueurs de destinations
+        
         // Initialisation de la carte
         let map = L.map('map', {
             center: [20, 0],
@@ -432,6 +750,228 @@
         currentLayer.addTo(map);
         
         
+        // Fonctions d'authentification
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+        
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            clearAuthForms();
+        }
+        
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            
+            // Réinitialiser les classes
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            
+            if (tab === 'login') {
+                loginForm.style.display = 'flex';
+                registerForm.style.display = 'none';
+                tabBtns[0].classList.add('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'flex';
+                tabBtns[1].classList.add('active');
+            }
+        }
+        
+        function showAuthMessage(message, type) {
+            const messageDiv = document.getElementById('authMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `auth-message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Masquer après 3 secondes
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function clearAuthForms() {
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('authMessage').style.display = 'none';
+        }
+        
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showAuthMessage('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            try {
+                const user = await window.firebaseService.signIn(email, password);
+                if (user) {
+                    showAuthMessage('Connexion réussie!', 'success');
+                    setTimeout(() => {
+                        closeAuthModal();
+                        updateUserPanel();
+                    }, 1500);
+                } else {
+                    showAuthMessage('Erreur de connexion', 'error');
+                }
+            } catch (error) {
+                showAuthMessage('Erreur: ' + error.message, 'error');
+            }
+        }
+        
+        async function handleRegister() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                showAuthMessage('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showAuthMessage('Le mot de passe doit contenir au moins 6 caractères', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showAuthMessage('Les mots de passe ne correspondent pas', 'error');
+                return;
+            }
+            
+            try {
+                const user = await window.firebaseService.signUp(email, password);
+                if (user) {
+                    showAuthMessage('Compte créé avec succès!', 'success');
+                    setTimeout(() => {
+                        closeAuthModal();
+                        updateUserPanel();
+                    }, 1500);
+                } else {
+                    showAuthMessage('Erreur lors de la création du compte', 'error');
+                }
+            } catch (error) {
+                showAuthMessage('Erreur: ' + error.message, 'error');
+            }
+        }
+        
+        async function handleLogout() {
+            try {
+                await window.firebaseService.signOut();
+                updateUserPanel();
+                console.log('Déconnexion réussie');
+            } catch (error) {
+                console.error('Erreur déconnexion:', error);
+            }
+        }
+        
+        // Fonction pour afficher les destinations sur la carte
+        async function displayDestinationsOnMap() {
+            // Effacer les marqueurs existants
+            destinationMarkers.forEach(marker => map.removeLayer(marker));
+            destinationMarkers = [];
+            
+            if (!window.firebaseService.isAuthenticated()) {
+                console.log('Utilisateur non connecté, pas de destinations à afficher');
+                return;
+            }
+            
+            try {
+                console.log('Récupération des itinéraires pour affichage...');
+                const itineraries = await window.firebaseService.getItineraries();
+                console.log('Itinéraires trouvés:', itineraries);
+                
+                itineraries.forEach(itinerary => {
+                    console.log(`Itinéraire: ${itinerary.nom}`);
+                    console.log('Destinations dans itinéraire:', itinerary.destinations);
+                    
+                    // Les destinations sont stockées dans le champ "destinations" de l'itinéraire
+                    if (itinerary.destinations && Array.isArray(itinerary.destinations)) {
+                        itinerary.destinations.forEach((destination, index) => {
+                            console.log(`Destination ${index}:`, destination);
+                            
+                            // Vérifier si c'est un objet complet ou juste un ID
+                            if (typeof destination === 'object' && destination.location && destination.location.lat && destination.location.lng) {
+                                // Créer un marqueur pour la destination
+                                const marker = L.marker([destination.location.lat, destination.location.lng])
+                                    .addTo(map)
+                                    .bindPopup(`
+                                        <div style="min-width: 200px;">
+                                            <h4 style="margin: 0 0 5px 0; color: #333;">${destination.nom || destination.adresse}</h4>
+                                            <p style="margin: 5px 0; color: #666;">${destination.adresse}</p>
+                                            <p style="margin: 5px 0; font-size: 12px; color: #999;">Itinéraire: ${itinerary.nom}</p>
+                                        </div>
+                                    `);
+                                
+                                destinationMarkers.push(marker);
+                                console.log(`✅ Marqueur ajouté pour: ${destination.nom} à [${destination.location.lat}, ${destination.location.lng}]`);
+                            } else if (typeof destination === 'string') {
+                                console.log(`⚠️ Destination ${index} est un ID, pas un objet complet:`, destination);
+                                // TODO: Récupérer les données complètes de cette destination
+                            } else {
+                                console.log(`❌ Destination ${index} format invalide:`, destination);
+                            }
+                        });
+                    } else {
+                        console.log('❌ Aucune destination dans cet itinéraire ou format invalide');
+                    }
+                });
+                
+                console.log(`Total des marqueurs affichés: ${destinationMarkers.length}`);
+                
+                // Ajuster la vue pour voir tous les marqueurs
+                if (destinationMarkers.length > 0) {
+                    const group = new L.featureGroup(destinationMarkers);
+                    map.fitBounds(group.getBounds().pad(0.1));
+                } else {
+                    console.log('❌ Aucun marqueur à afficher');
+                }
+                
+            } catch (error) {
+                console.error('Erreur affichage destinations:', error);
+            }
+        }
+        
+        // Mettre à jour l'affichage des destinations après connexion
+        function updateUserPanel() {
+            const userPanel = document.getElementById('userPanel');
+            const userEmail = document.getElementById('userEmail');
+            
+            if (window.firebaseService.isAuthenticated()) {
+                const user = window.firebaseService.user;
+                userEmail.textContent = user.email;
+                userPanel.style.display = 'flex';
+                
+                // Afficher les destinations sur la carte après connexion
+                displayDestinationsOnMap();
+            } else {
+                userPanel.style.display = 'none';
+                
+                // Effacer les marqueurs lors de la déconnexion
+                destinationMarkers.forEach(marker => map.removeLayer(marker));
+                destinationMarkers = [];
+            }
+        }
+        
+        // Vérifier l'état de connexion au chargement
+        window.firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                window.firebaseService.user = user;
+                updateUserPanel();
+                console.log('Utilisateur connecté:', user.email);
+            } else {
+                window.firebaseService.user = null;
+                updateUserPanel();
+                console.log('Utilisateur déconnecté');
+            }
+        });
+        
         // Fonctions de popup
         function openMenuPopup() {
             document.getElementById('menuPopup').classList.add('active');
@@ -455,7 +995,7 @@
             }
         }
         
-        function validateAdd() {
+        async function validateAdd() {
             const address = document.getElementById('addressField').value;
             const days = document.getElementById('daysInput').value;
             const hours = document.getElementById('hoursInput').value;
@@ -465,14 +1005,101 @@
                 alert('Veuillez sélectionner une adresse');
                 return;
             }
-            console.log('Destination ajoutée:', { address, days, hours, minutes });
-            closeSidePanel();
+            
+            // Vérifier si l'utilisateur est connecté
+            if (!window.firebaseService.isAuthenticated()) {
+                alert('Veuillez vous connecter pour ajouter une destination');
+                openAuthModal();
+                return;
+            }
+            
+            // Récupérer les données de l'adresse sélectionnée
+            const selectedResult = window.currentSelectedResult;
+            if (!selectedResult) {
+                alert('Erreur: aucune adresse sélectionnée');
+                return;
+            }
+            
+            // Créer un itinéraire par défaut si aucun n'existe
+            console.log('Recherche itinéraire existant...');
+            let currentItinerary = await getCurrentItinerary();
+            if (!currentItinerary) {
+                console.log('Aucun itinéraire, création du premier...');
+                const itineraryName = `Voyage du ${new Date().toLocaleDateString()}`;
+                currentItinerary = await window.firebaseService.createItinerary(itineraryName);
+                console.log('Nouvel itinéraire créé:', currentItinerary);
+            } else {
+                console.log('Itinéraire existant trouvé:', currentItinerary);
+            }
+            
+            // Ajouter la destination à Firebase
+            console.log('Préparation des données de destination...');
+            const destinationData = {
+                nom: selectedResult.display_name,
+                adresse: selectedResult.display_name,
+                location: {
+                    lat: parseFloat(selectedResult.lat),
+                    lng: parseFloat(selectedResult.lng)
+                },
+                street_number: selectedResult.address.street_number || '',
+                route: selectedResult.address.route || '',
+                locality: selectedResult.address.locality || '',
+                administrative_area_level_2: selectedResult.address.administrative_area_level_2 || '',
+                administrative_area_level_1: selectedResult.address.administrative_area_level_1 || '',
+                country: selectedResult.address.country || '',
+                postal_code: selectedResult.address.postal_code || ''
+            };
+            
+            console.log('Données destination:', destinationData);
+            console.log('Itinéraire ID:', currentItinerary.id);
+            
+            console.log('Envoi à Firebase...');
+            const addedDestination = await window.firebaseService.addDestination(
+                currentItinerary.id, 
+                destinationData
+            );
+            
+            console.log('Résultat Firebase:', addedDestination);
+            
+            if (addedDestination) {
+                console.log('Destination ajoutée avec succès:', addedDestination);
+                
+                // Afficher un message de confirmation
+                alert(`Destination ajoutée:\n${address}\nDurée: ${days}j ${hours}h ${minutes}min`);
+                
+                // Fermer le panneau et réinitialiser
+                closeSidePanel();
+                clearAddForm();
+                
+                // Rafraîchir les marqueurs sur la carte
+                displayDestinationsOnMap();
+            } else {
+                alert('Erreur lors de l\'ajout de la destination');
+            }
         }
         
-        // Variables globales pour la recherche
-        let searchTimeout;
-        let isSearching = false;
-        let isOnline = navigator.onLine;
+        async function getCurrentItinerary() {
+            const itineraries = await window.firebaseService.getItineraries();
+            return itineraries.length > 0 ? itineraries[0] : null;
+        }
+        
+        function clearAddForm() {
+            document.getElementById('addressField').value = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').classList.remove('active');
+            document.getElementById('daysInput').value = '0';
+            document.getElementById('hoursInput').value = '0';
+            document.getElementById('minutesInput').value = '0';
+            window.currentSelectedResult = null;
+        }
+        
+        // Fonction de test pour voir les destinations (peut être supprimée plus tard)
+        function showDestinations() {
+            const points = window.itinerariesService.getAllPoints();
+            console.log('Destinations stockées:', points);
+            console.log('JSON export:', window.itinerariesService.exportToJSON());
+            alert(`Nombre de destinations: ${points.length}\n\nVoir la console pour les détails.`);
+        }
         
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
@@ -576,6 +1203,9 @@
             document.getElementById('addressField').value = displayName;
             document.getElementById('searchResults').classList.remove('active');
             document.getElementById('searchInput').value = '';
+            
+            // Stocker le résultat sélectionné pour utilisation ultérieure
+            window.currentSelectedResult = result;
             
             // Centrer la carte sur l'adresse sélectionnée
             const lat = parseFloat(result.lat);
