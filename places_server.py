@@ -7,7 +7,28 @@ import os
 from urllib.request import urlopen
 
 PORT = 8000
-GOOGLE_API_KEY = 'AIzaSyD5264kcW9Yzf4Okvm3Weat-fquYwnJ7Nw' # Remplacez par votre clé
+
+# Charger la clé API depuis les variables d'environnement
+def load_api_key():
+    try:
+        with open('.env.local', 'r') as f:
+            for line in f:
+                if line.startswith('GOOGLE_API_KEY='):
+                    return line.split('=', 1)[1].strip()
+    except FileNotFoundError:
+        print("Erreur: Fichier .env.local non trouvé")
+        print("Créez le fichier .env.local avec votre clé API:")
+        print("GOOGLE_API_KEY=votre_clé_api_ici")
+        return None
+    
+    print("Erreur: GOOGLE_API_KEY non trouvé dans .env.local")
+    return None
+
+GOOGLE_API_KEY = load_api_key()
+
+if not GOOGLE_API_KEY:
+    print("Arrêt du serveur: clé API non configurée")
+    exit(1)
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -35,6 +56,26 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path == '/' or self.path == '/index.html':
+            # Servir index.html en injectant la clé API
+            try:
+                with open('index.html', 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Injecter la clé API dans une variable JavaScript
+                    content = content.replace(
+                        '<!-- Search Service -->',
+                        f'<script>window.GOOGLE_API_KEY = "{GOOGLE_API_KEY}";</script>\n    <!-- Search Service -->'
+                    )
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f'Erreur: {str(e)}'.encode())
         else:
             # Servir les fichiers statiques
             super().do_GET()

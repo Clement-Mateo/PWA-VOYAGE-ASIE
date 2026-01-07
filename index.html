@@ -397,6 +397,9 @@
         }
     </script>
     
+    <!-- Search Service -->
+    <script src="searchService.js"></script>
+    
     <script>
         // Initialisation de la carte
         let map = L.map('map', {
@@ -483,11 +486,10 @@
         });
         
         /**
-         * Recherche d'adresse avec stratégie optimisée
+         * Recherche d'adresse utilisant le service externe
          * 1. Attend 3 secondes après la fin de la saisie
          * 2. Vérifie la connexion internet
-         * 3. Si en ligne: Places API puis Geocoding API
-         * 4. Si hors ligne: recherche locale uniquement
+         * 3. Utilise searchService pour les requêtes API
          */
         async function searchAddress() {
             const query = document.getElementById('searchInput').value.trim();
@@ -511,35 +513,16 @@
                     let allResults = [];
                     
                     if (isOnline) {
-                        // Mode en ligne: essayer Geocoding API uniquement (pas de serveur proxy sur GitHub Pages)
-                        const apiKey = 'GOOGLE_API_KEY_PLACEHOLDER';
-                        const geocodingResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`);
-                        const geocodingData = await geocodingResponse.json();
-                        
-                        if (geocodingData.results && geocodingData.results.length > 0) {
-                            geocodingData.results.forEach(result => {
-                                const components = {};
-                                result.address_components.forEach(comp => {
-                                    comp.types.forEach(type => {
-                                        components[type] = comp.long_name || comp.short_name;
-                                    });
-                                });
-                                
-                                allResults.push({
-                                    display_name: result.formatted_address,
-                                    lat: result.geometry.location.lat,
-                                    lng: result.geometry.location.lng,
-                                    address: components
-                                });
-                            });
-                        }
+                        // Mode en ligne: utiliser le service de recherche
+                        allResults = await window.searchService.search(query);
                     } else {
                         // Mode hors ligne: message informatif
                         allResults = [{
                             display_name: 'Recherche indisponible hors ligne',
                             lat: null,
                             lng: null,
-                            address: {}
+                            address: {},
+                            source: 'offline'
                         }];
                     }
                     
@@ -547,11 +530,13 @@
                     displayResults(allResults);
                     
                 } catch (error) {
+                    console.error('Erreur recherche:', error);
                     displayResults([{
                         display_name: 'Erreur de recherche',
                         lat: null,
                         lng: null,
-                        address: {}
+                        address: {},
+                        source: 'error'
                     }]);
                 } finally {
                     isSearching = false;
