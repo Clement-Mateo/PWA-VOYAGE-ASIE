@@ -19,22 +19,23 @@
     
     <!-- Styles globaux -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="components/AuthPopup/AuthPopup.css">
 </head>
 <body>
     <div id="map"></div>
     
-    <button class="menu-btn" onclick="MenuPopup.show()">
-        <div class="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </button>
+    <button class="auth-btn" onclick="AuthPopup.show()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+        <polyline points="10 17 15 12 10 7"></polyline>
+        <line x1="15" y1="12" x2="3" y2="12"></line>
+    </svg>
+</button>
     
     <button class="add-btn" onclick="AddDestination.show()">+</button>
     
-    <!-- Conteneur pour le menu popup -->
-    <div id="menuPopupContainer"></div>
+    <!-- Conteneur pour le popup de connexion -->
+    <div id="authPopupContainer"></div>
     
     <!-- Conteneur pour le panneau d'ajout -->
     <div id="addPanelContainer"></div>
@@ -42,8 +43,13 @@
     <!-- Conteneur pour le panneau utilisateur -->
     <div id="userPanel" class="user-panel">
         <div class="user-info">
-            <span id="userEmail"></span>
-            <button class="btn-secondary" onclick="MenuPopup.handleLogout()">Déconnexion</button>
+            <button class="logout-btn" onclick="handleLogout()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
         </div>
     </div>
     
@@ -140,19 +146,8 @@
     <!-- Firebase Service -->
     <script src="firebaseService.js"></script>
     
-    <!-- MenuPopup Script -->
-    <script type="module">
-        import { MenuPopup } from './components/MenuPopup/MenuPopup.js';
-        window.MenuPopup = MenuPopup;
-        
-        // Initialiser le composant quand le DOM est prêt
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('menuPopupContainer');
-            if (container) {
-                MenuPopup.init('menuPopupContainer');
-            }
-        });
-    </script>
+    <!-- AuthPopup Script -->
+    <script src="components/AuthPopup/AuthPopup.js"></script>
     
     <!-- Component Manager -->
     <script type="module">
@@ -170,6 +165,12 @@
         // Initialiser les composants quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOM prêt, initialisation des composants...');
+            
+            // Initialiser AuthPopup
+            if (window.AuthPopup) {
+                window.AuthPopup.init('authPopupContainer');
+            }
+            
             await ComponentManager.initAll();
         });
     </script>
@@ -295,15 +296,14 @@
         // Mettre à jour l'affichage des destinations après connexion
         function updateUserPanel() {
             const userPanel = document.getElementById('userPanel');
-            const userEmail = document.getElementById('userEmail');
             
             if (window.firebaseService.isAuthenticated()) {
                 const user = window.firebaseService.user;
-                userEmail.textContent = user.email;
                 userPanel.style.display = 'flex';
                 
                 // Afficher les destinations sur la carte après connexion
                 displayDestinationsOnMap();
+                console.log('Panneau utilisateur affiché pour:', user.email);
             } else {
                 userPanel.style.display = 'none';
                 
@@ -314,30 +314,46 @@
         }
         
         // Vérifier l'état de connexion au chargement
-        window.firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                window.firebaseService.user = user;
-                updateUserPanel();
-                console.log('Utilisateur connecté:', user.email);
-            } else {
-                window.firebaseService.user = null;
-                updateUserPanel();
-                console.log('Utilisateur déconnecté');
-            }
-        });
-        
-        // Fonctions de popup (compatibilité)
-        function closePopup(popupId) {
-            if (popupId === 'menuPopup') {
-                MenuPopup.hide();
-            }
+        if (window.firebase && window.firebase.auth && window.firebase.onAuthStateChanged) {
+            window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                if (user) {
+                    window.firebaseService.user = user;
+                    updateUserPanel();
+                    console.log('Utilisateur connecté:', user.email);
+                } else {
+                    window.firebaseService.user = null;
+                    updateUserPanel();
+                    console.log('Utilisateur déconnecté');
+                }
+            });
+        } else {
+            console.error('Firebase Auth non disponible pour onAuthStateChanged');
         }
         
-        function closePopupOutside(event, popupId) {
-            if (event.target === event.currentTarget) {
-                if (popupId === 'menuPopup') {
-                    MenuPopup.hide();
-                }
+        // Fonction de déconnexion
+        function handleLogout() {
+            console.log('Tentative de déconnexion...');
+            console.log('Firebase disponible:', !!window.firebase);
+            console.log('Firebase.auth disponible:', !!window.firebase?.auth);
+            console.log('signOut disponible:', !!window.firebase?.signOut);
+            
+            if (window.firebase && window.firebase.auth && window.firebase.signOut) {
+                window.firebase.signOut(window.firebase.auth)
+                    .then(() => {
+                        console.log('Déconnexion réussie');
+                        updateUserPanel();
+                        
+                        // Réafficher le bouton de connexion
+                        const authBtn = document.querySelector('.auth-btn');
+                        if (authBtn) {
+                            authBtn.style.display = 'flex';
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Erreur de déconnexion:', error);
+                    });
+            } else {
+                console.error('Firebase non disponible pour la déconnexion');
             }
         }
         

@@ -18,7 +18,7 @@ body {
 }
 
 /* Boutons flottants */
-.menu-btn, .add-btn {
+.auth-btn, .add-btn {
     position: fixed;
     z-index: 1000;
     background: white;
@@ -29,14 +29,22 @@ body {
     transition: all 0.3s;
 }
 
-.menu-btn {
+.auth-btn {
     top: 10px;
     right: 10px;
     width: 50px;
     height: 50px;
+    border-radius: 50%;
+    background: #007cba;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.auth-btn:hover {
+    background: #005a87;
+    transform: translateY(-2px);
 }
 
 .add-btn {
@@ -50,11 +58,6 @@ body {
     background: #007cba;
 }
 
-.menu-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
 .add-btn:hover {
     transform: scale(1.1);
     background: #005a87;
@@ -62,48 +65,17 @@ body {
 }
 
 /* Masquer les boutons quand un popup est ouvert */
-body.has-popup .menu-btn,
-body.has-popup .add-btn {
+body.has-popup .auth-btn,
+body.has-popup .add-btn,
+body.has-popup .logout-btn {
     opacity: 0 !important;
     pointer-events: none !important;
     transform: scale(0.8) !important;
     transition: all 0.3s ease !important;
 }
 
-/* Hamburger menu */
-.hamburger {
-    width: 20px;
-    height: 14px;
-    position: relative;
-}
-
-.hamburger span {
-    display: block;
-    position: absolute;
-    height: 2px;
-    width: 100%;
-    background: #333;
-    border-radius: 2px;
-    opacity: 1;
-    left: 0;
-    transform: rotate(0deg);
-    transition: .25s ease-in-out;
-}
-
-.hamburger span:nth-child(1) {
-    top: 0px;
-}
-
-.hamburger span:nth-child(2) {
-    top: 6px;
-}
-
-.hamburger span:nth-child(3) {
-    top: 12px;
-}
-
 /* Conteneurs de composants */
-#menuPopupContainer, #addPanelContainer {
+#addPanelContainer {
     position: relative;
     z-index: 999;
 }
@@ -113,10 +85,10 @@ body.has-popup .add-btn {
     position: fixed;
     top: 10px;
     right: 10px;
-    background: white;
-    padding: 10px;
+    background: transparent;
+    padding: 0;
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     z-index: 1000;
     display: none;
     align-items: center;
@@ -129,9 +101,27 @@ body.has-popup .add-btn {
     gap: 10px;
 }
 
-#userEmail {
+.logout-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     font-weight: bold;
-    color: #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    transform: scale(1.1);
+    background: #c82333;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
 }
 
 /* Contrôles de carte */
@@ -155,7 +145,7 @@ body.has-popup .add-btn {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .menu-btn, .add-btn {
+    .auth-btn, .add-btn {
         width: 45px;
         height: 45px;
         top: 5px;
@@ -174,7 +164,7 @@ body.has-popup .add-btn {
 }
 
 @media (max-width: 480px) {
-    .menu-btn, .add-btn {
+    .auth-btn, .add-btn {
         top: 5px;
         right: 5px;
         width: 40px;
@@ -182,7 +172,7 @@ body.has-popup .add-btn {
     }
     
     .add-btn {
-        top: 55px;
+        top: 50px;
     }
     
     .controls {
