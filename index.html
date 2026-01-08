@@ -140,20 +140,31 @@
     <!-- Firebase Service -->
     <script src="firebaseService.js"></script>
     
+    <!-- MenuPopup Script -->
+    <script type="module">
+        import { MenuPopup } from './components/MenuPopup/MenuPopup.js';
+        window.MenuPopup = MenuPopup;
+        
+        // Initialiser le composant quand le DOM est prêt
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('menuPopupContainer');
+            if (container) {
+                MenuPopup.init('menuPopupContainer');
+            }
+        });
+    </script>
+    
     <!-- Component Manager -->
     <script type="module">
         // Importer les composants
         import { ComponentManager } from './components/ComponentManager.js';
-        import { MenuPopup } from './components/MenuPopup/MenuPopup.js';
         import { AddDestination } from './components/AddDestination/AddDestination.js';
         
         // Enregistrer les composants
-        ComponentManager.register('menuPopup', MenuPopup);
         ComponentManager.register('addDestination', AddDestination);
         
         // Exporter globalement
         window.ComponentManager = ComponentManager;
-        window.MenuPopup = MenuPopup;
         window.AddDestination = AddDestination;
         
         // Initialiser les composants quand le DOM est prêt

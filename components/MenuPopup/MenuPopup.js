@@ -258,7 +258,7 @@ export const MenuPopup = {
     },
 
     // Gérer la déconnexion
-    handleLogout() {
+    async handleLogout() {
         console.log('Tentative de déconnexion...');
         
         if (!window.firebaseService) {
