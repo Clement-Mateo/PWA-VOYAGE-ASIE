@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/places-search.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "GOOGLE_API_KEY": "@google_api_key"
+  }
+}

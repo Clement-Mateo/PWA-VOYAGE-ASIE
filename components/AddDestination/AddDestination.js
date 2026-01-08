@@ -36,59 +36,56 @@ const SearchService = {
         }
         
         try {
-            // Utiliser Geocoding API (plus simple que Places API)
+            // Utiliser le proxy Vercel, avec fallback pour le développement
             const apiKey = await this.getApiKey();
-            if (!apiKey || apiKey === 'GOOGLE_API_KEY_PLACEHOLDER') {
-                return [{
-                    display_name: 'API Key non configurée',
-                    lat: null,
-                    lng: null,
-                    address: {},
-                    source: 'error'
-                }];
-            }
+            let url;
             
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`
-            );
-            const data = await response.json();
-            
-            if (data.results && data.results.length > 0) {
-                return data.results.map(result => {
-                    const components = {};
-                    result.address_components.forEach(comp => {
-                        comp.types.forEach(type => {
-                            components[type] = comp.long_name || comp.short_name;
-                        });
-                    });
+            // Essayer le proxy Vercel d'abord
+            try {
+                url = `https://carte-monde-interactive.vercel.app/api/places-search?query=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'OK') {
+                    return data.results.map(place => ({
+                        placeId: place.place_id,
+                        name: place.name,
+                        address: place.formatted_address,
+                        location: {
+                            lat: place.geometry.location.lat,
+                            lng: place.geometry.location.lng
+                        }
+                    }));
+                }
+            } catch (proxyError) {
+                console.warn('Proxy Vercel non disponible, fallback en développement:', proxyError.message);
+                
+                // Fallback : utiliser Geocoding API pour le développement
+                if (!this.isProduction && apiKey && apiKey !== 'GOOGLE_API_KEY_PLACEHOLDER') {
+                    url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
                     
-                    return {
-                        display_name: result.formatted_address,
-                        name: result.formatted_address,
-                        formatted_address: result.formatted_address,
-                        lat: result.geometry.location.lat,
-                        lng: result.geometry.location.lng,
-                        geometry: {
+                    if (data.results && data.results.length > 0) {
+                        return data.results.map(result => ({
+                            placeId: result.place_id,
+                            name: result.formatted_address,
+                            address: result.formatted_address,
                             location: {
                                 lat: result.geometry.location.lat,
                                 lng: result.geometry.location.lng
                             }
-                        },
-                        address: components,
-                        source: 'geocode'
-                    };
-                });
+                        }));
+                    }
+                }
             }
+            
+            console.error('Aucun résultat disponible');
             return [];
+            
         } catch (error) {
-            console.error('Erreur Geocoding API:', error);
-            return [{
-                display_name: 'Erreur de connexion à l\'API',
-                lat: null,
-                lng: null,
-                address: {},
-                source: 'error'
-            }];
+            console.error('Erreur de recherche:', error);
+            return [];
         }
     },
 };
@@ -224,7 +221,7 @@ export const AddDestination = {
                 resultsDiv.innerHTML = '<div class="search-error">Erreur de recherche: ' + error.message + '</div>';
                 resultsDiv.classList.add('active');
             }
-        }, 800);
+        }, 1000);
     },
 
     // Afficher les résultats
@@ -286,129 +283,41 @@ export const AddDestination = {
         }
         
         try {
-            // Récupérer ou créer l'itinéraire
-            const itinerary = await this.getCurrentItinerary();
-            if (!itinerary) {
-                alert('Erreur lors de la création de l\'itinéraire');
-                return;
-            }
+            // TODO: Ajouter la destination à l'itinéraire
+            console.log('Destination à ajouter:', {
+                address,
+                duration: { days, hours, minutes },
+                location: this.currentSelectedResult.location
+            });
             
-            // Préparer les données de destination
-            const destinationData = {
-                nom: this.currentSelectedResult.name || address,
-                adresse: address,
-                location: {
-                    lat: this.currentSelectedResult.geometry.location.lat,
-                    lng: this.currentSelectedResult.geometry.location.lng
-                },
-                duree: {
-                    jours: parseInt(days),
-                    heures: parseInt(hours),
-                    minutes: parseInt(minutes)
-                },
-                street_number: this.currentSelectedResult.street_number || '',
-                route: this.currentSelectedResult.route || '',
-                locality: this.currentSelectedResult.locality || '',
-                administrative_area_level_1: this.currentSelectedResult.administrative_area_level_1 || '',
-                country: this.currentSelectedResult.country || '',
-                postal_code: this.currentSelectedResult.postal_code || ''
-            };
-            
-            console.log('Préparation des données de destination...');
-            console.log('Données destination:', destinationData);
-            console.log('Itinéraire ID:', itinerary.id);
-            
-            // Ajouter la destination
-            const addedDestination = await window.firebaseService.addDestination(itinerary.id, destinationData);
-            
-            if (addedDestination) {
-                console.log('Destination ajoutée avec succès:', addedDestination);
-                alert('Destination ajoutée avec succès !');
-                
-                // Nettoyer le formulaire
-                this.clearForm();
-                this.hide();
-                
-                // Afficher les destinations sur la carte
-                if (window.displayDestinationsOnMap) {
-                    window.displayDestinationsOnMap();
-                }
-            } else {
-                alert('Erreur lors de l\'ajout de la destination');
-            }
-            
+            this.hide();
         } catch (error) {
             console.error('Erreur lors de l\'ajout:', error);
-            alert('Erreur lors de l\'ajout: ' + error.message);
-        }
-    },
-
-    // Récupérer l'itinéraire actuel
-    async getCurrentItinerary() {
-        try {
-            console.log('Recherche itinéraire existant...');
-            const itineraries = await window.firebaseService.getItineraries();
-            
-            if (itineraries.length > 0) {
-                console.log('Itinéraire existant trouvé:', itineraries[0]);
-                return itineraries[0];
-            } else {
-                console.log('Aucun itinéraire, création du premier...');
-                const today = new Date().toLocaleDateString('fr-FR');
-                const newItinerary = await window.firebaseService.createItinerary(`Voyage du ${today}`);
-                console.log('Nouvel itinéraire créé:', newItinerary);
-                return newItinerary;
-            }
-        } catch (error) {
-            console.error('Erreur récupération itinéraire:', error);
-            return null;
-        }
-    },
-
-    // Valider les entrées de durée
-    validateDurationInput(type) {
-        let input;
-        let max;
-        
-        switch(type) {
-            case 'hours':
-                input = document.getElementById('hoursInput');
-                max = 23;
-                break;
-            case 'minutes':
-                input = document.getElementById('minutesInput');
-                max = 59;
-                break;
-            case 'days':
-                input = document.getElementById('daysInput');
-                max = 365;
-                break;
-        }
-        
-        if (input && input.value > max) {
-            input.value = max;
-        }
-    },
-
-    // Vider le formulaire
-    clearForm() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('addressField').value = '';
-        document.getElementById('searchResults').classList.remove('active');
-        document.getElementById('daysInput').value = '0';
-        document.getElementById('hoursInput').value = '0';
-        document.getElementById('minutesInput').value = '0';
-        this.currentSelectedResult = null;
-        
-        if (this.tempMarker && window.map) {
-            window.map.removeLayer(this.tempMarker);
-            this.tempMarker = null;
+            alert('Erreur lors de l\'ajout de la destination');
         }
     },
 
     // Configuration des écouteurs d'événements
     setupEventListeners() {
         // Événements gérés directement dans le template avec onclick
-        console.log('AddDestination initialisé');
+        console.log('AddDestination setupEventListeners complété');
+    },
+
+    // Vider le formulaire
+    clearForm() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('addressField').value = '';
+        document.getElementById('daysInput').value = '0';
+        document.getElementById('hoursInput').value = '0';
+        document.getElementById('minutesInput').value = '0';
+        document.getElementById('searchResults').classList.remove('active');
+        document.getElementById('searchResults').innerHTML = '';
+        this.currentSelectedResult = null;
+        
+        // Supprimer le marqueur temporaire
+        if (this.tempMarker) {
+            window.map.removeLayer(this.tempMarker);
+            this.tempMarker = null;
+        }
     }
 };
