@@ -7,45 +7,26 @@
 const SearchService = {
     isProduction: window.location.hostname.includes('github.io'),
     
-    getApiKey() {
+    async getApiKey() {
         if (this.isProduction) {
             return 'GOOGLE_API_KEY_PLACEHOLDER';
         } else {
-            // En développement, charger le fichier .env.local
-            const loadEnvFile = async () => {
-                try {
-                    const response = await fetch('./.env.local');
-                    const text = await response.text();
-                    const lines = text.split('\n');
-                    
-                    for (const line of lines) {
-                        if (line.startsWith('GOOGLE_API_KEY=')) {
-                            return line.split('=')[1];
-                        }
+            // En développement, charger le fichier env.local (sans le point)
+            try {
+                const response = await fetch('./public/env.local');
+                const text = await response.text();
+                const lines = text.split('\n');
+                
+                for (const line of lines) {
+                    if (line.startsWith('GOOGLE_API_KEY=')) {
+                        return line.split('=')[1];
                     }
-                    return null;
-                } catch (error) {
-                    console.error('Erreur lors du chargement de .env.local:', error);
-                    return null;
                 }
-            };
-            
-            // Essayer d'abord depuis le fichier .env.local
-            let apiKey = loadEnvFile();
-            
-            if (!apiKey) {
-                // Fallback vers les variables globales
-                if (typeof window !== 'undefined' && window.GOOGLE_API_KEY) {
-                    apiKey = window.GOOGLE_API_KEY;
-                }
+                return null;
+            } catch (error) {
+                console.error('Erreur lors du chargement de env.local:', error);
+                return null;
             }
-            
-            if (!apiKey) {
-                console.warn('⚠️ GOOGLE_API_KEY non trouvée. Vérifiez votre fichier .env.local');
-                return 'GOOGLE_API_KEY_PLACEHOLDER';
-            }
-            
-            return apiKey;
         }
     },
     

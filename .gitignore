@@ -1,2 +1,2 @@
 # Fichiers à ignorer pour Git
-.env.local
+public/env.local
