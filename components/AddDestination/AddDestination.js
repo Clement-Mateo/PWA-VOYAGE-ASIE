@@ -11,20 +11,25 @@ const SearchService = {
         if (this.isProduction) {
             return 'GOOGLE_API_KEY_PLACEHOLDER';
         } else {
-            // En développement, charger le fichier env.local (sans le point)
-            try {
-                const response = await fetch('./env.local');
-                const text = await response.text();
-                const lines = text.split('\n');
-                
-                for (const line of lines) {
-                    if (line.startsWith('GOOGLE_API_KEY=')) {
-                        return line.split('=')[1];
+            // En développement local seulement, charger le fichier env.local
+            if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+                try {
+                    const response = await fetch('./env.local');
+                    const text = await response.text();
+                    const lines = text.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('GOOGLE_API_KEY=')) {
+                            return line.split('=')[1];
+                        }
                     }
+                    return null;
+                } catch (error) {
+                    console.error('Erreur lors du chargement de env.local:', error);
+                    return null;
                 }
-                return null;
-            } catch (error) {
-                console.error('Erreur lors du chargement de env.local:', error);
+            } else {
+                // En production Vercel, ne pas essayer de charger env.local
                 return null;
             }
         }
@@ -36,59 +41,87 @@ const SearchService = {
         }
         
         try {
-            // Utiliser Geocoding API (plus simple que Places API)
+            // Utiliser le proxy Vercel, avec fallback pour le développement
             const apiKey = await this.getApiKey();
-            if (!apiKey || apiKey === 'GOOGLE_API_KEY_PLACEHOLDER') {
-                return [{
-                    display_name: 'API Key non configurée',
-                    lat: null,
-                    lng: null,
-                    address: {},
-                    source: 'error'
-                }];
+            let url;
+            
+            // Détection de l'environnement et construction de l'URL
+            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            
+            if (isProduction) {
+                // En production : utiliser une URL relative (fonctionne avec le domaine actuel)
+                url = `/api/places-search?query=${encodeURIComponent(query)}`;
+                console.log('🌐 Mode production - URL relative:', url);
+            } else {
+                // En local : tester l'URL absolue de production
+                url = `https://pwa-voyage-asie.vercel.app/api/places-search?query=${encodeURIComponent(query)}`;
+                console.log('🏠 Mode local - URL absolue:', url);
             }
             
-            const response = await fetch(
-                `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`
-            );
-            const data = await response.json();
-            
-            if (data.results && data.results.length > 0) {
-                return data.results.map(result => {
-                    const components = {};
-                    result.address_components.forEach(comp => {
-                        comp.types.forEach(type => {
-                            components[type] = comp.long_name || comp.short_name;
-                        });
-                    });
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.status === 'OK' && data.results.length > 0) {
+                    return data.results.map(place => ({
+                        placeId: place.place_id,
+                        name: place.name,
+                        address: place.formatted_address,
+                        location: {
+                            lat: place.geometry.location.lat,
+                            lng: place.geometry.location.lng
+                        }
+                    }));
+                } else {
+                    // Si Places API ne retourne aucun résultat, essayer Geocoding
+                    console.warn('Places API sans résultats, fallback avec Geocoding API');
+                    if (apiKey && apiKey !== 'GOOGLE_API_KEY_PLACEHOLDER') {
+                        const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+                        const geoResponse = await fetch(geoUrl);
+                        const geoData = await geoResponse.json();
+                        
+                        if (geoData.results && geoData.results.length > 0) {
+                            return geoData.results.map(result => ({
+                                placeId: result.place_id,
+                                name: result.formatted_address,
+                                address: result.formatted_address,
+                                location: {
+                                    lat: result.geometry.location.lat,
+                                    lng: result.geometry.location.lng
+                                }
+                            }));
+                        }
+                    }
+                }
+            } catch (proxyError) {
+                console.warn('Proxy Vercel indisponible ou erreur, fallback avec Geocoding API:', proxyError.message);
+                
+                // Fallback : utiliser Geocoding API pour le développement ET en production
+                if (apiKey && apiKey !== 'GOOGLE_API_KEY_PLACEHOLDER') {
+                    url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
                     
-                    return {
-                        display_name: result.formatted_address,
-                        name: result.formatted_address,
-                        formatted_address: result.formatted_address,
-                        lat: result.geometry.location.lat,
-                        lng: result.geometry.location.lng,
-                        geometry: {
+                    if (data.results && data.results.length > 0) {
+                        return data.results.map(result => ({
+                            placeId: result.place_id,
+                            name: result.formatted_address,
+                            address: result.formatted_address,
                             location: {
                                 lat: result.geometry.location.lat,
                                 lng: result.geometry.location.lng
                             }
-                        },
-                        address: components,
-                        source: 'geocode'
-                    };
-                });
+                        }));
+                    }
+                }
             }
+            
+            console.error('Aucun résultat disponible');
             return [];
+            
         } catch (error) {
-            console.error('Erreur Geocoding API:', error);
-            return [{
-                display_name: 'Erreur de connexion à l\'API',
-                lat: null,
-                lng: null,
-                address: {},
-                source: 'error'
-            }];
+            console.error('Erreur de recherche:', error);
+            return [];
         }
     },
 };
@@ -328,7 +361,7 @@ export const AddDestination = {
                 resultsDiv.innerHTML = '<div class="search-error">Erreur de recherche: ' + error.message + '</div>';
                 resultsDiv.classList.add('active');
             }
-        }, 800);
+        }, 1000);
     },
 
     // Afficher les résultats
@@ -341,12 +374,19 @@ export const AddDestination = {
             return;
         }
         
-        const html = results.map(result => `
-            <div class="search-result-item" onclick="AddDestination.selectResult(${JSON.stringify(result).replace(/"/g, '&quot;')})">
-                <strong>${result.name || result.formatted_address}</strong><br>
-                <small>${result.formatted_address}</small>
-            </div>
-        `).join('');
+        const html = results.map(result => {
+            let html = `<div class="search-result-item" onclick="AddDestination.selectResult(${JSON.stringify(result).replace(/"/g, '&quot;')})">
+                <strong>${result.name || result.formatted_address}</strong>`;
+            
+            if (result.address && result.address.trim() !== '') {
+                html += `<br><small>${result.address}</small>`;
+            }
+            
+            html += `<br><small>${result.location.lat}, ${result.location.lng}</small>
+            </div>`;
+            
+            return html;
+        }).join('');
         
         resultsDiv.innerHTML = html;
         resultsDiv.classList.add('active');
@@ -355,7 +395,7 @@ export const AddDestination = {
     // Sélectionner un résultat
     selectResult(result) {
         this.currentSelectedResult = result;
-        document.getElementById('addressField').value = result.formatted_address;
+        document.getElementById('addressField').value = result.name || result.formatted_address;
         document.getElementById('searchResults').classList.remove('active');
         
         // Centrer la carte sur la destination
@@ -390,118 +430,81 @@ export const AddDestination = {
         }
         
         try {
-            // Récupérer ou créer l'itinéraire
-            const itinerary = await this.getCurrentItinerary();
-            if (!itinerary) {
-                alert('Erreur lors de la création de l\'itinéraire');
-                return;
-            }
-            
-            // Préparer les données de destination
-            const destinationData = {
-                nom: this.currentSelectedResult.name || address,
-                adresse: address,
-                location: {
-                    lat: this.currentSelectedResult.geometry.location.lat,
-                    lng: this.currentSelectedResult.geometry.location.lng
-                },
-                duree: {
-                    jours: parseInt(days),
-                    heures: parseInt(hours),
-                    minutes: parseInt(minutes)
-                },
-                street_number: this.currentSelectedResult.street_number || '',
-                route: this.currentSelectedResult.route || '',
-                locality: this.currentSelectedResult.locality || '',
-                administrative_area_level_1: this.currentSelectedResult.administrative_area_level_1 || '',
-                country: this.currentSelectedResult.country || '',
-                postal_code: this.currentSelectedResult.postal_code || ''
+            // Créer la destination
+            const destination = {
+                id: Date.now().toString(), // ID temporaire
+                name: this.currentSelectedResult.name || this.currentSelectedResult.formatted_address,
+                address: address,
+                duration: { days: parseInt(days) || 0, hours: parseInt(hours) || 0, minutes: parseInt(minutes) || 0 },
+                location: this.currentSelectedResult.location,
+                createdAt: new Date().toISOString()
             };
             
-            console.log('Préparation des données de destination...');
-            console.log('Données destination:', destinationData);
-            console.log('Itinéraire ID:', itinerary.id);
-            
-            // Ajouter la destination
-            const addedDestination = await window.firebaseService.addDestination(itinerary.id, destinationData);
-            
-            if (addedDestination) {
-                console.log('Destination ajoutée avec succès:', addedDestination);
-                alert('Destination ajoutée avec succès !');
-                
-                // Nettoyer le formulaire
-                this.clearForm();
-                this.hide();
-                
-                // Afficher les destinations sur la carte
-                if (window.displayDestinationsOnMap) {
-                    window.displayDestinationsOnMap();
-                }
+            // Ajouter à Firebase
+            if (window.firebaseService && window.firebaseService.isAuthenticated()) {
+                await window.firebaseService.addDestinationToItinerary(destination);
+                console.log('Destination ajoutée à Firebase:', destination);
             } else {
-                alert('Erreur lors de l\'ajout de la destination');
+                // Fallback localStorage si non connecté
+                if (window.userItinerary) {
+                    window.userItinerary.destinations.push(destination);
+                } else {
+                    window.userItinerary = {
+                        destinations: [destination],
+                        createdAt: new Date().toISOString()
+                    };
+                }
+                localStorage.setItem('userItinerary', JSON.stringify(window.userItinerary));
+                console.log('Destination ajoutée en localStorage:', destination);
             }
             
+            // Mettre à jour l'affichage
+            if (window.displayDestinationsOnMap) {
+                window.displayDestinationsOnMap();
+            }
+            
+            this.hide();
         } catch (error) {
             console.error('Erreur lors de l\'ajout:', error);
-            alert('Erreur lors de l\'ajout: ' + error.message);
-        }
-    },
-
-    // Récupérer l'itinéraire actuel
-    async getCurrentItinerary() {
-        try {
-            console.log('Recherche itinéraire existant...');
-            const itineraries = await window.firebaseService.getItineraries();
-            
-            if (itineraries.length > 0) {
-                console.log('Itinéraire existant trouvé:', itineraries[0]);
-                return itineraries[0];
-            } else {
-                console.log('Aucun itinéraire, création du premier...');
-                const today = new Date().toLocaleDateString('fr-FR');
-                const newItinerary = await window.firebaseService.createItinerary(`Voyage du ${today}`);
-                console.log('Nouvel itinéraire créé:', newItinerary);
-                return newItinerary;
-            }
-        } catch (error) {
-            console.error('Erreur récupération itinéraire:', error);
-            return null;
+            alert('Erreur lors de l\'ajout de la destination');
         }
     },
 
     // Valider les entrées de durée
     validateDurationInput(type) {
-        let input;
-        let max;
+        const input = document.getElementById(`${type}Input`);
+        let value = parseInt(input.value) || 0;
         
         switch(type) {
+            case 'days':
+                value = Math.max(0, value); // Minimum 0
+                break;
             case 'hours':
-                input = document.getElementById('hoursInput');
-                max = 23;
+                value = Math.max(0, Math.min(23, value)); // Entre 0 et 23
                 break;
             case 'minutes':
-                input = document.getElementById('minutesInput');
-                max = 59;
-                break;
-            case 'days':
-                input = document.getElementById('daysInput');
-                max = 365;
+                value = Math.max(0, Math.min(59, value)); // Entre 0 et 59
                 break;
         }
         
-        if (input && input.value > max) {
-            input.value = max;
-        }
+        input.value = value;
+    },
+
+    // Configuration des écouteurs d'événements
+    setupEventListeners() {
+        // Événements gérés directement dans le template avec onclick
+        console.log('AddDestination setupEventListeners complété');
     },
 
     // Vider le formulaire
     clearForm() {
         document.getElementById('searchInput').value = '';
         document.getElementById('addressField').value = '';
-        document.getElementById('searchResults').classList.remove('active');
         document.getElementById('daysInput').value = '0';
         document.getElementById('hoursInput').value = '0';
         document.getElementById('minutesInput').value = '0';
+        document.getElementById('searchResults').classList.remove('active');
+        document.getElementById('searchResults').innerHTML = '';
         this.currentSelectedResult = null;
         
         // Supprimer le marqueur temporaire
