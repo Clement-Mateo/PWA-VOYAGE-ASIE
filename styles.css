@@ -1,0 +1,188 @@
+/* Styles globaux de l'application */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Boutons flottants */
+.menu-btn, .add-btn {
+    position: fixed;
+    z-index: 1000;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.menu-btn {
+    top: 10px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-btn {
+    top: 70px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    background: #007cba;
+}
+
+.menu-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.add-btn:hover {
+    transform: scale(1.1);
+    background: #005a87;
+    box-shadow: 0 4px 15px rgba(0, 124, 186, 0.4);
+}
+
+/* Hamburger menu */
+.hamburger {
+    width: 20px;
+    height: 14px;
+    position: relative;
+}
+
+.hamburger span {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: #333;
+    border-radius: 2px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+}
+
+.hamburger span:nth-child(1) {
+    top: 0px;
+}
+
+.hamburger span:nth-child(2) {
+    top: 6px;
+}
+
+.hamburger span:nth-child(3) {
+    top: 12px;
+}
+
+/* Conteneurs de composants */
+#menuPopupContainer, #addPanelContainer {
+    position: relative;
+    z-index: 999;
+}
+
+/* Panneau utilisateur */
+.user-panel {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#userEmail {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Contrôles de carte */
+.controls {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#mapStyle {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .menu-btn, .add-btn {
+        width: 45px;
+        height: 45px;
+        top: 5px;
+        right: 5px;
+    }
+    
+    .add-btn {
+        top: 55px;
+    }
+    
+    .controls {
+        top: auto;
+        bottom: 20px;
+        left: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-btn, .add-btn {
+        top: 5px;
+        right: 5px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .add-btn {
+        top: 55px;
+    }
+    
+    .controls {
+        bottom: 10px;
+        left: 5px;
+    }
+    
+    #mapStyle {
+        font-size: 12px;
+        padding: 3px;
+    }
+}

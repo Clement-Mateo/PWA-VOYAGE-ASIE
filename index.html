@@ -17,480 +17,13 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
           crossorigin=""/>
     
-    <!-- Styles personnalisés -->
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
-        
-        #map {
-            height: 100vh;
-            width: 100%;
-            position: relative;
-        }
-        
-        .menu-btn, .add-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s;
-        }
-        
-        .menu-btn:hover, .add-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-        
-        .add-btn {
-            top: 80px;
-        }
-        
-        .hamburger {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .hamburger span {
-            width: 25px;
-            height: 3px;
-            background: #333;
-            border-radius: 2px;
-        }
-        
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .popup-overlay.active {
-            display: flex;
-        }
-        
-        .popup-menu {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            max-width: 300px;
-            width: 90%;
-            position: relative;
-        }
-        
-        .side-panel {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 400px;
-            height: 100%;
-            background: white;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            z-index: 2000;
-            transition: right 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        .side-panel.active {
-            right: 0;
-        }
-        
-        .side-panel-content {
-            padding: 30px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.3s;
-        }
-        
-        .close-btn:hover {
-            background: #f0f0f0;
-        }
-        
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .popup-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .popup-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-cancel, .btn-validate {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        
-        .btn-cancel {
-            background: #e0e0e0;
-            color: #666;
-        }
-        
-        .btn-cancel:hover {
-            background: #d0d0d0;
-        }
-        
-        .btn-validate {
-            background: #007cba;
-            color: white;
-        }
-        
-        .btn-validate:hover {
-            background: #005a87;
-        }
-        
-        .search-container {
-            margin-bottom: 20px;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        
-        .search-results {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            display: none;
-        }
-        
-        .search-results.active {
-            display: block;
-        }
-        
-        .search-result-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .search-result-item:hover {
-            background: #f5f5f5;
-        }
-        
-        .address-field {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            background: #f9f9f9;
-        }
-        
-        .duration-container {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .duration-field {
-            flex: 1;
-            text-align: center;
-        }
-        
-        .duration-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .duration-input-group {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .duration-input {
-            width: 60px;
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 16px;
-        }
-        
-        @media (max-width: 768px) {
-            .menu-btn, .add-btn {
-                top: 10px;
-                right: 10px;
-                width: 45px;
-                height: 45px;
-            }
-            
-            .add-btn {
-                top: 65px;
-            }
-            
-            .side-panel {
-                width: 100%;
-                right: -100%;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .menu-btn, .add-btn {
-                top: 5px;
-                right: 5px;
-                width: 40px;
-                height: 40px;
-            }
-            
-            .add-btn {
-                top: 55px;
-            }
-            
-            .duration-container {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-        
-        /* Styles pour l'authentification */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            margin: 0;
-            color: #333;
-        }
-        
-        .auth-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            background: #f9f9f9;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-        }
-        
-        .tab-btn.active {
-            background: #007cba;
-            color: white;
-            border-color: #007cba;
-        }
-        
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .form-group label {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .form-group input {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        .btn-primary {
-            background: #007cba;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background: #005a87;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-        
-        .auth-message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            display: none;
-        }
-        
-        .auth-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .auth-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .user-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        #userEmail {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .menu-items {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .menu-item {
-            background: #f9f9f9;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            text-align: left;
-            transition: background 0.3s;
-        }
-        
-        .menu-item:hover {
-            background: #e9ecef;
-        }
-    </style>
+    <!-- Styles globaux -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="map"></div>
     
-    <button class="menu-btn" onclick="openMenuPopup()">
+    <button class="menu-btn" onclick="MenuPopup.show()">
         <div class="hamburger">
             <span></span>
             <span></span>
@@ -498,129 +31,31 @@
         </div>
     </button>
     
-    <button class="add-btn" onclick="openAddPopup()">+</button>
+    <button class="add-btn" onclick="AddDestination.show()">+</button>
     
-    <!-- Popup Menu -->
-    <div class="popup-overlay" id="menuPopup" onclick="closePopupOutside(event, 'menuPopup')">
-        <div class="popup-menu">
-            <button class="close-btn" onclick="closePopup('menuPopup')">×</button>
-            <h3 class="popup-title">Menu</h3>
-            <div class="menu-items">
-                <button class="menu-item" onclick="openAuthModal()">
-                    🔐 Connexion / Inscription
-                </button>
-                <button class="menu-item" onclick="closePopup('menuPopup')">
-                    ❌ Fermer
-                </button>
-            </div>
-            <div id="authModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Connexion / Inscription</h2>
-                <span class="close-btn" onclick="closeAuthModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="auth-tabs">
-                    <button class="tab-btn active" onclick="switchAuthTab('login')">Connexion</button>
-                    <button class="tab-btn" onclick="switchAuthTab('register')">Inscription</button>
-                </div>
-                
-                <!-- Formulaire de connexion -->
-                <div id="loginForm" class="auth-form">
-                    <div class="form-group">
-                        <label>Email:</label>
-                        <input type="email" id="loginEmail" placeholder="votre@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Mot de passe:</label>
-                        <input type="password" id="loginPassword" placeholder="Votre mot de passe">
-                    </div>
-                    <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
-                </div>
-                
-                <!-- Formulaire d'inscription -->
-                <div id="registerForm" class="auth-form" style="display: none;">
-                    <div class="form-group">
-                        <label>Email:</label>
-                        <input type="email" id="registerEmail" placeholder="votre@email.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Mot de passe:</label>
-                        <input type="password" id="registerPassword" placeholder="Min 6 caractères">
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmer mot de passe:</label>
-                        <input type="password" id="confirmPassword" placeholder="Confirmez le mot de passe">
-                    </div>
-                    <button class="btn-primary" onclick="handleRegister()">S'inscrire</button>
-                </div>
-                
-                <div id="authMessage" class="auth-message"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="userPanel" class="user-panel" style="display: none;">
+    <!-- Conteneur pour le menu popup -->
+    <div id="menuPopupContainer"></div>
+    
+    <!-- Conteneur pour le panneau d'ajout -->
+    <div id="addPanelContainer"></div>
+    
+    <!-- Conteneur pour le panneau utilisateur -->
+    <div id="userPanel" class="user-panel">
         <div class="user-info">
-            <span id="userEmail">Utilisateur</span>
-            <button class="btn-secondary" onclick="handleLogout()">Déconnexion</button>
-        </div>
-    </div>
-
-    <div id="controls" class="controls">
-                <select id="mapStyle" onchange="changeMapStyle()">
-                    <option value="osm">OpenStreetMap</option>
-                    <option value="satellite">Satellite</option>
-                    <option value="terrain">Terrain</option>
-                    <option value="dark">Mode sombre</option>
-                </select>
-            </div>
+            <span id="userEmail"></span>
+            <button class="btn-secondary" onclick="MenuPopup.handleLogout()">Déconnexion</button>
         </div>
     </div>
     
-    <!-- Popup Add -->
-    <div class="side-panel" id="addPanel">
-        <div class="side-panel-content">
-            <div class="popup-header">
-                <h3 class="popup-title">Ajouter une destination</h3>
-                <div class="popup-actions">
-                    <button class="btn-cancel" onclick="closeSidePanel()">Annuler</button>
-                    <button class="btn-validate" onclick="validateAdd()">Valider</button>
-                </div>
-            </div>
-            
-            <div class="search-container">
-                <input type="text" class="search-input" id="searchInput" placeholder="Rechercher une adresse..." oninput="searchAddress()">
-                <div class="search-results" id="searchResults"></div>
-            </div>
-            
-            <input type="text" class="address-field" id="addressField" placeholder="Adresse sélectionnée" readonly>
-            
-            <div class="duration-container">
-                <div class="duration-field">
-                    <div class="duration-label">Jours</div>
-                    <div class="duration-input-group">
-                        <input type="number" class="duration-input" id="daysInput" value="0" min="0" onchange="validateDurationInput('days')">
-                    </div>
-                </div>
-                
-                <div class="duration-field">
-                    <div class="duration-label">Heures</div>
-                    <div class="duration-input-group">
-                        <input type="number" class="duration-input" id="hoursInput" value="0" min="0" max="23" onchange="validateDurationInput('hours')">
-                    </div>
-                </div>
-                
-                <div class="duration-field">
-                    <div class="duration-label">Minutes</div>
-                    <div class="duration-input-group">
-                        <input type="number" class="duration-input" id="minutesInput" value="0" min="0" max="59" onchange="validateDurationInput('minutes')">
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Contrôles de carte -->
+    <div class="controls">
+        <select id="mapStyle" onchange="changeMapStyle()">
+            <option value="osm">OpenStreetMap</option>
+            <option value="satellite">Satellite</option>
+            <option value="terrain">Terrain</option>
+            <option value="dark">Mode sombre</option>
+        </select>
     </div>
-    
     
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -702,14 +137,31 @@
         }
     </script>
     
-    <!-- Search Service -->
-    <script src="searchService.js"></script>
-    
     <!-- Firebase Service -->
     <script src="firebaseService.js"></script>
     
-    <!-- Itineraries Service -->
-    <script src="itinerariesService.js"></script>
+    <!-- Component Manager -->
+    <script type="module">
+        // Importer les composants
+        import { ComponentManager } from './components/ComponentManager.js';
+        import { MenuPopup } from './components/MenuPopup/MenuPopup.js';
+        import { AddDestination } from './components/AddDestination/AddDestination.js';
+        
+        // Enregistrer les composants
+        ComponentManager.register('menuPopup', MenuPopup);
+        ComponentManager.register('addDestination', AddDestination);
+        
+        // Exporter globalement
+        window.ComponentManager = ComponentManager;
+        window.MenuPopup = MenuPopup;
+        window.AddDestination = AddDestination;
+        
+        // Initialiser les composants quand le DOM est prêt
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM prêt, initialisation des composants...');
+            await ComponentManager.initAll();
+        });
+    </script>
     
     <script>
         // Variables globales
@@ -749,126 +201,17 @@
         let currentLayer = mapStyles.osm;
         currentLayer.addTo(map);
         
+        // Ajouter les contrôles de zoom
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
         
-        // Fonctions d'authentification
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-        
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-            clearAuthForms();
-        }
-        
-        function switchAuthTab(tab) {
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            
-            // Réinitialiser les classes
-            tabBtns.forEach(btn => btn.classList.remove('active'));
-            
-            if (tab === 'login') {
-                loginForm.style.display = 'flex';
-                registerForm.style.display = 'none';
-                tabBtns[0].classList.add('active');
-            } else {
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'flex';
-                tabBtns[1].classList.add('active');
-            }
-        }
-        
-        function showAuthMessage(message, type) {
-            const messageDiv = document.getElementById('authMessage');
-            messageDiv.textContent = message;
-            messageDiv.className = `auth-message ${type}`;
-            messageDiv.style.display = 'block';
-            
-            // Masquer après 3 secondes
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 3000);
-        }
-        
-        function clearAuthForms() {
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('registerEmail').value = '';
-            document.getElementById('registerPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-            document.getElementById('authMessage').style.display = 'none';
-        }
-        
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!email || !password) {
-                showAuthMessage('Veuillez remplir tous les champs', 'error');
-                return;
-            }
-            
-            try {
-                const user = await window.firebaseService.signIn(email, password);
-                if (user) {
-                    showAuthMessage('Connexion réussie!', 'success');
-                    setTimeout(() => {
-                        closeAuthModal();
-                        updateUserPanel();
-                    }, 1500);
-                } else {
-                    showAuthMessage('Erreur de connexion', 'error');
-                }
-            } catch (error) {
-                showAuthMessage('Erreur: ' + error.message, 'error');
-            }
-        }
-        
-        async function handleRegister() {
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (!email || !password || !confirmPassword) {
-                showAuthMessage('Veuillez remplir tous les champs', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showAuthMessage('Le mot de passe doit contenir au moins 6 caractères', 'error');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showAuthMessage('Les mots de passe ne correspondent pas', 'error');
-                return;
-            }
-            
-            try {
-                const user = await window.firebaseService.signUp(email, password);
-                if (user) {
-                    showAuthMessage('Compte créé avec succès!', 'success');
-                    setTimeout(() => {
-                        closeAuthModal();
-                        updateUserPanel();
-                    }, 1500);
-                } else {
-                    showAuthMessage('Erreur lors de la création du compte', 'error');
-                }
-            } catch (error) {
-                showAuthMessage('Erreur: ' + error.message, 'error');
-            }
-        }
-        
-        async function handleLogout() {
-            try {
-                await window.firebaseService.signOut();
-                updateUserPanel();
-                console.log('Déconnexion réussie');
-            } catch (error) {
-                console.error('Erreur déconnexion:', error);
-            }
+        // Fonctions de carte
+        function changeMapStyle() {
+            const style = document.getElementById('mapStyle').value;
+            map.removeLayer(currentLayer);
+            currentLayer = mapStyles[style];
+            currentLayer.addTo(map);
         }
         
         // Fonction pour afficher les destinations sur la carte
@@ -972,133 +315,19 @@
             }
         });
         
-        // Fonctions de popup
-        function openMenuPopup() {
-            document.getElementById('menuPopup').classList.add('active');
-        }
-        
-        function openAddPopup() {
-            document.getElementById('addPanel').classList.add('active');
-        }
-        
-        function closeSidePanel() {
-            document.getElementById('addPanel').classList.remove('active');
-        }
-        
+        // Fonctions de popup (compatibilité)
         function closePopup(popupId) {
-            document.getElementById(popupId).classList.remove('active');
+            if (popupId === 'menuPopup') {
+                MenuPopup.hide();
+            }
         }
         
         function closePopupOutside(event, popupId) {
             if (event.target === event.currentTarget) {
-                closePopup(popupId);
+                if (popupId === 'menuPopup') {
+                    MenuPopup.hide();
+                }
             }
-        }
-        
-        async function validateAdd() {
-            const address = document.getElementById('addressField').value;
-            const days = document.getElementById('daysInput').value;
-            const hours = document.getElementById('hoursInput').value;
-            const minutes = document.getElementById('minutesInput').value;
-            
-            if (!address) {
-                alert('Veuillez sélectionner une adresse');
-                return;
-            }
-            
-            // Vérifier si l'utilisateur est connecté
-            if (!window.firebaseService.isAuthenticated()) {
-                alert('Veuillez vous connecter pour ajouter une destination');
-                openAuthModal();
-                return;
-            }
-            
-            // Récupérer les données de l'adresse sélectionnée
-            const selectedResult = window.currentSelectedResult;
-            if (!selectedResult) {
-                alert('Erreur: aucune adresse sélectionnée');
-                return;
-            }
-            
-            // Créer un itinéraire par défaut si aucun n'existe
-            console.log('Recherche itinéraire existant...');
-            let currentItinerary = await getCurrentItinerary();
-            if (!currentItinerary) {
-                console.log('Aucun itinéraire, création du premier...');
-                const itineraryName = `Voyage du ${new Date().toLocaleDateString()}`;
-                currentItinerary = await window.firebaseService.createItinerary(itineraryName);
-                console.log('Nouvel itinéraire créé:', currentItinerary);
-            } else {
-                console.log('Itinéraire existant trouvé:', currentItinerary);
-            }
-            
-            // Ajouter la destination à Firebase
-            console.log('Préparation des données de destination...');
-            const destinationData = {
-                nom: selectedResult.display_name,
-                adresse: selectedResult.display_name,
-                location: {
-                    lat: parseFloat(selectedResult.lat),
-                    lng: parseFloat(selectedResult.lng)
-                },
-                street_number: selectedResult.address.street_number || '',
-                route: selectedResult.address.route || '',
-                locality: selectedResult.address.locality || '',
-                administrative_area_level_2: selectedResult.address.administrative_area_level_2 || '',
-                administrative_area_level_1: selectedResult.address.administrative_area_level_1 || '',
-                country: selectedResult.address.country || '',
-                postal_code: selectedResult.address.postal_code || ''
-            };
-            
-            console.log('Données destination:', destinationData);
-            console.log('Itinéraire ID:', currentItinerary.id);
-            
-            console.log('Envoi à Firebase...');
-            const addedDestination = await window.firebaseService.addDestination(
-                currentItinerary.id, 
-                destinationData
-            );
-            
-            console.log('Résultat Firebase:', addedDestination);
-            
-            if (addedDestination) {
-                console.log('Destination ajoutée avec succès:', addedDestination);
-                
-                // Afficher un message de confirmation
-                alert(`Destination ajoutée:\n${address}\nDurée: ${days}j ${hours}h ${minutes}min`);
-                
-                // Fermer le panneau et réinitialiser
-                closeSidePanel();
-                clearAddForm();
-                
-                // Rafraîchir les marqueurs sur la carte
-                displayDestinationsOnMap();
-            } else {
-                alert('Erreur lors de l\'ajout de la destination');
-            }
-        }
-        
-        async function getCurrentItinerary() {
-            const itineraries = await window.firebaseService.getItineraries();
-            return itineraries.length > 0 ? itineraries[0] : null;
-        }
-        
-        function clearAddForm() {
-            document.getElementById('addressField').value = '';
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').classList.remove('active');
-            document.getElementById('daysInput').value = '0';
-            document.getElementById('hoursInput').value = '0';
-            document.getElementById('minutesInput').value = '0';
-            window.currentSelectedResult = null;
-        }
-        
-        // Fonction de test pour voir les destinations (peut être supprimée plus tard)
-        function showDestinations() {
-            const points = window.itinerariesService.getAllPoints();
-            console.log('Destinations stockées:', points);
-            console.log('JSON export:', window.itinerariesService.exportToJSON());
-            alert(`Nombre de destinations: ${points.length}\n\nVoir la console pour les détails.`);
         }
         
         // Écouter les changements de connexion
@@ -1112,131 +341,6 @@
             console.log('Connexion perdue - API désactivée');
         });
         
-        /**
-         * Recherche d'adresse utilisant le service externe
-         * 1. Attend 3 secondes après la fin de la saisie
-         * 2. Vérifie la connexion internet
-         * 3. Utilise searchService pour les requêtes API
-         */
-        async function searchAddress() {
-            const query = document.getElementById('searchInput').value.trim();
-            const resultsDiv = document.getElementById('searchResults');
-            
-            // Réinitialiser le timeout
-            clearTimeout(searchTimeout);
-            
-            // Masquer les résultats si la requête est trop courte
-            if (query.length < 3) {
-                resultsDiv.classList.remove('active');
-                return;
-            }
-            
-            // Attendre 3 secondes après la fin de la saisie
-            searchTimeout = setTimeout(async () => {
-                if (isSearching) return; // Éviter les recherches multiples
-                isSearching = true;
-                
-                try {
-                    let allResults = [];
-                    
-                    if (isOnline) {
-                        // Mode en ligne: utiliser le service de recherche
-                        allResults = await window.searchService.search(query);
-                    } else {
-                        // Mode hors ligne: message informatif
-                        allResults = [{
-                            display_name: 'Recherche indisponible hors ligne',
-                            lat: null,
-                            lng: null,
-                            address: {},
-                            source: 'offline'
-                        }];
-                    }
-                    
-                    // Afficher les résultats
-                    displayResults(allResults);
-                    
-                } catch (error) {
-                    console.error('Erreur recherche:', error);
-                    displayResults([{
-                        display_name: 'Erreur de recherche',
-                        lat: null,
-                        lng: null,
-                        address: {},
-                        source: 'error'
-                    }]);
-                } finally {
-                    isSearching = false;
-                }
-            }, 3000); // 3 secondes d'attente
-        }
-        
-        /**
-         * Affiche les résultats de recherche dans l'interface
-         * @param {Array} results - Liste des résultats à afficher
-         */
-        function displayResults(results) {
-            const resultsDiv = document.getElementById('searchResults');
-            resultsDiv.innerHTML = '';
-            
-            if (results.length === 0) {
-                resultsDiv.innerHTML = '<div class="search-result-item">Aucun résultat trouvé</div>';
-            } else {
-                results.forEach(result => {
-                    const item = document.createElement('div');
-                    item.className = 'search-result-item';
-                    item.textContent = result.display_name;
-                    item.onclick = () => selectAddress(result, result.display_name);
-                    resultsDiv.appendChild(item);
-                });
-            }
-            
-            resultsDiv.classList.add('active');
-        }
-        
-        /**
-         * Sélectionne une adresse et met à jour l'interface
-         * @param {Object} result - Résultat sélectionné avec coordonnées
-         * @param {string} displayName - Nom affiché de l'adresse
-         */
-        function selectAddress(result, displayName) {
-            document.getElementById('addressField').value = displayName;
-            document.getElementById('searchResults').classList.remove('active');
-            document.getElementById('searchInput').value = '';
-            
-            // Stocker le résultat sélectionné pour utilisation ultérieure
-            window.currentSelectedResult = result;
-            
-            // Centrer la carte sur l'adresse sélectionnée
-            const lat = parseFloat(result.lat);
-            const lng = parseFloat(result.lng);
-            map.setView([lat, lng], 13);
-        }
-        
-        function validateDurationInput(type) {
-            const input = document.getElementById(type + 'Input');
-            let value = parseInt(input.value) || 0;
-            
-            if (type === 'hours') {
-                value = Math.max(0, Math.min(23, value));
-            } else if (type === 'minutes') {
-                value = Math.max(0, Math.min(59, value));
-            } else {
-                value = Math.max(0, value);
-            }
-            
-            input.value = value;
-        }
-        
-        
-        function changeMapStyle() {
-            const style = document.getElementById('mapStyle').value;
-            map.removeLayer(currentLayer);
-            currentLayer = mapStyles[style];
-            currentLayer.addTo(map);
-        }
-        
-        
         // Support tactile pour mobile
         if ('ontouchstart' in window) {
             map.dragging.enable();
@@ -1245,7 +349,11 @@
             map.scrollWheelZoom.enable();
         }
         
-        
+        // Exporter les fonctions globalement
+        window.displayDestinationsOnMap = displayDestinationsOnMap;
+        window.updateUserPanel = updateUserPanel;
+        window.changeMapStyle = changeMapStyle;
+        window.map = map;
     </script>
 </body>
 </html>

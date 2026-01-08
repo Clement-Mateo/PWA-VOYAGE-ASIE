@@ -1,0 +1,183 @@
+/* Styles pour le composant AddDestination */
+
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 999;
+}
+
+.side-panel.active {
+    right: 0;
+}
+
+.side-panel-content {
+    padding: 30px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.popup-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-cancel, .btn-validate {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-cancel {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.btn-cancel:hover {
+    background: #d0d0d0;
+}
+
+.btn-validate {
+    background: #007cba;
+    color: white;
+}
+
+.btn-validate:hover {
+    background: #005a87;
+}
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.search-results {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: none;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-result-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-result-item:hover {
+    background: #f5f5f5;
+}
+
+.search-error {
+    padding: 10px;
+    color: #dc3545;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+}
+
+.address-field {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    background: #f9f9f9;
+}
+
+.duration-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.duration-field {
+    flex: 1;
+    text-align: center;
+}
+
+.duration-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.duration-input-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.duration-input {
+    width: 60px;
+    padding: 8px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .side-panel {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .duration-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .side-panel-content {
+        padding: 20px;
+    }
+    
+    .popup-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-cancel, .btn-validate {
+        width: 100%;
+    }
+}

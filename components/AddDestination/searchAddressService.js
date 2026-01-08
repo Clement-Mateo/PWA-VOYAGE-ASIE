@@ -160,4 +160,4 @@ class SearchService {
 }
 
 // Export du service pour utilisation globale
-window.searchService = new SearchService();
+window.searchAddressService = new SearchService();
