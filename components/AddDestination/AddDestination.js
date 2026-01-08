@@ -111,10 +111,6 @@ export const AddDestination = {
             <div class="side-panel-content">
                 <div class="popup-header">
                     <h3 class="popup-title">Ajouter une destination</h3>
-                    <div class="popup-actions">
-                        <button class="btn-cancel" onclick="AddDestination.hide()">Annuler</button>
-                        <button class="btn-validate" onclick="AddDestination.validate()">Valider</button>
-                    </div>
                 </div>
                 
                 <div class="search-container">
@@ -145,6 +141,82 @@ export const AddDestination = {
                             <input type="number" class="duration-input" id="minutesInput" value="0" min="0" max="59" onchange="AddDestination.validateDurationInput('minutes')">
                         </div>
                     </div>
+                </div>
+                
+                <button class="btn-activity" onclick="AddDestination.showActivityPopup()">Ajouter une activité</button>
+                
+                <div class="activity-section" id="activitySection" style="display: none;">
+                    <div class="activity-checkbox">
+                        <input type="checkbox" id="showActivities" onchange="AddDestination.toggleActivityList()">
+                        <label for="showActivities">Afficher les activités ajoutées</label>
+                    </div>
+                    <div class="activity-list" id="activityList"></div>
+                </div>
+                
+                <div class="popup-footer">
+                    <button class="btn-cancel" onclick="AddDestination.hide()">Annuler</button>
+                    <button class="btn-validate" onclick="AddDestination.validate()">Valider</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popup pour ajouter une activité -->
+        <div class="activity-popup" id="activityPopup">
+            <div class="activity-popup-content">
+                <div class="activity-popup-header">
+                    <h3 class="activity-popup-title">Ajouter une activité</h3>
+                    <button class="btn-close-activity" onclick="AddDestination.hideActivityPopup()">×</button>
+                </div>
+                
+                <div class="activity-form">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-input" id="activityName" placeholder="Nom de l'activité">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label class="form-label">Heure arrivée</label>
+                            <input type="time" class="form-input" id="arrivalTime">
+                        </div>
+                        <div class="form-group half">
+                            <label class="form-label">Heure départ</label>
+                            <input type="time" class="form-input" id="departureTime">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Prix</label>
+                        <div class="price-inputs">
+                            <input type="number" class="form-input price-amount" id="priceAmount" placeholder="0">
+                            <select class="form-input price-currency" id="priceCurrency">
+                                <option value="EUR">€</option>
+                                <option value="USD">$</option>
+                                <option value="GBP">£</option>
+                                <option value="JPY">¥</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Type d'activité</label>
+                        <select class="form-input" id="activityType">
+                            <option value="">Sélectionner...</option>
+                            <option value="visite">Visite touristique</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="transport">Transport</option>
+                            <option value="sport">Sport</option>
+                            <option value="culture">Culture</option>
+                            <option value="nature">Nature</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="activity-popup-footer">
+                    <button class="btn-cancel-activity" onclick="AddDestination.hideActivityPopup()">Annuler</button>
+                    <button class="btn-validate-activity" onclick="AddDestination.saveActivity()">Valider</button>
                 </div>
             </div>
         </div>
@@ -419,5 +491,119 @@ export const AddDestination = {
     setupEventListeners() {
         // Événements gérés directement dans le template avec onclick
         console.log('AddDestination initialisé');
+    },
+
+    // Afficher le popup d'activité
+    showActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        if (popup) {
+            popup.classList.add('active');
+        }
+    },
+
+    // Cacher le popup d'activité
+    hideActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        if (popup) {
+            popup.classList.remove('active');
+            this.clearActivityForm();
+        }
+    },
+
+    // Sauvegarder une activité
+    saveActivity() {
+        const name = document.getElementById('activityName').value;
+        const arrivalTime = document.getElementById('arrivalTime').value;
+        const departureTime = document.getElementById('departureTime').value;
+        const priceAmount = document.getElementById('priceAmount').value;
+        const priceCurrency = document.getElementById('priceCurrency').value;
+        const activityType = document.getElementById('activityType').value;
+
+        if (!name.trim()) {
+            alert('Veuillez saisir un nom d\'activité');
+            return;
+        }
+
+        const activity = {
+            name: name.trim(),
+            arrivalTime: arrivalTime,
+            departureTime: departureTime,
+            price: {
+                amount: parseFloat(priceAmount) || 0,
+                currency: priceCurrency
+            },
+            type: activityType
+        };
+
+        this.activities.push(activity);
+        this.loadActivities();
+        this.hideActivityPopup();
+        
+        // Cocher automatiquement la case
+        const checkbox = document.getElementById('showActivities');
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+
+        console.log('Activité ajoutée:', activity);
+    },
+
+    // Vider le formulaire d'activité
+    clearActivityForm() {
+        document.getElementById('activityName').value = '';
+        document.getElementById('arrivalTime').value = '';
+        document.getElementById('departureTime').value = '';
+        document.getElementById('priceAmount').value = '';
+        document.getElementById('priceCurrency').value = 'EUR';
+        document.getElementById('activityType').value = '';
+    },
+
+    // Basculer l'affichage de la liste des activités
+    toggleActivityList() {
+        const checkbox = document.getElementById('showActivities');
+        const activityList = document.getElementById('activityList');
+        
+        if (checkbox && activityList) {
+            if (checkbox.checked) {
+                // Afficher les activités existantes
+                this.loadActivities();
+                activityList.style.display = 'block';
+            } else {
+                activityList.style.display = 'none';
+            }
+        }
+    },
+
+    // Charger les activités existantes
+    loadActivities() {
+        const activityList = document.getElementById('activityList');
+        if (!activityList) return;
+
+        // Pour l'instant, afficher un message par défaut
+        // TODO: Charger les activités depuis Firebase
+        if (this.activities && this.activities.length > 0) {
+            activityList.innerHTML = this.activities.map(activity => 
+                `<div class="activity-item">• ${activity}</div>`
+            ).join('');
+        } else {
+            activityList.innerHTML = '<div class="no-activities">Aucune activité ajoutée pour cette destination</div>';
+        }
+    },
+
+    // Ajouter les activités au composant
+    activities: [],
+
+    // Ajouter une activité
+    addActivity(activity) {
+        if (activity && activity.trim()) {
+            this.activities.push(activity.trim());
+            this.loadActivities();
+            
+            // Cocher automatiquement la case
+            const checkbox = document.getElementById('showActivities');
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        }
     }
 };
