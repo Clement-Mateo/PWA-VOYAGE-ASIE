@@ -224,7 +224,7 @@ export const AddDestination = {
                 resultsDiv.innerHTML = '<div class="search-error">Erreur de recherche: ' + error.message + '</div>';
                 resultsDiv.classList.add('active');
             }
-        }, 300);
+        }, 800);
     },
 
     // Afficher les résultats
