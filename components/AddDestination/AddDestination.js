@@ -13,7 +13,7 @@ const SearchService = {
         } else {
             // En développement, charger le fichier env.local (sans le point)
             try {
-                const response = await fetch('./public/env.local');
+                const response = await fetch('./env.local');
                 const text = await response.text();
                 const lines = text.split('\n');
                 
@@ -305,7 +305,7 @@ export const AddDestination = {
                 resultsDiv.innerHTML = '<div class="search-error">Erreur de recherche: ' + error.message + '</div>';
                 resultsDiv.classList.add('active');
             }
-        }, 300);
+        }, 800);
     },
 
     // Afficher les résultats
