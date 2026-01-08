@@ -13,7 +13,7 @@ const SearchService = {
         } else {
             // En développement, charger le fichier env.local (sans le point)
             try {
-                const response = await fetch('./public/env.local');
+                const response = await fetch('./env.local');
                 const text = await response.text();
                 const lines = text.split('\n');
                 
