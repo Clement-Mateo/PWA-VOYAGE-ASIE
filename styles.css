@@ -61,6 +61,15 @@ body {
     box-shadow: 0 4px 15px rgba(0, 124, 186, 0.4);
 }
 
+/* Masquer les boutons quand un popup est ouvert */
+body.has-popup .menu-btn,
+body.has-popup .add-btn {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.8) !important;
+    transition: all 0.3s ease !important;
+}
+
 /* Hamburger menu */
 .hamburger {
     width: 20px;

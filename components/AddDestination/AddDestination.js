@@ -186,6 +186,10 @@ export const AddDestination = {
             panel.classList.add('active');
             this.isVisible = true;
             console.log('Panel rendu visible');
+            
+            // Ajouter la classe pour masquer les boutons
+            document.body.classList.add('has-popup');
+            console.log('Boutons masqués');
         } else {
             console.error('Panel addDestinationPanel non trouvé dans le DOM');
         }
@@ -197,6 +201,11 @@ export const AddDestination = {
         if (panel) {
             panel.classList.remove('active');
             this.isVisible = false;
+            
+            // Retirer la classe pour réafficher les boutons
+            document.body.classList.remove('has-popup');
+            console.log('Boutons réaffichés');
+            
             this.clearForm();
         }
     },
