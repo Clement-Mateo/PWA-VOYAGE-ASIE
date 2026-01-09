@@ -235,73 +235,62 @@
             destinationMarkers = [];
             
             if (!window.firebaseService.isAuthenticated()) {
-                console.log('Utilisateur non connecté, pas de destinations à afficher');
+                console.log('🔒 Utilisateur non connecté');
                 return;
             }
             
             try {
-                console.log('Récupération des itinéraires pour affichage...');
-                const itineraries = await window.firebaseService.getItineraries();
-                console.log('Itinéraires trouvés:', itineraries);
+                const destinations = await window.firebaseService.getDirectDestinations();
                 
-                itineraries.forEach(itinerary => {
-                    console.log(`Itinéraire: ${itinerary.nom}`);
-                    console.log('Destinations dans itinéraire:', itinerary.destinations);
-                    
-                    // Les destinations sont stockées dans le champ "destinations" de l'itinéraire
-                    if (itinerary.destinations && Array.isArray(itinerary.destinations)) {
-                        itinerary.destinations.forEach((destination, index) => {
-                            console.log(`Destination ${index}:`, destination);
+                if (destinations.length > 0) {
+                    destinations.forEach((destination) => {
+                        if (typeof destination === 'object' && destination.location && destination.location.lat && destination.location.lng) {
+                            const name = destination.name || 'Destination sans nom';
                             
-                            // Vérifier si c'est un objet complet ou juste un ID
-                            if (typeof destination === 'object' && destination.location && destination.location.lat && destination.location.lng) {
-                                // Créer un marqueur pour la destination
-                                const marker = L.marker([destination.location.lat, destination.location.lng])
-                                    .addTo(map)
-                                    .bindPopup(`
-                                        <div style="min-width: 200px;">
-                                            <h4 style="margin: 0 0 5px 0; color: #333;">${destination.nom || destination.adresse}</h4>
-                                            <p style="margin: 5px 0; color: #666;">${destination.adresse}</p>
-                                            <p style="margin: 5px 0; font-size: 12px; color: #999;">Itinéraire: ${itinerary.nom}</p>
-                                        </div>
-                                    `);
-                                
-                                destinationMarkers.push(marker);
-                                console.log(`✅ Marqueur ajouté pour: ${destination.nom} à [${destination.location.lat}, ${destination.location.lng}]`);
-                            } else if (typeof destination === 'string') {
-                                console.log(`⚠️ Destination ${index} est un ID, pas un objet complet:`, destination);
-                                // TODO: Récupérer les données complètes de cette destination
-                            } else {
-                                console.log(`❌ Destination ${index} format invalide:`, destination);
+                            let popupContent = `
+                                <div style="min-width: 200px;">
+                                    <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>`;
+                            
+                            if (destination.address && destination.address.trim() !== '') {
+                                popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address}</p>`;
                             }
-                        });
-                    } else {
-                        console.log('❌ Aucune destination dans cet itinéraire ou format invalide');
-                    }
-                });
-                
-                console.log(`Total des marqueurs affichés: ${destinationMarkers.length}`);
-                
-                // Ajuster la vue pour voir tous les marqueurs
-                if (destinationMarkers.length > 0) {
+                            
+                            popupContent += `
+                                    <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
+                                </div>`;
+                            
+                            const marker = L.marker([destination.location.lat, destination.location.lng])
+                                .addTo(map)
+                                .bindPopup(popupContent);
+                            
+                            destinationMarkers.push(marker);
+                        }
+                    });
+                    
+                    console.log(`✅ ${destinationMarkers.length} marqueur(s) affiché(s)`);
+                    
+                    // Ajuster la vue pour voir tous les marqueurs
                     const group = new L.featureGroup(destinationMarkers);
                     map.fitBounds(group.getBounds().pad(0.1));
                 } else {
-                    console.log('❌ Aucun marqueur à afficher');
+                    console.log('❌ Aucune destination à afficher');
                 }
                 
             } catch (error) {
-                console.error('Erreur affichage destinations:', error);
+                console.error('❌ Erreur affichage destinations:', error);
             }
         }
         
         // Mettre à jour l'affichage des destinations après connexion
-        function updateUserPanel() {
+        async function updateUserPanel() {
             const userPanel = document.getElementById('userPanel');
             
             if (window.firebaseService.isAuthenticated()) {
                 const user = window.firebaseService.user;
                 userPanel.style.display = 'flex';
+                
+                // Vérifier et créer l'itinéraire si nécessaire
+                await window.firebaseService.ensureUserItinerary();
                 
                 // Afficher les destinations sur la carte après connexion
                 displayDestinationsOnMap();
@@ -316,20 +305,23 @@
         }
         
         // Vérifier l'état de connexion au chargement
-        if (window.firebase && window.firebase.auth && window.firebase.onAuthStateChanged) {
-            window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
-                if (user) {
-                    window.firebaseService.user = user;
-                    updateUserPanel();
-                    console.log('Utilisateur connecté:', user.email);
-                } else {
-                    window.firebaseService.user = null;
-                    updateUserPanel();
-                    console.log('Utilisateur déconnecté');
-                }
-            });
-        } else {
-            console.error('Firebase Auth non disponible pour onAuthStateChanged');
+        window.firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                window.firebaseService.user = user;
+                console.log('Utilisateur connecté:', user.email);
+                updateUserPanel();
+            } else {
+                window.firebaseService.user = null;
+                console.log('Utilisateur déconnecté');
+                updateUserPanel();
+            }
+        });
+        
+        // Fonctions de popup (compatibilité)
+        function closePopup(popupId) {
+            if (popupId === 'menuPopup') {
+                MenuPopup.hide();
+            }
         }
         
         // Fonction de déconnexion

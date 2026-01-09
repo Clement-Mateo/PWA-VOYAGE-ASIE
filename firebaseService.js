@@ -186,7 +186,7 @@ class FirebaseService {
 }
 
     /**
-     * Récupérer tous les itinéraires de l'utilisateur
+     * Récupérer tous les itinéraires de l'utilisateur connecté
      */
     async getItineraries() {
         if (!this.user) return [];
@@ -195,13 +195,16 @@ class FirebaseService {
             const q = window.firebase.query(
                 window.firebase.collection(this.db, 'itineraries'),
                 window.firebase.where('userId', '==', this.user.uid),
-                window.firebase.orderBy('updatedAt', 'desc')
+                window.firebase.orderBy('createdAt')
             );
-            const snapshot = await window.firebase.getDocs(q);
             
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const snapshot = await window.firebase.getDocs(q);
+            const itineraries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            console.log(`✅ Récupération itinéraires: ${itineraries.length} trouvé(s)`);
+            return itineraries;
         } catch (error) {
-            console.error('Erreur récupération itinéraires:', error);
+            console.error('❌ Erreur récupération itinéraires:', error.message);
             return [];
         }
     }
@@ -225,6 +228,118 @@ class FirebaseService {
         } catch (error) {
             console.error('Erreur récupération destinations:', error);
             return [];
+        }
+    }
+
+    /**
+     * Récupérer toutes les destinations de l'utilisateur connecté
+     */
+    async getDirectDestinations() {
+        if (!this.user) return [];
+        
+        try {
+            const q = window.firebase.query(
+                window.firebase.collection(this.db, 'destinations'),
+                window.firebase.where('userId', '==', this.user.uid),
+                window.firebase.orderBy('createdAt')
+            );
+            const snapshot = await window.firebase.getDocs(q);
+            
+            const destinations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log(`✅ Destinations récupérées: ${destinations.length}`);
+            
+            return destinations;
+        } catch (error) {
+            console.error('❌ Erreur récupération destinations:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Vérifier et créer un itinéraire si nécessaire
+     */
+    async ensureUserItinerary() {
+        if (!this.user) {
+            throw new Error('Utilisateur non connecté');
+        }
+        
+        try {
+            const itineraries = await this.getItineraries();
+            
+            if (itineraries.length === 0) {
+                console.log('🆕 Aucun itinéraire trouvé, création...');
+                const newItinerary = await this.createItineraryForUser(this.user.uid);
+                console.log('✅ Itinéraire créé:', newItinerary.id);
+                return newItinerary;
+            } else {
+                console.log('✅ Itinéraire existant réutilisé:', itineraries[0].id);
+                return itineraries[0];
+            }
+        } catch (error) {
+            console.error('❌ Erreur gestion itinéraire:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Créer un itinéraire pour un nouvel utilisateur
+     */
+    async createItineraryForUser(userId) {
+        try {
+            const newItinerary = {
+                nom: 'Mon itinéraire',
+                userId: userId,
+                createdAt: window.firebase.serverTimestamp()
+            };
+            
+            const docRef = await window.firebase.addDoc(
+                window.firebase.collection(this.db, 'itineraries'),
+                newItinerary
+            );
+            
+            const createdItinerary = { id: docRef.id, ...newItinerary };
+            console.log('✅ Itinéraire créé en BDD:', createdItinerary.id);
+            
+            return createdItinerary;
+        } catch (error) {
+            console.error('❌ Erreur création itinéraire:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Ajouter une destination à l'itinéraire actuel
+     */
+    async addDestinationToItinerary(destination) {
+        if (!this.user) {
+            throw new Error('Utilisateur non connecté');
+        }
+        
+        try {
+            const itineraries = await this.getItineraries();
+            
+            if (itineraries.length > 0) {
+                const currentItinerary = itineraries[0];
+                
+                const destinationWithItineraryId = {
+                    ...destination,
+                    itineraryId: currentItinerary.id,
+                    userId: this.user.uid
+                };
+                
+                await window.firebase.addDoc(
+                    window.firebase.collection(this.db, 'destinations'),
+                    destinationWithItineraryId
+                );
+                
+                console.log('✅ Destination ajoutée à Firebase:', destination.name);
+                return currentItinerary.id;
+            } else {
+                throw new Error('Aucun itinéraire trouvé');
+            }
+        } catch (error) {
+            console.error('❌ Erreur ajout destination:', error.message);
+            throw error;
         }
     }
 
