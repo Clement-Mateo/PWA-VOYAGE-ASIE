@@ -99,6 +99,18 @@ cssLink.rel = 'stylesheet';
 cssLink.href = './components/AddDestination/AddDestination.css';
 document.head.appendChild(cssLink);
 
+// Importer dynamiquement le composant AddActivity
+const script = document.createElement('script');
+script.src = './components/AddDestination/addActivity/AddActivity.js';
+script.onload = function() {
+    console.log('AddActivity.js chargé');
+    console.log('AddActivity disponible:', typeof window.AddActivity !== 'undefined');
+};
+script.onerror = function() {
+    console.error('Erreur lors du chargement de AddActivity.js');
+};
+document.head.appendChild(script);
+
 export const AddDestination = {
     // État du composant
     isVisible: false,
@@ -111,10 +123,6 @@ export const AddDestination = {
             <div class="side-panel-content">
                 <div class="popup-header">
                     <h3 class="popup-title">Ajouter une destination</h3>
-                    <div class="popup-actions">
-                        <button class="btn-cancel" onclick="AddDestination.hide()">Annuler</button>
-                        <button class="btn-validate" onclick="AddDestination.validate()">Valider</button>
-                    </div>
                 </div>
                 
                 <div class="search-container">
@@ -145,6 +153,93 @@ export const AddDestination = {
                             <input type="number" class="duration-input" id="minutesInput" value="0" min="0" max="59" onchange="AddDestination.validateDurationInput('minutes')">
                         </div>
                     </div>
+                </div>
+                
+                <button class="btn-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.showActivityPopup(); } else { console.error('AddActivity non disponible'); alert('AddActivity en cours de chargement...'); }">Ajouter une activité</button>
+                
+                <div class="activity-section" id="activitySection" style="display: none;">
+                    <div class="activity-checkbox">
+                        <input type="checkbox" id="showActivities" onchange="if (typeof AddActivity !== 'undefined') { AddActivity.toggleActivityList(); } else { console.error('AddActivity non disponible'); }">
+                        <label for="showActivities">Afficher les activités ajoutées</label>
+                    </div>
+                    <div class="activity-list" id="activityList"></div>
+                </div>
+                
+                <div class="popup-footer">
+                    <button class="btn-cancel" onclick="AddDestination.hide()">Annuler</button>
+                    <button class="btn-validate" onclick="AddDestination.validate()">Valider</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popup pour ajouter une activité -->
+        <div class="activity-popup" id="activityPopup">
+            <div class="activity-popup-content">
+                <div class="activity-popup-header">
+                    <h3 class="activity-popup-title">Ajouter une activité</h3>
+                    <button class="btn-close-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.hideActivityPopup(); } else { console.error('AddActivity non disponible'); }">×</button>
+                </div>
+                
+                <div class="activity-form">
+                    <div class="form-group">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-input" id="activityName" placeholder="Nom de l'activité">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label class="form-label">Heure arrivée</label>
+                            <input type="time" class="form-input" id="arrivalTime">
+                        </div>
+                        <div class="form-group half">
+                            <label class="form-label">Heure départ</label>
+                            <input type="time" class="form-input" id="departureTime">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Prix</label>
+                        <div class="price-inputs">
+                            <div class="price-amount">
+                                <input type="number" class="form-input" id="priceAmount1" placeholder="0">
+                                <select class="form-input" id="priceCurrency1">
+                                    <option value="EUR">€</option>
+                                    <option value="USD">$</option>
+                                    <option value="GBP">£</option>
+                                    <option value="JPY">¥</option>
+                                </select>
+                            </div>
+                            <div class="price-currency">
+                                <input type="number" class="form-input" id="priceAmount2" placeholder="0">
+                                <select class="form-input" id="priceCurrency2">
+                                    <option value="EUR">€</option>
+                                    <option value="USD">$</option>
+                                    <option value="GBP">£</option>
+                                    <option value="JPY">¥</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Type d'activité</label>
+                        <select class="form-input" id="activityType">
+                            <option value="">Sélectionner...</option>
+                            <option value="visite">Visite touristique</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="transport">Transport</option>
+                            <option value="sport">Sport</option>
+                            <option value="culture">Culture</option>
+                            <option value="nature">Nature</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="activity-popup-footer">
+                    <button class="btn-cancel-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.hideActivityPopup(); } else { console.error('AddActivity non disponible'); }">Annuler</button>
+                    <button class="btn-validate-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.saveActivity(); } else { console.error('AddActivity non disponible'); }">Valider</button>
                 </div>
             </div>
         </div>
@@ -186,6 +281,10 @@ export const AddDestination = {
             panel.classList.add('active');
             this.isVisible = true;
             console.log('Panel rendu visible');
+            
+            // Ajouter la classe pour masquer les boutons
+            document.body.classList.add('has-popup');
+            console.log('Boutons masqués');
         } else {
             console.error('Panel addDestinationPanel non trouvé dans le DOM');
         }
@@ -197,6 +296,11 @@ export const AddDestination = {
         if (panel) {
             panel.classList.remove('active');
             this.isVisible = false;
+            
+            // Retirer la classe pour réafficher les boutons
+            document.body.classList.remove('has-popup');
+            console.log('Boutons réaffichés');
+            
             this.clearForm();
         }
     },
@@ -400,15 +504,28 @@ export const AddDestination = {
         document.getElementById('minutesInput').value = '0';
         this.currentSelectedResult = null;
         
+        // Supprimer le marqueur temporaire
         if (this.tempMarker && window.map) {
             window.map.removeLayer(this.tempMarker);
             this.tempMarker = null;
         }
     },
 
-    // Configuration des écouteurs d'événements
-    setupEventListeners() {
-        // Événements gérés directement dans le template avec onclick
-        console.log('AddDestination initialisé');
+    // Valider les entrées de durée
+    validateDurationInput(type) {
+        const input = document.getElementById(type + 'Input');
+        const value = parseInt(input.value);
+        
+        if (type === 'days' && value > 365) {
+            input.value = 365;
+        } else if (type === 'hours' && value > 23) {
+            input.value = 23;
+        } else if (type === 'minutes' && value > 59) {
+            input.value = 59;
+        }
+        
+        if (value < 0) {
+            input.value = 0;
+        }
     }
 };
