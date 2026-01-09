@@ -99,6 +99,18 @@ cssLink.rel = 'stylesheet';
 cssLink.href = './components/AddDestination/AddDestination.css';
 document.head.appendChild(cssLink);
 
+// Importer dynamiquement le composant AddActivity
+const script = document.createElement('script');
+script.src = './components/AddDestination/addActivity/AddActivity.js';
+script.onload = function() {
+    console.log('AddActivity.js chargé');
+    console.log('AddActivity disponible:', typeof window.AddActivity !== 'undefined');
+};
+script.onerror = function() {
+    console.error('Erreur lors du chargement de AddActivity.js');
+};
+document.head.appendChild(script);
+
 export const AddDestination = {
     // État du composant
     isVisible: false,
@@ -143,11 +155,11 @@ export const AddDestination = {
                     </div>
                 </div>
                 
-                <button class="btn-activity" onclick="AddDestination.showActivityPopup()">Ajouter une activité</button>
+                <button class="btn-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.showActivityPopup(); } else { console.error('AddActivity non disponible'); alert('AddActivity en cours de chargement...'); }">Ajouter une activité</button>
                 
                 <div class="activity-section" id="activitySection" style="display: none;">
                     <div class="activity-checkbox">
-                        <input type="checkbox" id="showActivities" onchange="AddDestination.toggleActivityList()">
+                        <input type="checkbox" id="showActivities" onchange="if (typeof AddActivity !== 'undefined') { AddActivity.toggleActivityList(); } else { console.error('AddActivity non disponible'); }">
                         <label for="showActivities">Afficher les activités ajoutées</label>
                     </div>
                     <div class="activity-list" id="activityList"></div>
@@ -165,7 +177,7 @@ export const AddDestination = {
             <div class="activity-popup-content">
                 <div class="activity-popup-header">
                     <h3 class="activity-popup-title">Ajouter une activité</h3>
-                    <button class="btn-close-activity" onclick="AddDestination.hideActivityPopup()">×</button>
+                    <button class="btn-close-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.hideActivityPopup(); } else { console.error('AddActivity non disponible'); }">×</button>
                 </div>
                 
                 <div class="activity-form">
@@ -188,13 +200,24 @@ export const AddDestination = {
                     <div class="form-group">
                         <label class="form-label">Prix</label>
                         <div class="price-inputs">
-                            <input type="number" class="form-input price-amount" id="priceAmount" placeholder="0">
-                            <select class="form-input price-currency" id="priceCurrency">
-                                <option value="EUR">€</option>
-                                <option value="USD">$</option>
-                                <option value="GBP">£</option>
-                                <option value="JPY">¥</option>
-                            </select>
+                            <div class="price-amount">
+                                <input type="number" class="form-input" id="priceAmount1" placeholder="0">
+                                <select class="form-input" id="priceCurrency1">
+                                    <option value="EUR">€</option>
+                                    <option value="USD">$</option>
+                                    <option value="GBP">£</option>
+                                    <option value="JPY">¥</option>
+                                </select>
+                            </div>
+                            <div class="price-currency">
+                                <input type="number" class="form-input" id="priceAmount2" placeholder="0">
+                                <select class="form-input" id="priceCurrency2">
+                                    <option value="EUR">€</option>
+                                    <option value="USD">$</option>
+                                    <option value="GBP">£</option>
+                                    <option value="JPY">¥</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
@@ -215,8 +238,8 @@ export const AddDestination = {
                 </div>
                 
                 <div class="activity-popup-footer">
-                    <button class="btn-cancel-activity" onclick="AddDestination.hideActivityPopup()">Annuler</button>
-                    <button class="btn-validate-activity" onclick="AddDestination.saveActivity()">Valider</button>
+                    <button class="btn-cancel-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.hideActivityPopup(); } else { console.error('AddActivity non disponible'); }">Annuler</button>
+                    <button class="btn-validate-activity" onclick="if (typeof AddActivity !== 'undefined') { AddActivity.saveActivity(); } else { console.error('AddActivity non disponible'); }">Valider</button>
                 </div>
             </div>
         </div>
@@ -481,129 +504,28 @@ export const AddDestination = {
         document.getElementById('minutesInput').value = '0';
         this.currentSelectedResult = null;
         
+        // Supprimer le marqueur temporaire
         if (this.tempMarker && window.map) {
             window.map.removeLayer(this.tempMarker);
             this.tempMarker = null;
         }
     },
 
-    // Configuration des écouteurs d'événements
-    setupEventListeners() {
-        // Événements gérés directement dans le template avec onclick
-        console.log('AddDestination initialisé');
-    },
-
-    // Afficher le popup d'activité
-    showActivityPopup() {
-        const popup = document.getElementById('activityPopup');
-        if (popup) {
-            popup.classList.add('active');
-        }
-    },
-
-    // Cacher le popup d'activité
-    hideActivityPopup() {
-        const popup = document.getElementById('activityPopup');
-        if (popup) {
-            popup.classList.remove('active');
-            this.clearActivityForm();
-        }
-    },
-
-    // Sauvegarder une activité
-    saveActivity() {
-        const name = document.getElementById('activityName').value;
-        const arrivalTime = document.getElementById('arrivalTime').value;
-        const departureTime = document.getElementById('departureTime').value;
-        const priceAmount = document.getElementById('priceAmount').value;
-        const priceCurrency = document.getElementById('priceCurrency').value;
-        const activityType = document.getElementById('activityType').value;
-
-        if (!name.trim()) {
-            alert('Veuillez saisir un nom d\'activité');
-            return;
-        }
-
-        const activity = {
-            name: name.trim(),
-            arrivalTime: arrivalTime,
-            departureTime: departureTime,
-            price: {
-                amount: parseFloat(priceAmount) || 0,
-                currency: priceCurrency
-            },
-            type: activityType
-        };
-
-        this.activities.push(activity);
-        this.loadActivities();
-        this.hideActivityPopup();
+    // Valider les entrées de durée
+    validateDurationInput(type) {
+        const input = document.getElementById(type + 'Input');
+        const value = parseInt(input.value);
         
-        // Cocher automatiquement la case
-        const checkbox = document.getElementById('showActivities');
-        if (checkbox) {
-            checkbox.checked = true;
+        if (type === 'days' && value > 365) {
+            input.value = 365;
+        } else if (type === 'hours' && value > 23) {
+            input.value = 23;
+        } else if (type === 'minutes' && value > 59) {
+            input.value = 59;
         }
-
-        console.log('Activité ajoutée:', activity);
-    },
-
-    // Vider le formulaire d'activité
-    clearActivityForm() {
-        document.getElementById('activityName').value = '';
-        document.getElementById('arrivalTime').value = '';
-        document.getElementById('departureTime').value = '';
-        document.getElementById('priceAmount').value = '';
-        document.getElementById('priceCurrency').value = 'EUR';
-        document.getElementById('activityType').value = '';
-    },
-
-    // Basculer l'affichage de la liste des activités
-    toggleActivityList() {
-        const checkbox = document.getElementById('showActivities');
-        const activityList = document.getElementById('activityList');
         
-        if (checkbox && activityList) {
-            if (checkbox.checked) {
-                // Afficher les activités existantes
-                this.loadActivities();
-                activityList.style.display = 'block';
-            } else {
-                activityList.style.display = 'none';
-            }
-        }
-    },
-
-    // Charger les activités existantes
-    loadActivities() {
-        const activityList = document.getElementById('activityList');
-        if (!activityList) return;
-
-        // Pour l'instant, afficher un message par défaut
-        // TODO: Charger les activités depuis Firebase
-        if (this.activities && this.activities.length > 0) {
-            activityList.innerHTML = this.activities.map(activity => 
-                `<div class="activity-item">• ${activity}</div>`
-            ).join('');
-        } else {
-            activityList.innerHTML = '<div class="no-activities">Aucune activité ajoutée pour cette destination</div>';
-        }
-    },
-
-    // Ajouter les activités au composant
-    activities: [],
-
-    // Ajouter une activité
-    addActivity(activity) {
-        if (activity && activity.trim()) {
-            this.activities.push(activity.trim());
-            this.loadActivities();
-            
-            // Cocher automatiquement la case
-            const checkbox = document.getElementById('showActivities');
-            if (checkbox) {
-                checkbox.checked = true;
-            }
+        if (value < 0) {
+            input.value = 0;
         }
     }
 };

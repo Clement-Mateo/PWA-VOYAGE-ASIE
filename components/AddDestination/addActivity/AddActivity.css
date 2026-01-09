@@ -1,0 +1,265 @@
+/* Styles pour les activités */
+
+/* Section des activités */
+.activity-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.activity-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.activity-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.activity-checkbox label {
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    user-select: none;
+}
+
+/* Liste des activités */
+.activity-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.activity-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 14px;
+    color: #555;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.no-activities {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Bouton pour ajouter une activité */
+.btn-activity {
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.3s;
+    margin-bottom: 15px;
+}
+
+.btn-activity:hover {
+    background: #218838;
+}
+
+/* Popup d'activité */
+.activity-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-popup.active {
+    display: flex;
+}
+
+.activity-popup-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.activity-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.activity-popup-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.btn-close-activity {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.btn-close-activity:hover {
+    background: #f0f0f0;
+}
+
+/* Formulaire d'activité */
+.activity-form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Styles pour les champs de prix */
+.price-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.price-amount,
+.price-currency {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.price-amount input,
+.price-currency input {
+    margin-bottom: 5px;
+}
+
+.price-amount select,
+.price-currency select {
+    margin-top: 5px;
+}
+
+/* Footer du popup d'activité */
+.activity-popup-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    background: #f9f9f9;
+}
+
+.btn-cancel-activity,
+.btn-validate-activity {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-cancel-activity {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel-activity:hover {
+    background: #5a6268;
+}
+
+.btn-validate-activity {
+    background: #007cba;
+    color: white;
+}
+
+.btn-validate-activity:hover {
+    background: #005a87;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .activity-popup-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .price-inputs {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .activity-popup-footer {
+        flex-direction: column;
+    }
+    
+    .btn-cancel-activity,
+    .btn-validate-activity {
+        width: 100%;
+    }
+}
