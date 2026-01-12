@@ -12,6 +12,29 @@ class FirebaseService {
     }
 
     /**
+     * Obtenir les fonctions Firebase nécessaires
+     */
+    getFirebaseFunctions() {
+        if (!window.firebase) {
+            throw new Error('Firebase non disponible');
+        }
+        
+        console.log('🔍 Disponibilité des fonctions Firebase:');
+        console.log('- deleteDoc:', typeof window.firebase.deleteDoc);
+        console.log('- doc:', typeof window.firebase.doc);
+        console.log('- getDoc:', typeof window.firebase.getDoc);
+        console.log('- updateDoc:', typeof window.firebase.updateDoc);
+        
+        return {
+            doc: window.firebase.doc,
+            getDoc: window.firebase.getDoc,
+            updateDoc: window.firebase.updateDoc,
+            deleteDoc: window.firebase.deleteDoc,
+            serverTimestamp: window.firebase.serverTimestamp
+        };
+    }
+
+    /**
      * Initialise Firebase avec votre configuration
      */
     async initialize() {
@@ -238,19 +261,32 @@ class FirebaseService {
         if (!this.user) return [];
         
         try {
+            console.log('🔍 Recherche destinations pour userId:', this.user.uid);
+            
+            // Requête filtrée SANS orderBy (car orderBy nécessite un index)
             const q = window.firebase.query(
                 window.firebase.collection(this.db, 'destinations'),
-                window.firebase.where('userId', '==', this.user.uid),
-                window.firebase.orderBy('createdAt')
+                window.firebase.where('userId', '==', this.user.uid)
             );
+            
+            console.log('🔍 Requête Firestore créée');
+            
             const snapshot = await window.firebase.getDocs(q);
             
-            const destinations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log(`✅ Destinations récupérées: ${destinations.length}`);
+            console.log('🔍 Snapshot obtenu, nombre de documents:', snapshot.docs.length);
+            
+            const destinations = snapshot.docs.map(doc => ({ 
+                firestoreId: doc.id, 
+                ...doc.data()
+            }));
+            
+            console.log('✅ Destinations récupérées:', destinations.length);
+            console.log('🔍 Détails des destinations:', destinations);
             
             return destinations;
         } catch (error) {
             console.error('❌ Erreur récupération destinations:', error.message);
+            console.error('❌ Code erreur:', error.code);
             return [];
         }
     }
@@ -327,18 +363,69 @@ class FirebaseService {
                     userId: this.user.uid
                 };
                 
-                await window.firebase.addDoc(
+                const docRef = await window.firebase.addDoc(
                     window.firebase.collection(this.db, 'destinations'),
                     destinationWithItineraryId
                 );
                 
-                console.log('✅ Destination ajoutée à Firebase:', destination.name);
+                // Stocker l'ID Firestore dans l'objet destination
+                const destinationWithId = {
+                    ...destinationWithItineraryId,
+                    firestoreId: docRef.id
+                };
+                
+                console.log('✅ Destination ajoutée à Firebase avec ID:', docRef.id);
+                console.log('✅ Destination complète:', destinationWithId);
                 return currentItinerary.id;
             } else {
                 throw new Error('Aucun itinéraire trouvé');
             }
         } catch (error) {
             console.error('❌ Erreur ajout destination:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Mettre à jour une destination existante
+     */
+    async updateDestination(destination) {
+        if (!this.user) {
+            throw new Error('Utilisateur non connecté');
+        }
+        
+        try {
+            // Chercher la destination dans la collection destinations
+            const q = window.firebase.query(
+                window.firebase.collection(this.db, 'destinations'),
+                window.firebase.where('userId', '==', this.user.uid)
+            );
+            const snapshot = await window.firebase.getDocs(q);
+            
+            // Trouver la destination correspondante par son ID ou nom
+            let destinationDoc = null;
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                if (data.id === destination.id || data.name === destination.name) {
+                    destinationDoc = doc;
+                }
+            });
+            
+            if (destinationDoc) {
+                // Mettre à jour le document
+                await window.firebase.updateDoc(destinationDoc.ref, {
+                    name: destination.name,
+                    address: destination.address,
+                    duration: destination.duration,
+                    updatedAt: new Date()
+                });
+                console.log('✅ Destination mise à jour dans Firebase:', destination.name);
+            } else {
+                console.error('❌ Destination non trouvée pour mise à jour');
+                throw new Error('Destination non trouvée');
+            }
+        } catch (error) {
+            console.error('❌ Erreur mise à jour destination:', error.message);
             throw error;
         }
     }
@@ -355,6 +442,38 @@ class FirebaseService {
      */
     getUserId() {
         return this.user ? this.user.uid : null;
+    }
+
+    /**
+     * Supprimer une destination directement par son ID (méthode alternative)
+     */
+    async deleteDestinationById(destinationId) {
+        if (!this.isAuthenticated()) {
+            throw new Error('Utilisateur non authentifié');
+        }
+
+        if (!destinationId) {
+            throw new Error('ID de destination invalide');
+        }
+
+        try {
+            const { doc, deleteDoc } = this.getFirebaseFunctions();
+            const userId = this.getUserId();
+            
+            console.log('🔧 Suppression directe par ID:', destinationId);
+            console.log('🔍 UserId de l\'utilisateur:', userId);
+            
+            // Supprimer directement le document de destination
+            const destinationRef = doc(this.db, 'destinations', destinationId);
+            await deleteDoc(destinationRef);
+
+            console.log('✅ Destination supprimée directement par ID:', destinationId);
+            return true;
+
+        } catch (error) {
+            console.error('❌ Erreur suppression directe destination:', error);
+            throw error;
+        }
     }
 }
 
