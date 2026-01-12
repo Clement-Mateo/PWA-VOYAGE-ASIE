@@ -191,8 +191,13 @@
             zoom: 2,
             minZoom: 2,
             maxZoom: 18,
-            worldCopyJump: true,
-            zoomControl: false
+            worldCopyJump: false, // Désactiver la coupure visible
+            continuousWorld: true, // Monde continu fluide
+            zoomControl: false,
+            maxBounds: [[-85, -Infinity], [85, Infinity]], // Bloquer vertical mais horizontal infini
+            maxBoundsViscosity: 0.0, // Fluidité maximale
+            inertia: true, // Scroll fluide
+            bounceAtZoomLimits: false // Pas de rebond
         });
         
         // Différents styles de cartes
@@ -366,6 +371,61 @@
             map.doubleClickZoom.enable();
             map.scrollWheelZoom.enable();
         }
+        
+        // Calculer les limites en fonction de la taille de l'écran
+        function getScreenBounds() {
+            const bounds = map.getBounds();
+            const screenLatRange = bounds.getNorth() - bounds.getSouth();
+            const centerLat = map.getCenter().lat;
+            
+            // Calculer les limites pour que la carte remplisse exactement l'écran
+            const maxNorth = centerLat + (screenLatRange / 2);
+            const maxSouth = centerLat - (screenLatRange / 2);
+            
+            return {
+                north: Math.min(maxNorth, 85),  // Ne pas dépasser 85°N
+                south: Math.max(maxSouth, -85)  // Ne pas dépasser 85°S
+            };
+        }
+        
+        // Scroll horizontal fluide sans démarcation
+        map.on('dragend', function() {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            const bounds = getScreenBounds();
+            
+            // Bloquer seulement vertical selon la taille de l'écran
+            if (center.lat < bounds.south) center.lat = bounds.south;
+            if (center.lat > bounds.north) center.lat = bounds.north;
+            
+            // Horizontal TOTALEMENT libre - pas de correction
+            // continuousWorld: true gère le wrap automatiquement
+            
+            // Remettre seulement si on sort verticalement
+            map.setView([center.lat, center.lng], zoom, { animate: false });
+        });
+        
+        // Scroll fluide pendant le drag
+        map.on('drag', function() {
+            const center = map.getCenter();
+            const bounds = getScreenBounds();
+            
+            // Bloquer seulement vertical pendant le drag
+            if (center.lat < bounds.south || center.lat > bounds.north) {
+                // Corriger seulement vertical
+                const correctedLat = Math.max(bounds.south, Math.min(bounds.north, center.lat));
+                map.setView([correctedLat, center.lng], map.getZoom(), { animate: false });
+            }
+        });
+        
+        // Contrôler le zoom
+        map.on('zoomend', function() {
+            const zoom = map.getZoom();
+            if (zoom < 2) map.setZoom(2);
+            if (zoom > 18) map.setZoom(18);
+        });
+        
+        console.log('🌍 Carte configurée : horizontal fluide sans démarcation, vertical adapté');
         
         // Exporter les fonctions globalement
         window.displayDestinationsOnMap = displayDestinationsOnMap;
