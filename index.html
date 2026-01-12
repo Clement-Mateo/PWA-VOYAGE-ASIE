@@ -319,20 +319,17 @@
         
         // Fonctions de popup (compatibilité)
         function closePopup(popupId) {
-            if (popupId === 'menuPopup') {
-                MenuPopup.hide();
+            if (popupId === 'authPopup') {
+                window.AuthPopup.hide();
             }
         }
         
         // Fonction de déconnexion
         function handleLogout() {
             console.log('Tentative de déconnexion...');
-            console.log('Firebase disponible:', !!window.firebase);
-            console.log('Firebase.auth disponible:', !!window.firebase?.auth);
-            console.log('signOut disponible:', !!window.firebase?.signOut);
             
-            if (window.firebase && window.firebase.auth && window.firebase.signOut) {
-                window.firebase.signOut(window.firebase.auth)
+            if (window.firebaseService) {
+                window.firebaseService.signOut()
                     .then(() => {
                         console.log('Déconnexion réussie');
                         updateUserPanel();
@@ -347,7 +344,7 @@
                         console.error('Erreur de déconnexion:', error);
                     });
             } else {
-                console.error('Firebase non disponible pour la déconnexion');
+                console.error('FirebaseService non disponible pour la déconnexion');
             }
         }
         

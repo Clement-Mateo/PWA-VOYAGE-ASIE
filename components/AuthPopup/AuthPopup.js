@@ -167,9 +167,6 @@ const AuthPopup = {
         const password = document.getElementById('loginPassword').value;
         
         console.log('Tentative de connexion avec:', email);
-        console.log('Firebase disponible:', !!window.firebase);
-        console.log('Firebase.auth disponible:', !!window.firebase?.auth);
-        console.log('signInWithEmailAndPassword disponible:', !!window.firebase?.signInWithEmailAndPassword);
         
         if (!email || !password) {
             alert('Veuillez remplir tous les champs');
@@ -177,27 +174,29 @@ const AuthPopup = {
         }
         
         try {
-            // Utiliser Firebase pour la connexion
-            if (window.firebase && window.firebase.auth && window.firebase.signInWithEmailAndPassword) {
-                console.log('Appel de signInWithEmailAndPassword...');
-                const userCredential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, email, password);
-                console.log('Connexion réussie:', userCredential.user);
+            // Utiliser firebaseService pour la connexion
+            if (window.firebaseService) {
+                console.log('Appel de firebaseService.signIn...');
+                const user = await window.firebaseService.signIn(email, password);
                 
-                // Fermer le popup immédiatement
-                console.log('Fermeture du popup...');
-                this.hide();
-                
-                // Mettre à jour l'interface utilisateur
-                this.updateUserInterface(email);
-                
-                // Afficher un message de succès plus court
-                console.log('Connexion terminée avec succès');
+                if (user) {
+                    console.log('Connexion réussie:', user.email);
+                    
+                    // Fermer le popup immédiatement
+                    console.log('Fermeture du popup...');
+                    this.hide();
+                    
+                    // Mettre à jour l'interface utilisateur
+                    window.updateUserPanel();
+                    
+                    // Afficher un message de succès
+                    console.log('Connexion terminée avec succès');
+                } else {
+                    console.error('Échec de connexion');
+                    alert('Échec de connexion');
+                }
             } else {
-                console.error('Firebase non disponible:', {
-                    firebase: !!window.firebase,
-                    auth: !!window.firebase?.auth,
-                    signIn: !!window.firebase?.signInWithEmailAndPassword
-                });
+                console.error('FirebaseService non disponible');
                 alert('Service Firebase non disponible');
             }
             
@@ -231,23 +230,29 @@ const AuthPopup = {
         }
         
         try {
-            // Utiliser Firebase pour l'inscription
-            if (window.firebase && window.firebase.auth && window.firebase.createUserWithEmailAndPassword) {
-                console.log('Appel de createUserWithEmailAndPassword...');
-                const userCredential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, email, password);
-                console.log('Inscription réussie:', userCredential.user);
+            // Utiliser firebaseService pour l'inscription
+            if (window.firebaseService) {
+                console.log('Appel de firebaseService.signUp...');
+                const user = await window.firebaseService.signUp(email, password);
                 
-                // Fermer le popup immédiatement
-                console.log('Fermeture du popup après inscription...');
-                this.hide();
-                
-                // Mettre à jour l'interface utilisateur
-                this.updateUserInterface(email);
-                
-                // Afficher un message de succès plus court
-                console.log('Inscription terminée avec succès');
+                if (user) {
+                    console.log('Inscription réussie:', user.email);
+                    
+                    // Fermer le popup immédiatement
+                    console.log('Fermeture du popup après inscription...');
+                    this.hide();
+                    
+                    // Mettre à jour l'interface utilisateur
+                    window.updateUserPanel();
+                    
+                    // Afficher un message de succès
+                    console.log('Inscription terminée avec succès');
+                } else {
+                    console.error('Échec de l\'inscription');
+                    alert('Échec de l\'inscription');
+                }
             } else {
-                console.error('Firebase non disponible pour l\'inscription');
+                console.error('FirebaseService non disponible pour l\'inscription');
                 alert('Service Firebase non disponible');
             }
             
@@ -255,23 +260,6 @@ const AuthPopup = {
             console.error('Erreur d\'inscription:', error);
             alert('Erreur d\'inscription: ' + error.message);
         }
-    },
-
-    // Mettre à jour l'interface après connexion
-    updateUserInterface(email) {
-        // Cacher le bouton de connexion
-        const authBtn = document.querySelector('.auth-btn');
-        if (authBtn) {
-            authBtn.style.display = 'none';
-        }
-        
-        // Afficher le panneau utilisateur
-        const userPanel = document.getElementById('userPanel');
-        if (userPanel) {
-            userPanel.style.display = 'flex';
-        }
-        
-        console.log('Interface utilisateur mise à jour pour:', email);
     },
 
     // Réinitialiser le formulaire
