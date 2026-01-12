@@ -5,14 +5,14 @@
 
 // Service de recherche intégré pour éviter les problèmes de chargement
 const SearchService = {
-    isProduction: window.location.hostname.includes('github.io'),
+    isProduction: window.location.hostname.includes('vercel'),
     
     async getApiKey() {
         if (this.isProduction) {
             return 'GOOGLE_API_KEY_PLACEHOLDER';
         } else {
             // En développement local seulement, charger le fichier env.local
-            if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+            if (window.location.hostname === '127.0.0.1') {
                 try {
                     const response = await fetch('./env.local');
                     const text = await response.text();
