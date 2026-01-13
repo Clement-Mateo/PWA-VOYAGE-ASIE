@@ -18,33 +18,35 @@ body {
 }
 
 /* Boutons flottants */
-.auth-btn, .add-btn {
+.auth-btn, .destinations-toggle-btn {
     position: fixed;
     z-index: 1000;
-    background: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    right: 10px;
 }
 
 .auth-btn {
     top: 10px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #007cba;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.auth-btn:hover {
-    background: #005a87;
+.destinations-toggle-btn {
+    top: 70px;
+}
+
+.auth-btn:hover, .destinations-toggle-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .add-btn {
