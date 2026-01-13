@@ -566,11 +566,6 @@ const Destinations = {
             // Recharger les destinations
             await this.loadDestinations();
             
-            // Mettre à jour la carte
-            if (window.displayDestinationsOnMap) {
-                window.displayDestinationsOnMap();
-            }
-            
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
             alert('Erreur lors de la suppression de la destination: ' + error.message);
@@ -753,11 +748,7 @@ const Destinations = {
             
             // Recharger les destinations
             await this.loadDestinations();
-            
-            // Mettre à jour la carte
-            if (window.displayDestinationsOnMap) {
-                window.displayDestinationsOnMap();
-            }
+
         } catch (error) {
             console.error('❌ Erreur sauvegarde destination:', error);
             alert('Erreur lors de la sauvegarde de la destination');
@@ -826,10 +817,6 @@ const Destinations = {
             // Recharger les destinations
             await this.loadDestinations();
             
-            // Mettre à jour la carte
-            if (window.displayDestinationsOnMap) {
-                window.displayDestinationsOnMap();
-            }
         } catch (error) {
             console.error('❌ Erreur ajout destination:', error);
             alert('Erreur lors de l\'ajout de la destination');
