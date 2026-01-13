@@ -61,6 +61,23 @@ class FirebaseService {
             const app = window.firebase.initializeApp(firebaseConfig);
             this.db = window.firebase.getFirestore(app);
             this.auth = window.firebase.getAuth(app);
+            
+            // Activer la persistance de session (Firebase Auth est persistant par défaut)
+            // Firebase Auth v12 maintient automatiquement la session
+            console.log('✅ Persistance de session Firebase activée (par défaut)');
+            
+            // Configurer l'observateur d'authentification pour détecter la session existante
+            this.auth.onAuthStateChanged((user) => {
+                this.user = user;
+                if (user) {
+                    console.log('✅ Utilisateur connecté automatiquement:', user.email);
+                    this.updateUserPanel();
+                } else {
+                    console.log('🔒 Utilisateur déconnecté');
+                    this.updateUserPanel();
+                }
+            });
+            
             this.isInitialized = true;
             console.log('Firebase v12 initialisé avec succès');
         } catch (error) {
@@ -474,6 +491,14 @@ class FirebaseService {
         } catch (error) {
             console.error('❌ Erreur suppression directe destination:', error);
             throw error;
+        }
+    }
+/**
+     * Mettre à jour le panneau utilisateur
+     */
+    updateUserPanel() {
+        if (typeof window.updateUserPanel === 'function') {
+            window.updateUserPanel();
         }
     }
 }
