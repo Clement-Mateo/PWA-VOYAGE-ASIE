@@ -157,8 +157,17 @@ const Destinations = {
         
         list.innerHTML = '';
         
-        this.destinations.forEach((destination, index) => {
-            const card = this.createDestinationCard(destination, index);
+        // Trier les destinations par order
+        const sortedDestinations = [...this.destinations].sort((a, b) => {
+            const orderA = a.order || 0;
+            const orderB = b.order || 0;
+            return orderA - orderB;
+        });
+        
+        sortedDestinations.forEach((destination, sortedIndex) => {
+            // Trouver l'index original dans le tableau destinations
+            const originalIndex = this.destinations.indexOf(destination);
+            const card = this.createDestinationCard(destination, originalIndex);
             list.appendChild(card);
         });
     },
@@ -187,6 +196,12 @@ const Destinations = {
         const card = document.createElement('div');
         card.className = 'destination-card';
         card.id = `destination-${index}`;
+        
+        // Rendre draggable seulement si la destination existe (firestoreId)
+        if (destination.firestoreId) {
+            card.draggable = true;
+            card.classList.add('draggable');
+        }
         
         // Ajouter la classe 'editing' si c'est une nouvelle destination
         if (!destination.firestoreId) {
@@ -246,7 +261,108 @@ const Destinations = {
         
         console.log('🔍 Destinations: Card HTML créé, icône utilisé:', fontLoaded ? 'Material Symbols' : 'Emoji fallback');
         
+        // Ajouter les événements drag and drop
+        this.addDragAndDropEvents(card, index);
+        
         return card;
+    },
+    
+    /**
+     * Ajouter les événements drag and drop à une card
+     */
+    addDragAndDropEvents(card, index) {
+        const destination = this.destinations[index];
+        
+        // Seulement pour les destinations existantes
+        if (!destination.firestoreId) return;
+        
+        card.addEventListener('dragstart', (e) => {
+            console.log('🔧 Drag start:', destination.name);
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', card.innerHTML);
+            this.draggedIndex = index;
+        });
+        
+        card.addEventListener('dragend', (e) => {
+            console.log('🔧 Drag end:', destination.name);
+            card.classList.remove('dragging');
+        });
+        
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this.draggedIndex !== undefined && this.draggedIndex !== index) {
+                card.classList.add('drag-over');
+            }
+        });
+        
+        card.addEventListener('dragleave', (e) => {
+            card.classList.remove('drag-over');
+        });
+        
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            
+            if (this.draggedIndex !== undefined && this.draggedIndex !== index) {
+                console.log('🔧 Drop:', this.destinations[this.draggedIndex].name, '->', destination.name);
+                this.reorderDestinations(this.draggedIndex, index);
+            }
+        });
+    },
+    
+    /**
+     * Réorganiser les destinations
+     */
+    async reorderDestinations(fromIndex, toIndex) {
+        const draggedDestination = this.destinations[fromIndex];
+        const targetDestination = this.destinations[toIndex];
+        
+        if (!draggedDestination.firestoreId || !targetDestination.firestoreId) {
+            console.warn('⚠️ Impossible de réorganiser : destination sans firestoreId');
+            return;
+        }
+        
+        console.log('🔧 Réorganisation:', draggedDestination.name, '-> position', toIndex);
+        
+        // Sauvegarder les ordres originaux pour restauration si erreur
+        const originalDraggedOrder = draggedDestination.order;
+        const originalTargetOrder = targetDestination.order;
+        
+        // MISE À JOUR IMMÉDIATE DE L'UI (Optimistic UI)
+        const tempOrder = draggedDestination.order;
+        draggedDestination.order = targetDestination.order;
+        targetDestination.order = tempOrder;
+        
+        // Re-render immédiatement pour le feedback visuel
+        this.render();
+        
+        // Sauvegarder en arrière-plan
+        try {
+            await Promise.all([
+                window.firebaseService.updateDestination(draggedDestination),
+                window.firebaseService.updateDestination(targetDestination)
+            ]);
+            
+            console.log('✅ Réorganisation sauvegardée avec succès');
+            
+        } catch (error) {
+            console.error('❌ Erreur réorganisation:', error);
+            
+            // RESTAURATION si erreur
+            draggedDestination.order = originalDraggedOrder;
+            targetDestination.order = originalTargetOrder;
+            
+            // Re-render pour restaurer l'ordre original
+            this.render();
+            
+            // Notification à l'utilisateur
+            alert('Erreur lors de la réorganisation. L\'ordre a été restauré.');
+        }
+        
+        this.draggedIndex = undefined;
     },
 
     // Valider les entrées de durée
@@ -439,9 +555,13 @@ const Destinations = {
         }
         
         try {
+            // Supprimer la destination
             await window.firebaseService.deleteDestinationById(destinationId);
             
             console.log('✅ Destination supprimée:', destination);
+            
+            // Mettre à jour les ordres des destinations suivantes
+            await this.updateOrdersAfterDeletion(destination.order);
             
             // Recharger les destinations
             await this.loadDestinations();
@@ -454,6 +574,50 @@ const Destinations = {
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
             alert('Erreur lors de la suppression de la destination: ' + error.message);
+        }
+    },
+    
+    /**
+     * Mettre à jour les ordres après suppression d'une destination
+     */
+    async updateOrdersAfterDeletion(deletedOrder) {
+        console.log('🔧 Mise à jour des ordres après suppression de order:', deletedOrder);
+        
+        // Trouver toutes les destinations avec un order supérieur à celui supprimé
+        const destinationsToUpdate = this.destinations.filter(dest => 
+            dest.firestoreId && dest.order > deletedOrder
+        );
+        
+        console.log('🔧 Destinations à mettre à jour:', destinationsToUpdate.length);
+        
+        // Mettre à jour leur order (diminuer de 1)
+        const updatePromises = destinationsToUpdate.map(async dest => {
+            const oldOrder = dest.order;
+            dest.order = oldOrder - 1;
+            
+            console.log(`🔧 Mise à jour: ${dest.name} order ${oldOrder} -> ${dest.order}`);
+            
+            try {
+                await window.firebaseService.updateDestination(dest);
+                return { success: true, destination: dest.name };
+            } catch (error) {
+                console.error(`❌ Erreur mise à jour ${dest.name}:`, error);
+                // Restaurer l'ordre original en cas d'erreur
+                dest.order = oldOrder;
+                return { success: false, destination: dest.name, error };
+            }
+        });
+        
+        // Exécuter toutes les mises à jour en parallèle
+        const results = await Promise.all(updatePromises);
+        
+        // Vérifier les résultats
+        const failures = results.filter(r => !r.success);
+        if (failures.length > 0) {
+            console.error('❌ Erreurs lors de la mise à jour des ordres:', failures);
+            alert('Certaines destinations n\'ont pas pu être réordonnées. Veuillez rafraîchir la page.');
+        } else {
+            console.log('✅ Tous les ordres mis à jour avec succès');
         }
     },
     
@@ -475,8 +639,17 @@ const Destinations = {
             const list = document.createElement('div');
             list.className = 'destinations-list';
             
-            this.destinations.forEach((destination, index) => {
-                const card = this.createDestinationCard(destination, index);
+            // Trier les destinations par order
+            const sortedDestinations = [...this.destinations].sort((a, b) => {
+                const orderA = a.order || 0;
+                const orderB = b.order || 0;
+                return orderA - orderB;
+            });
+            
+            sortedDestinations.forEach((destination, sortedIndex) => {
+                // Trouver l'index original dans le tableau destinations
+                const originalIndex = this.destinations.indexOf(destination);
+                const card = this.createDestinationCard(destination, originalIndex);
                 list.appendChild(card);
             });
             
@@ -607,7 +780,8 @@ const Destinations = {
         const newDestination = {
             name: '',
             address: '',
-            duration: { days: 0, hours: 0, minutes: 0 }
+            duration: { days: 0, hours: 0, minutes: 0 },
+            order: this.destinations.length // Order = position dans la liste
         };
         
         // Ajouter la nouvelle destination à la FIN du tableau

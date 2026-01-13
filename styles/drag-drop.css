@@ -1,0 +1,32 @@
+/* Drag and Drop styles */
+.destination-card.draggable {
+    cursor: move;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.destination-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+.destination-card.drag-over {
+    border: 2px dashed #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: scale(1.02);
+}
+
+.destination-card.draggable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Curseur personnalisé pour le drag */
+.destination-card.draggable:active {
+    cursor: grabbing;
+}
+
+/* Animation de retour en place */
+.destination-card.draggable:not(.dragging) {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
