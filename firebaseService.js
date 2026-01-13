@@ -275,9 +275,10 @@ class FirebaseService {
             
             console.log('🔍 Snapshot obtenu, nombre de documents:', snapshot.docs.length);
             
-            const destinations = snapshot.docs.map(doc => ({ 
+            const destinations = snapshot.docs.map((doc, index) => ({ 
                 firestoreId: doc.id, 
-                ...doc.data()
+                ...doc.data(),
+                order: doc.data().order !== undefined ? doc.data().order : index // Ajouter order si manquant
             }));
             
             console.log('✅ Destinations récupérées:', destinations.length);
