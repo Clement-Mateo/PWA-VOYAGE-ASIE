@@ -35,6 +35,7 @@ function waitForFont() {
 const Destinations = {
     isVisible: false,
     destinations: [],
+    isSaving: false, // État de sauvegarde pour éviter les clics multiples
     
     /**
      * Initialiser le composant
@@ -710,25 +711,41 @@ const Destinations = {
      */
     async saveDestination(index) {
         const destination = this.destinations[index];
+        const saveButton = document.querySelector(`#form-${index} .btn-save`);
         
-        // Récupérer les valeurs du formulaire
-        const title = document.getElementById(`title-${index}`).value;
-        const address = document.getElementById(`address-${index}`).value;
-        const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
-        const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
-        const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
+        // Si déjà en cours de sauvegarde, ignorer
+        if (this.isSaving) {
+            console.log('🚫 Sauvegarde déjà en cours, ignore le clic');
+            return;
+        }
         
-        // Mettre à jour l'objet destination
-        destination.name = title;
-        destination.duration = { days, hours, minutes };
+        // Marquer comme en cours de sauvegarde
+        this.isSaving = true;
         
-        // Si une adresse a été sélectionnée via la recherche, utiliser ses données
-        if (this.selectedAddress && this.selectedAddress.address === address) {
-            // Utiliser address comme objet contenant toutes les données
-            destination.address = this.selectedAddress;
+        // Désactiver le bouton et afficher le loading
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
         }
         
         try {
+            // Récupérer les valeurs du formulaire
+            const title = document.getElementById(`title-${index}`).value;
+            const address = document.getElementById(`address-${index}`).value;
+            const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
+            const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
+            const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
+            
+            // Mettre à jour l'objet destination
+            destination.name = title;
+            destination.duration = { days, hours, minutes };
+            
+            // Si une adresse a été sélectionnée via la recherche, utiliser ses données
+            if (this.selectedAddress && this.selectedAddress.address === address) {
+                // Utiliser address comme objet contenant toutes les données
+                destination.address = this.selectedAddress;
+            }
+            
             if (!destination.firestoreId) {
                 // C'est une nouvelle destination (pas d'ID Firestore), l'ajouter à Firebase
                 await window.firebaseService.addDestinationToItinerary(destination);
@@ -748,6 +765,15 @@ const Destinations = {
         } catch (error) {
             console.error('❌ Erreur sauvegarde destination:', error);
             alert('Erreur lors de la sauvegarde de la destination');
+        } finally {
+            // Réactiver le bouton et restaurer le texte
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '💾 Enregistrer';
+            }
+            
+            // Marquer comme terminé
+            this.isSaving = false;
         }
     },
     
