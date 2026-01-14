@@ -147,6 +147,28 @@ class FirebaseService {
     }
 
     /**
+     * Réinitialisation du mot de passe
+     */
+    async resetPassword(email) {
+        if (!this.isInitialized) {
+            console.error('resetPassword: Firebase non initialisé');
+            return false;
+        }
+        
+        try {
+            console.log('Envoi de l\'email de réinitialisation à:', email);
+            await window.firebase.sendPasswordResetEmail(this.auth, email);
+            console.log('Email de réinitialisation envoyé avec succès');
+            return true;
+        } catch (error) {
+            console.error('Erreur envoi email réinitialisation:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+            return false;
+        }
+    }
+
+    /**
      * Créer un itinéraire
      */
     async createItinerary(nom) {
