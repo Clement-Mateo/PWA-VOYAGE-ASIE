@@ -17,6 +17,11 @@ body {
     z-index: 1;
 }
 
+/* Masquer l'attribution Leaflet */
+.leaflet-control-attribution {
+    display: none !important;
+}
+
 /* Boutons flottants */
 .auth-btn, .destinations-toggle-btn {
     position: fixed;

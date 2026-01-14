@@ -204,6 +204,9 @@
             osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }),
+            maptiler: L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YSAwtO41576Mnmte3DQN', {
+                attribution: '© MapTiler © OpenStreetMap contributors'
+            }),
             satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '© Esri'
             }),
@@ -216,7 +219,7 @@
         };
         
         // Style par défaut
-        let currentLayer = mapStyles.osm;
+        let currentLayer = mapStyles.maptiler;
         currentLayer.addTo(map);
         
         // Ajouter les contrôles de zoom
