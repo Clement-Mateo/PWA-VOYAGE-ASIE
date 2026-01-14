@@ -248,22 +248,22 @@
                 
                 if (destinations.length > 0) {
                     destinations.forEach((destination) => {
-                        if (typeof destination === 'object' && destination.location && destination.location.lat && destination.location.lng) {
+                        if (typeof destination === 'object' && destination.address && destination.address.location && destination.address.location.lat && destination.address.location.lng) {
                             const name = destination.name || 'Destination sans nom';
                             
                             let popupContent = `
                                 <div style="min-width: 200px;">
                                     <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>`;
-                            
-                            if (destination.address && destination.address.trim() !== '') {
-                                popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address}</p>`;
+                            // Utiliser address
+                            if (destination.address && destination.address.address) {
+                                popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address.address}</p>`;
                             }
                             
                             popupContent += `
                                     <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
                                 </div>`;
                             
-                            const marker = L.marker([destination.location.lat, destination.location.lng])
+                            const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
                                 .addTo(map)
                                 .bindPopup(popupContent);
                             

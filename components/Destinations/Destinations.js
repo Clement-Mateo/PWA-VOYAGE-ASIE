@@ -225,13 +225,13 @@ const Destinations = {
                     ` : ''}
                 </div>
             </div>
-            <p class="destination-address">${destination.address || 'Adresse à spécifier'}</p>
+            <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
             <p class="destination-duration">⏱️ ${durationText}</p>
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
                     <div class="address-input-container">
-                        <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address || ''}" placeholder="Adresse" readonly>
+                        <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
                         <button class="address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
                             <span class="material-icons">search</span>
                         </button>
@@ -470,7 +470,7 @@ const Destinations = {
                 const durationInputs = card.querySelectorAll('.duration-input');
                 
                 if (nameInput) nameInput.value = destination.name || '';
-                if (addressInput) addressInput.value = destination.address || '';
+                if (addressInput) addressInput.value = destination.address ? destination.address.address : '';
                 
                 if (destination.duration) {
                     if (durationInputs[0]) durationInputs[0].value = destination.duration.days || 0;
@@ -521,9 +521,6 @@ const Destinations = {
         
         // Stocker les données complètes de l'adresse
         this.selectedAddress = selectedAddress;
-        
-        console.log('Adresse sélectionnée:', selectedAddress);
-        console.log('Nom auto-rempli:', selectedAddress.name);
     },
     
     /**
@@ -723,13 +720,12 @@ const Destinations = {
         
         // Mettre à jour l'objet destination
         destination.name = title;
-        destination.address = address;
         destination.duration = { days, hours, minutes };
         
         // Si une adresse a été sélectionnée via la recherche, utiliser ses données
         if (this.selectedAddress && this.selectedAddress.address === address) {
-            destination.placeId = this.selectedAddress.placeId;
-            destination.location = this.selectedAddress.location;
+            // Utiliser address comme objet contenant toutes les données
+            destination.address = this.selectedAddress;
         }
         
         try {
