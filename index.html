@@ -185,10 +185,10 @@
         let currentSelectedResult;
         let isSearching = false;
         let isOnline = navigator.onLine;
-        let destinationMarkers = []; // Stocker les marqueurs de destinations
+        window.destinationMarkers = []; // Stocker les marqueurs de destinations
         
         // Variable pour stocker les décorateurs de flèches
-        let arrowDecorators = [];
+        window.arrowDecorators = [];
         
         // Initialisation de la carte
         let map = L.map('map', {
@@ -309,9 +309,9 @@
             return arrowDecorator;
         }
         async function displayDestinationsOnMap() {
-            // Effacer les marqueurs existants
-            destinationMarkers.forEach(marker => map.removeLayer(marker));
-            destinationMarkers = [];
+            console.log('🗺 displayDestinationsOnMap appelée');
+            
+            window.cleanMap();
             
             if (!window.firebaseService.isAuthenticated()) {
                 console.log('🔒 Utilisateur non connecté');
@@ -444,9 +444,6 @@
                     window.Destinations.show();
                 }
                 
-                // Afficher les destinations sur la carte
-                displayDestinationsOnMap();
-                
                 // Afficher le bouton de déconnexion
                 if (logoutBtn) {
                     logoutBtn.style.display = 'flex';
@@ -501,19 +498,54 @@
                 updateUserPanel();
             }
         });
-        
-        // Fonctions de popup (compatibilité - plus nécessaire)
-        function closePopup(popupId) {
-            console.log('closePopup appelé mais plus utilisé avec le composant Login');
+
+        /**
+         * Réinitialiser complètement la carte (nettoyer tous les éléments)
+         */
+        function cleanMap() {
+            console.log('🧹 Nettoyage complet de la carte');
+            
+            // Utiliser la variable locale 'map' (objet Leaflet valide)
+            if (map && typeof map === 'object') {                
+                
+                // Parcourir tous les layers et supprimer ceux qui ne sont pas des tiles
+                const layersToRemove = [];
+                map.eachLayer((layer) => {
+                    // Garder les tiles de fond (layers avec _tile, _url, ou _html)
+                    const isTileLayer = layer._tile || layer._url || layer._html;
+                    const isGridLayer = layer._cells || layer._s;
+                    
+                    if (!isTileLayer && !isGridLayer) {
+                        layersToRemove.push(layer);
+                    }
+                });
+                
+                // Supprimer tous les layers identifiés
+                layersToRemove.forEach((layer) => {
+                    map.removeLayer(layer);
+                });
+                
+                console.log(`✅ ${layersToRemove.length} layers supprimés universellement`);
+                
+                // Vider les tableaux globaux
+                if (window.destinationMarkers) {
+                    window.destinationMarkers = [];
+                }
+                if (window.arrowDecorators) {
+                    window.arrowDecorators = [];
+                }
+                
+                console.log('✅ Carte vidée avec succès');
+            } else {
+                console.warn('⚠️ map est null ou non initialisé, impossible de nettoyer la carte');
+            }
         }
         
         // Fonction de déconnexion
         function handleLogout() {
             console.log('Tentative de déconnexion...');
             
-            // Effacer les marqueurs avant la déconnexion
-            destinationMarkers.forEach(marker => map.removeLayer(marker));
-            destinationMarkers = [];
+            window.cleanMap();
             
             if (window.firebaseService) {
                 window.firebaseService.signOut()

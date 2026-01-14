@@ -442,8 +442,10 @@ class FirebaseService {
                 name: destination.name,
                 address: destination.address,
                 duration: destination.duration,
+                order: destination.order,
                 updatedAt: new Date()
             });
+
             console.log('✅ Destination mise à jour dans Firebase:', destination.name);
         } catch (error) {
             console.error('❌ Erreur mise à jour destination:', error.message);
