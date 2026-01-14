@@ -36,6 +36,7 @@ const Destinations = {
     isVisible: false,
     destinations: [],
     isSaving: false, // État de sauvegarde pour éviter les clics multiples
+    isDeleting: false, // État de suppression pour éviter les clics multiples
     
     /**
      * Initialiser le composant
@@ -542,14 +543,22 @@ const Destinations = {
             return;
         }
         
+        // Si déjà en cours de suppression, ignorer
+        if (this.isDeleting) {
+            console.log('🚫 Suppression déjà en cours, ignore le clic');
+            return;
+        }
+        
         console.log('🔧 Suppression directe par FirestoreId:', destinationId);
         
-        // Confirmation de suppression
-        const confirmDelete = confirm(`Êtes-vous sûr de vouloir supprimer "${destination.name || 'cette destination'}" ?`);
+        // Marquer comme en cours de suppression
+        this.isDeleting = true;
         
-        if (!confirmDelete) {
-            console.log('🚫 Suppression annulée par l\'utilisateur');
-            return;
+        // Trouver le bouton de suppression et le mettre en loading
+        const deleteButton = document.querySelector(`#destination-${index} .delete-btn`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="loading-spinner-small"></span>';
         }
         
         try {
@@ -567,6 +576,15 @@ const Destinations = {
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
             alert('Erreur lors de la suppression de la destination: ' + error.message);
+        } finally {
+            // Réactiver le bouton
+            if (deleteButton) {
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<span class="material-icons">delete</span>';
+            }
+            
+            // Marquer comme terminé
+            this.isDeleting = false;
         }
     },
     

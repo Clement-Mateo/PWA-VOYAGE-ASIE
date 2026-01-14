@@ -266,6 +266,16 @@
     to { transform: rotate(360deg); }
 }
 
+.loading-spinner-small {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #dc3545;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
 .btn-cancel {
     background: #f44336;
     color: white;
