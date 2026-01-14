@@ -7,6 +7,7 @@ const ChooseAddress = {
     isVisible: false,
     currentCallback: null,
     searchResults: [],
+    searchTimeout: null,
     
     /**
      * Initialiser le composant
@@ -70,10 +71,6 @@ const ChooseAddress = {
         const popup = this.getPopup();
         popup.classList.remove('show');
         
-        // Réinitialiser
-        this.searchResults = [];
-        this.currentCallback = null;
-        
         // Vider le champ de recherche
         const searchInput = document.getElementById('addressSearchInput');
         if (searchInput) {
@@ -85,6 +82,13 @@ const ChooseAddress = {
         if (resultsContainer) {
             resultsContainer.innerHTML = '';
         }
+        
+        // Réinitialiser (après la sélection potentielle)
+        setTimeout(() => {
+            console.log('🔍 Réinitialisation de searchResults et currentCallback');
+            this.searchResults = [];
+            this.currentCallback = null;
+        }, 100);
     },
     
     /**
@@ -119,20 +123,12 @@ const ChooseAddress = {
                 <div class="choose-address-body">
                     <div class="search-input-container">
                         <input type="text" id="addressSearchInput" class="address-search-input"
-                            placeholder="Saisissez une adresse..." oninput="ChooseAddress.search()">
+                            placeholder="Saisissez une adresse..." oninput="ChooseAddress.searchAddress()">
                     </div>
                     <div id="addressResults" class="address-results"></div>
                 </div>
             </div>
         `;
-        
-        // Ajouter l'événement de recherche au champ input
-        const searchInput = popup.querySelector('#addressSearchInput');
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.search();
-            }
-        });
         
         return popup;
     },
@@ -146,7 +142,7 @@ const ChooseAddress = {
         
         try {
             // Réutiliser la logique de AddDestination.js
-            const results = await this.searchAddresses(query);
+            const results = await this.performSearch(query);
             this.searchResults = results;
             this.showResults(results);
         } catch (error) {
@@ -156,9 +152,35 @@ const ChooseAddress = {
     },
     
     /**
-     * Rechercher des adresses (logique de AddDestination.js)
+     * Rechercher une adresse avec timeout (logique de AddDestination.js)
      */
-    async searchAddresses(query) {
+    async searchAddress() {
+        const query = document.getElementById('addressSearchInput').value;
+        
+        clearTimeout(this.searchTimeout);
+        
+        if (query.length < 3) {
+            this.showResults([]);
+            return;
+        }
+        
+        this.searchTimeout = setTimeout(async () => {
+            try {
+                console.log('🔍 Recherche de:', query);
+                const results = await this.performSearch(query);
+                console.log('✅ Résultats trouvés:', results);
+                this.showResults(results);
+            } catch (error) {
+                console.error('❌ Erreur de recherche:', error);
+                this.showResults([]);
+            }
+        }, 500);
+    },
+    
+    /**
+     * Effectuer la recherche réelle
+     */
+    async performSearch(query) {
         if (!query || query.length < 3) {
             return [];
         }
@@ -252,6 +274,10 @@ const ChooseAddress = {
      * Afficher les résultats de recherche
      */
     showResults(results) {
+        console.log('🔍 showResults appelé avec', results.length, 'résultats');
+        this.searchResults = results;
+        console.log('🔍 searchResults mis à jour:', this.searchResults.length);
+        
         const resultsContainer = document.getElementById('addressResults');
         
         if (results.length === 0) {
@@ -271,23 +297,36 @@ const ChooseAddress = {
      * Sélectionner une adresse
      */
     async selectAddress(index) {
+        console.log('🔍 ChooseAddress.selectAddress appelé avec index:', index);
+        console.log('🔍 searchResults disponibles:', this.searchResults.length);
+        
         const result = this.searchResults[index];
         
-        if (!result) return;
+        if (!result) {
+            console.error('❌ Aucun résultat trouvé pour l\'index', index);
+            return;
+        }
+        
+        console.log('🔍 Résultat sélectionné:', result);
         
         // Si nous n'avons pas les coordonnées, les récupérer
         if (!result.location) {
             try {
+                console.log('🔍 Récupération des coordonnées pour placeId:', result.placeId);
                 const detailedResult = await this.getPlaceDetails(result.placeId);
                 result.location = detailedResult.location;
+                console.log('✅ Coordonnées récupérées:', result.location);
             } catch (error) {
-                console.error('Erreur récupération détails:', error);
+                console.error('❌ Erreur récupération détails:', error);
             }
         }
         
         // Appeler le callback avec l'adresse sélectionnée
         if (this.currentCallback) {
+            console.log('🔍 Appel du callback avec:', result);
             this.currentCallback(result);
+        } else {
+            console.error('❌ Aucun callback défini');
         }
         
         this.hide();

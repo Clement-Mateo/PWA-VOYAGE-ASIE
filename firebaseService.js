@@ -435,35 +435,16 @@ class FirebaseService {
         }
         
         try {
-            // Chercher la destination dans la collection destinations
-            const q = window.firebase.query(
-                window.firebase.collection(this.db, 'destinations'),
-                window.firebase.where('userId', '==', this.user.uid)
-            );
-            const snapshot = await window.firebase.getDocs(q);
+            // Mettre à jour directement le document par son firestoreId
+            const docRef = window.firebase.doc(this.db, 'destinations', destination.firestoreId);
             
-            // Trouver la destination correspondante par son ID ou nom
-            let destinationDoc = null;
-            snapshot.docs.forEach(doc => {
-                const data = doc.data();
-                if (data.id === destination.id || data.name === destination.name) {
-                    destinationDoc = doc;
-                }
+            await window.firebase.updateDoc(docRef, {
+                name: destination.name,
+                address: destination.address,
+                duration: destination.duration,
+                updatedAt: new Date()
             });
-            
-            if (destinationDoc) {
-                // Mettre à jour le document
-                await window.firebase.updateDoc(destinationDoc.ref, {
-                    name: destination.name,
-                    address: destination.address,
-                    duration: destination.duration,
-                    updatedAt: new Date()
-                });
-                console.log('✅ Destination mise à jour dans Firebase:', destination.name);
-            } else {
-                console.error('❌ Destination non trouvée pour mise à jour');
-                throw new Error('Destination non trouvée');
-            }
+            console.log('✅ Destination mise à jour dans Firebase:', destination.name);
         } catch (error) {
             console.error('❌ Erreur mise à jour destination:', error.message);
             throw error;
