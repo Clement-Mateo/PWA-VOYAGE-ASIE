@@ -52,6 +52,9 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
     
+    <!-- Leaflet Polyline Decorator Plugin -->
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+    
     <!-- Firebase SDK v12 -->
     <script type="module">
         // Importer les modules Firebase nécessaires
@@ -184,6 +187,9 @@
         let isOnline = navigator.onLine;
         let destinationMarkers = []; // Stocker les marqueurs de destinations
         
+        // Variable pour stocker les décorateurs de flèches
+        let arrowDecorators = [];
+        
         // Initialisation de la carte
         let map = L.map('map', {
             center: [20, 0],
@@ -235,7 +241,73 @@
             currentLayer.addTo(map);
         }
         
-        // Fonction pour afficher les destinations sur la carte
+        // Fonction pour calculer les patterns de flèches
+        function calculateArrowPatterns(fromCoords, toCoords, zoomLevel) {
+            // Calculer la distance en pixels
+            const point1 = map.latLngToContainerPoint(fromCoords);
+            const point2 = map.latLngToContainerPoint(toCoords);
+            const pixelDistance = Math.sqrt(
+                Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
+            );
+            
+            const maxArrows = Math.max(1, Math.min(Math.floor(zoomLevel), 8));
+            
+            console.log('🔍 Pixel distance:', pixelDistance, 'Zoom level:', zoomLevel, 'Max arrows:', maxArrows);
+            
+            if (pixelDistance < 200) {
+                // Moins de 200px : une seule flèche au milieu
+                return [{
+                    offset: '50%',
+                    repeat: 0,
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 16,
+                        polygon: true,
+                        pathOptions: {
+                            stroke: false,
+                            fill: true,
+                            fillColor: '#4285F4',
+                            fillOpacity: 0.6
+                        }
+                    })
+                }];
+            } else {
+                // Plus de 200px : flèches adaptées au zoom
+                const patterns = [];
+                const segmentCount = Math.min(Math.floor(pixelDistance / 100), maxArrows);
+                
+                for (let i = 0; i < segmentCount; i++) {
+                    const percentageOffset = ((i + 1) / (segmentCount + 1)) * 100;
+                    
+                    patterns.push({
+                        offset: percentageOffset + '%',
+                        repeat: 0,
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 16,
+                            polygon: true,
+                            pathOptions: {
+                                stroke: false,
+                                fill: true,
+                                fillColor: '#4285F4',
+                                fillOpacity: 0.6
+                            }
+                        })
+                    });
+                }
+                
+                return patterns;
+            }
+        }
+        
+        // Fonction pour créer les flèches sur une ligne
+        function createArrowsOnLine(line, fromCoords, toCoords, zoomLevel) {
+            const patterns = calculateArrowPatterns(fromCoords, toCoords, zoomLevel);
+            const arrowDecorator = L.polylineDecorator(line, {
+                patterns: patterns,
+                map: map
+            }).addTo(map);
+            
+            return arrowDecorator;
+        }
         async function displayDestinationsOnMap() {
             // Effacer les marqueurs existants
             destinationMarkers.forEach(marker => map.removeLayer(marker));
@@ -250,31 +322,68 @@
                 const destinations = await window.firebaseService.getDirectDestinations();
                 
                 if (destinations.length > 0) {
-                    destinations.forEach((destination) => {
-                        if (typeof destination === 'object' && destination.address && destination.address.location && destination.address.location.lat && destination.address.location.lng) {
-                            const name = destination.name || 'Destination sans nom';
-                            
-                            let popupContent = `
-                                <div style="min-width: 200px;">
-                                    <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>`;
-                            // Utiliser address
-                            if (destination.address && destination.address.address) {
-                                popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address.address}</p>`;
-                            }
-                            
-                            popupContent += `
-                                    <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
-                                </div>`;
-                            
-                            const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
-                                .addTo(map)
-                                .bindPopup(popupContent);
-                            
-                            destinationMarkers.push(marker);
+                    // Trier les destinations par order
+                    const sortedDestinations = destinations.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    
+                    // Filtrer les destinations avec des coordonnées valides
+                    const validDestinations = sortedDestinations.filter(destination => 
+                        typeof destination === 'object' && 
+                        destination.address && 
+                        destination.address.location && 
+                        destination.address.location.lat && 
+                        destination.address.location.lng
+                    );
+                    
+                    // Créer les traits directionnels entre destinations consécutives
+                    for (let i = 0; i < validDestinations.length - 1; i++) {
+                        const fromDest = validDestinations[i];
+                        const toDest = validDestinations[i + 1];
+                        
+                        const fromCoords = [fromDest.address.location.lat, fromDest.address.location.lng];
+                        const toCoords = [toDest.address.location.lat, toDest.address.location.lng];
+                        
+                        // Créer une polyline avec flèche directionnelle utilisant le plugin
+                        const line = L.polyline([fromCoords, toCoords], {
+                            color: '#4285F4',
+                            weight: 3,
+                            opacity: 0.8,
+                            dashArray: '10, 5'
+                        }).addTo(map);
+                        
+                        // Créer les flèches avec la fonction simplifiée
+                        const arrowDecorator = createArrowsOnLine(line, fromCoords, toCoords, map.getZoom());
+                        
+                        destinationMarkers.push(line);
+                        destinationMarkers.push(arrowDecorator);
+                        arrowDecorators.push(arrowDecorator);
+                    }
+                    
+                    // Créer les marqueurs pour chaque destination
+                    validDestinations.forEach((destination, index) => {
+                        const name = destination.name || 'Destination sans nom';
+                        const order = destination.order || 0;
+                        
+                        let popupContent = `
+                            <div style="min-width: 200px;">
+                                <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>
+                                <p style="margin: 2px 0; font-size: 12px; color: #666;">Ordre: ${order}</p>`;
+                        
+                        if (destination.address && destination.address.address) {
+                            popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address.address}</p>`;
                         }
+                        
+                        popupContent += `
+                                <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
+                            </div>`;
+                        
+                        const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
+                            .addTo(map)
+                            .bindPopup(popupContent);
+                        
+                        destinationMarkers.push(marker);
                     });
                     
-                    console.log(`✅ ${destinationMarkers.length} marqueur(s) affiché(s)`);
+                    console.log(`✅ ${destinationMarkers.length} marqueur(s) et trait(s) affiché(s)`);
                     
                     // Ajuster la vue pour voir tous les marqueurs
                     const group = new L.featureGroup(destinationMarkers);
@@ -287,6 +396,27 @@
                 console.error('❌ Erreur affichage destinations:', error);
             }
         }
+        
+        // Fonction pour rafraîchir les flèches quand le zoom change
+        function updateArrowsOnZoom() {
+            // Effacer les décorateurs existants
+            arrowDecorators.forEach(decorator => map.removeLayer(decorator));
+            arrowDecorators = [];
+            
+            // Recréer les flèches avec le nouveau niveau de zoom
+            destinationMarkers.forEach(marker => {
+                if (marker instanceof L.Polyline) {
+                    // C'est une ligne, recréer les flèches
+                    const fromCoords = marker.getLatLngs()[0];
+                    const toCoords = marker.getLatLngs()[1];
+                    const arrowDecorator = createArrowsOnLine(marker, fromCoords, toCoords, map.getZoom());
+                    arrowDecorators.push(arrowDecorator);
+                }
+            });
+        }
+        
+        // Ajouter un écouteur d'événement pour le zoom
+        map.on('zoomend', updateArrowsOnZoom);
         
         // Mettre à jour l'affichage des destinations après connexion
         async function updateUserPanel() {
