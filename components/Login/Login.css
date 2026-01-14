@@ -212,6 +212,51 @@
     text-decoration: underline;
 }
 
+/* Zone mot de passe oublié */
+.login-forgot-password {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e1e5e9;
+}
+
+.btn-forgot-password {
+    color: #6c757d;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.btn-forgot-password:hover {
+    color: #667eea;
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+/* Formulaire de réinitialisation */
+.reset-form {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.reset-back {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e1e5e9;
+}
+
+.reset-back .btn-link {
+    color: #6c757d;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.reset-back .btn-link:hover {
+    color: #667eea;
+}
+
 /* Pied de page */
 .login-footer {
     background: #f8f9fa;

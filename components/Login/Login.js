@@ -1,7 +1,7 @@
 // Composant Login pour la connexion/inscription (remplace AuthPopup)
 const Login = {
     // État du composant
-    currentMode: 'login', // 'login' ou 'register'
+    currentMode: 'login', // 'login', 'register' ou 'reset'
     isInitialized: false,
 
     // Template HTML
@@ -54,6 +54,25 @@ const Login = {
                         <span id="loginSwitchText">Pas encore de compte ?</span>
                         <button class="btn-link" id="loginSwitchBtn" onclick="Login.switchMode()">S'inscrire</button>
                     </div>
+                    
+                    <!-- Lien mot de passe oublié (uniquement en mode login) -->
+                    <div class="login-forgot-password" id="forgotPasswordSection">
+                        <button class="btn-link btn-forgot-password" onclick="Login.showResetForm()">Mot de passe oublié ?</button>
+                    </div>
+                    
+                    <!-- Formulaire de réinitialisation -->
+                    <div class="reset-form" id="resetForm" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" id="resetEmail" placeholder="votre@email.com" autocomplete="email">
+                        </div>
+                        
+                        <button class="btn-login-primary" onclick="Login.resetPassword()">Envoyer le lien</button>
+                        
+                        <div class="reset-back">
+                            <button class="btn-link" onclick="Login.backToLogin()">← Retour à la connexion</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="login-footer">
@@ -94,6 +113,7 @@ const Login = {
         const registerEmail = document.getElementById('registerEmail');
         const registerPassword = document.getElementById('registerPassword');
         const confirmPassword = document.getElementById('confirmPassword');
+        const resetEmail = document.getElementById('resetEmail');
 
         if (loginEmail) loginEmail.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.login();
@@ -109,6 +129,9 @@ const Login = {
         });
         if (confirmPassword) confirmPassword.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.register();
+        });
+        if (resetEmail) resetEmail.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.resetPassword();
         });
 
         console.log('Écouteurs d\'événements Login configurés');
@@ -170,27 +193,43 @@ const Login = {
     switchMode() {
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
+        const resetForm = document.getElementById('resetForm');
         const title = document.getElementById('loginTitle');
         const subtitle = document.getElementById('loginSubtitle');
         const switchText = document.getElementById('loginSwitchText');
         const switchBtn = document.getElementById('loginSwitchBtn');
+        const forgotPasswordSection = document.getElementById('forgotPasswordSection');
         
         if (this.currentMode === 'login') {
             this.currentMode = 'register';
             loginForm.style.display = 'none';
             registerForm.style.display = 'block';
+            resetForm.style.display = 'none';
             title.textContent = 'Inscription';
             subtitle.textContent = 'Créez votre compte pour commencer';
             switchText.textContent = 'Déjà un compte ?';
             switchBtn.textContent = 'Se connecter';
-        } else {
+            forgotPasswordSection.style.display = 'none';
+        } else if (this.currentMode === 'register') {
             this.currentMode = 'login';
             loginForm.style.display = 'block';
             registerForm.style.display = 'none';
+            resetForm.style.display = 'none';
             title.textContent = 'Voyage Asie';
             subtitle.textContent = 'Connectez-vous pour planifier vos aventures';
             switchText.textContent = 'Pas encore de compte ?';
             switchBtn.textContent = 'S\'inscrire';
+            forgotPasswordSection.style.display = 'block';
+        } else if (this.currentMode === 'reset') {
+            this.currentMode = 'login';
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            resetForm.style.display = 'none';
+            title.textContent = 'Voyage Asie';
+            subtitle.textContent = 'Connectez-vous pour planifier vos aventures';
+            switchText.textContent = 'Pas encore de compte ?';
+            switchBtn.textContent = 'S\'inscrire';
+            forgotPasswordSection.style.display = 'block';
         }
     },
 
@@ -341,6 +380,125 @@ const Login = {
         }
     },
 
+    // Afficher le formulaire de réinitialisation
+    showResetForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const resetForm = document.getElementById('resetForm');
+        const title = document.getElementById('loginTitle');
+        const subtitle = document.getElementById('loginSubtitle');
+        const forgotPasswordSection = document.getElementById('forgotPasswordSection');
+        
+        this.currentMode = 'reset';
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'none';
+        resetForm.style.display = 'block';
+        title.textContent = 'Réinitialisation';
+        subtitle.textContent = 'Entrez votre email pour recevoir un lien de réinitialisation';
+        forgotPasswordSection.style.display = 'none';
+        
+        this.clearMessages();
+    },
+
+    // Retour à la connexion
+    backToLogin() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const resetForm = document.getElementById('resetForm');
+        const title = document.getElementById('loginTitle');
+        const subtitle = document.getElementById('loginSubtitle');
+        const switchText = document.getElementById('loginSwitchText');
+        const switchBtn = document.getElementById('loginSwitchBtn');
+        const forgotPasswordSection = document.getElementById('forgotPasswordSection');
+        
+        this.currentMode = 'login';
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        resetForm.style.display = 'none';
+        title.textContent = 'Voyage Asie';
+        subtitle.textContent = 'Connectez-vous pour planifier vos aventures';
+        switchText.textContent = 'Pas encore de compte ?';
+        switchBtn.textContent = 'S\'inscrire';
+        forgotPasswordSection.style.display = 'block';
+        
+        this.clearMessages();
+    },
+
+    // Réinitialiser le mot de passe
+    async resetPassword() {
+        const email = document.getElementById('resetEmail').value;
+        
+        console.log('Tentative de réinitialisation pour:', email);
+        
+        if (!email) {
+            this.showError('Veuillez entrer votre adresse email');
+            return;
+        }
+        
+        if (!this.validateEmail(email)) {
+            this.showError('Veuillez entrer une adresse email valide');
+            return;
+        }
+        
+        // Désactiver le bouton pendant l'envoi
+        this.setLoadingState('reset', true);
+        
+        try {
+            // Utiliser firebaseService pour la réinitialisation
+            if (window.firebaseService) {
+                console.log('Appel de firebaseService.resetPassword...');
+                const success = await window.firebaseService.resetPassword(email);
+                
+                if (success) {
+                    console.log('Email de réinitialisation envoyé à:', email);
+                    
+                    // Afficher un message de succès
+                    this.showSuccess('Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.');
+                    
+                    // Réinitialiser le champ email
+                    document.getElementById('resetEmail').value = '';
+                    
+                    // Revenir à la connexion après 3 secondes
+                    setTimeout(() => {
+                        this.backToLogin();
+                    }, 3000);
+                } else {
+                    console.error('Échec de l\'envoi de l\'email de réinitialisation');
+                    this.showError('Échec de l\'envoi de l\'email. Vérifiez l\'adresse email.');
+                }
+            } else {
+                console.error('FirebaseService non disponible pour la réinitialisation');
+                this.showError('Service Firebase non disponible');
+            }
+            
+        } catch (error) {
+            console.error('Erreur de réinitialisation:', error);
+            let errorMessage = 'Erreur lors de la réinitialisation';
+            
+            // Gérer les erreurs Firebase spécifiques
+            if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Email invalide';
+            } else if (error.code === 'auth/user-not-found') {
+                errorMessage = 'Aucun compte trouvé avec cet email';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Trop de demandes. Réessayez plus tard';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            this.showError(errorMessage);
+        } finally {
+            // Réactiver le bouton
+            this.setLoadingState('reset', false);
+        }
+    },
+
+    // Valider un email
+    validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    },
+
     // Réinitialiser le formulaire
     resetForm() {
         document.getElementById('loginEmail').value = '';
@@ -348,10 +506,11 @@ const Login = {
         document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
         document.getElementById('confirmPassword').value = '';
+        document.getElementById('resetEmail').value = '';
         
         // Revenir au mode connexion
-        if (this.currentMode === 'register') {
-            this.switchMode();
+        if (this.currentMode !== 'login') {
+            this.backToLogin();
         }
         
         // Effacer les messages d'erreur
@@ -360,16 +519,31 @@ const Login = {
 
     // Gérer l'état de chargement
     setLoadingState(mode, isLoading) {
-        const buttonId = mode === 'login' ? 'loginForm' : 'registerForm';
-        const form = document.getElementById(buttonId);
-        const button = form.querySelector('.btn-login-primary');
+        let button;
+        
+        if (mode === 'reset') {
+            const form = document.getElementById('resetForm');
+            button = form.querySelector('.btn-login-primary');
+        } else {
+            const buttonId = mode === 'login' ? 'loginForm' : 'registerForm';
+            const form = document.getElementById(buttonId);
+            button = form.querySelector('.btn-login-primary');
+        }
         
         if (isLoading) {
             button.disabled = true;
-            button.textContent = mode === 'login' ? 'Connexion...' : 'Inscription...';
+            if (mode === 'reset') {
+                button.textContent = 'Envoi en cours...';
+            } else {
+                button.textContent = mode === 'login' ? 'Connexion...' : 'Inscription...';
+            }
         } else {
             button.disabled = false;
-            button.textContent = mode === 'login' ? 'Se connecter' : 'S\'inscrire';
+            if (mode === 'reset') {
+                button.textContent = 'Envoyer le lien';
+            } else {
+                button.textContent = mode === 'login' ? 'Se connecter' : 'S\'inscrire';
+            }
         }
     },
 
@@ -377,7 +551,13 @@ const Login = {
     showError(message) {
         this.clearMessages();
         
-        const form = document.getElementById(this.currentMode === 'login' ? 'loginForm' : 'registerForm');
+        let form;
+        if (this.currentMode === 'reset') {
+            form = document.getElementById('resetForm');
+        } else {
+            form = document.getElementById(this.currentMode === 'login' ? 'loginForm' : 'registerForm');
+        }
+        
         const errorDiv = document.createElement('div');
         errorDiv.className = 'login-error';
         errorDiv.textContent = message;
