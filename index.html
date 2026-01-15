@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="styles/drag-drop.css">
     <link rel="stylesheet" href="components/Login/Login.css">
     <link rel="stylesheet" href="components/Destinations/Destinations.css">
+    <link rel="stylesheet" href="components/Destinations/Activity/Activity.css">
     <link rel="stylesheet" href="components/Destinations/ChooseAddress/ChooseAddress.css">
     <link rel="stylesheet" href="components/LeafletMap/LeafletMap.css">
 </head>
@@ -138,6 +139,7 @@
     <!-- Composants -->
     <script src="components/Login/Login.js"></script>
     <script src="components/Destinations/Destinations.js"></script>
+    <script src="components/Destinations/Activity/Activity.js"></script>
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
     <script src="components/LeafletMap/LeafletMap.js"></script>
     
@@ -152,6 +154,7 @@
         // Exporter globalement
         window.ComponentManager = ComponentManager;
         window.Destinations = Destinations;
+        window.Activity = Activity;
         window.ChooseAddress = ChooseAddress;
         window.LeafletMap = LeafletMap;
         
@@ -162,6 +165,11 @@
             // Initialiser Login
             if (window.Login) {
                 window.Login.init();
+            }
+            
+            // Initialiser Activity
+            if (window.Activity) {
+                window.Activity.init();
             }
             
             // Initialiser ChooseAddress

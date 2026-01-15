@@ -37,17 +37,6 @@
     background: #f9f9f9;
 }
 
-.activity-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #e0e0e0;
-    font-size: 14px;
-    color: #555;
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-}
-
 .no-activities {
     text-align: center;
     color: #999;

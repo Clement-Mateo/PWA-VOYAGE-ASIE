@@ -55,6 +55,262 @@
 .destination-card {
     background: white;
     border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.destination-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.destination-card.editing {
+    border: 2px solid #4CAF50;
+    background: #f8fff8;
+}
+
+.destination-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    cursor: grabbing;
+}
+
+.destination-card.drag-over {
+    border: 2px dashed #2196F3;
+    background: #e3f2fd;
+}
+
+.destination-card.expanded {
+    border: 2px solid #667eea;
+    background: #f0f4ff;
+}
+
+.destination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.destination-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    flex: 1;
+}
+
+.destination-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.edit-btn, .delete-btn, .expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.edit-btn {
+    color: #4CAF50;
+}
+
+.edit-btn:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.delete-btn {
+    color: #f44336;
+}
+
+.delete-btn:hover {
+    background: #ffebee;
+}
+
+.expand-btn {
+    color: #667eea;
+}
+
+.expand-btn:hover {
+    background: #e8eaf6;
+}
+
+.destination-address {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.destination-duration {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.destination-form {
+    display: none;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.destination-form.show {
+    display: block;
+}
+
+/* Section des activités */
+.destination-activities {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.activities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.activities-header h4 {
+    margin: 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.add-activity-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.add-activity-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.activities-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.activity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.activity-info strong {
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.activity-edit-btn,
+.activity-delete-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-edit-btn:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.activity-delete-btn {
+    color: #d32f2f;
+}
+
+.activity-delete-btn:hover {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.activity-edit-btn .material-icons,
+.activity-delete-btn .material-icons {
+    font-size: 16px;
+}
+
+.activity-delete-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.activity-delete-btn .loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #d32f2f;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.activity-time {
+    color: #666;
+    font-size: 12px;
+}
+
+.activity-price {
+    color: #4CAF50;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.destination-card {
+    background: white;
+    border-radius: 12px;
     padding: 15px;
     transition: all 0.3s ease;
     position: relative;
