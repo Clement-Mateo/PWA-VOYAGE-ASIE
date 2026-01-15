@@ -134,24 +134,6 @@ const ChooseAddress = {
     },
     
     /**
-     * Rechercher des adresses
-     */
-    async search() {
-        const searchInput = document.getElementById('addressSearchInput');
-        const query = searchInput.value.trim();
-        
-        try {
-            // Réutiliser la logique de AddDestination.js
-            const results = await this.performSearch(query);
-            this.searchResults = results;
-            this.showResults(results);
-        } catch (error) {
-            console.error('Erreur recherche adresse:', error);
-            this.showResults([]);
-        }
-    },
-    
-    /**
      * Rechercher une adresse avec timeout (logique de AddDestination.js)
      */
     async searchAddress() {

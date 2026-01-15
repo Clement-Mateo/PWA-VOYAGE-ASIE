@@ -71,10 +71,10 @@ class FirebaseService {
                 this.user = user;
                 if (user) {
                     console.log('✅ Utilisateur connecté automatiquement:', user.email);
-                    this.updateUserPanel();
+                    window.updateUserPanel();
                 } else {
                     console.log('🔒 Utilisateur déconnecté');
-                    this.updateUserPanel();
+                    window.updateUserPanel();
                 }
             });
             
@@ -496,14 +496,6 @@ class FirebaseService {
         } catch (error) {
             console.error('❌ Erreur suppression directe destination:', error);
             throw error;
-        }
-    }
-/**
-     * Mettre à jour le panneau utilisateur
-     */
-    updateUserPanel() {
-        if (typeof window.updateUserPanel === 'function') {
-            window.updateUserPanel();
         }
     }
 }

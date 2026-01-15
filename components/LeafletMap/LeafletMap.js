@@ -384,7 +384,7 @@ class LeafletMap {
     }
 
     /**
-     * Exporter pour compatibilit
+     * Exporter pour compatibilite
      */
     exportForLegacy() {
         window.map = this.leafletMap;

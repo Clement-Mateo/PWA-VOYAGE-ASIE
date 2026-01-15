@@ -5,33 +5,6 @@
 
 console.log('🔍 Destinations.js: Début du chargement');
 
-// Attendre que la police soit chargée
-function waitForFont() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log('🔍 Destinations: Vérification du chargement de la police...');
-            const testElement = document.createElement('span');
-            testElement.className = 'material-symbols-outlined';
-            testElement.textContent = 'edit';
-            testElement.style.fontFamily = "'Material Symbols Outlined', sans-serif";
-            document.body.appendChild(testElement);
-            
-            const computedStyle = window.getComputedStyle(testElement);
-            const fontLoaded = computedStyle.fontFamily.includes('Material Symbols');
-            
-            document.body.removeChild(testElement);
-            
-            if (fontLoaded) {
-                console.log('✅ Destinations: Police Material Symbols chargée');
-                resolve();
-            } else {
-                console.log('⏳ Destinations: Police pas encore chargée, nouvelle tentative...');
-                setTimeout(waitForFont, 100);
-            }
-        }, 100);
-    });
-}
-
 const Destinations = {
     isVisible: false,
     destinations: [],
