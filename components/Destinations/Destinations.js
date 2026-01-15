@@ -35,6 +35,8 @@ function waitForFont() {
 const Destinations = {
     isVisible: false,
     destinations: [],
+    isSaving: false, // État de sauvegarde pour éviter les clics multiples
+    isDeleting: false, // État de suppression pour éviter les clics multiples
     
     /**
      * Initialiser le composant
@@ -127,49 +129,6 @@ const Destinations = {
     show() {
         this.isVisible = true;
         this.updatePanelVisibility();
-    },
-    
-    /**
-     * Charger les destinations depuis Firebase
-     */
-    async loadDestinations() {
-        if (!window.firebaseService || !window.firebaseService.isAuthenticated()) {
-            console.log('🔒 Utilisateur non connecté');
-            return;
-        }
-        
-        try {
-            const destinations = await window.firebaseService.getDirectDestinations();
-            this.destinations = destinations;
-            this.renderDestinations();
-            console.log('✅ Destinations chargées:', destinations.length);
-        } catch (error) {
-            console.error('❌ Erreur chargement destinations:', error);
-        }
-    },
-    
-    /**
-     * Afficher les destinations dans le panneau
-     */
-    renderDestinations() {
-        const list = document.getElementById('destinationsList');
-        if (!list) return;
-        
-        list.innerHTML = '';
-        
-        // Trier les destinations par order
-        const sortedDestinations = [...this.destinations].sort((a, b) => {
-            const orderA = a.order || 0;
-            const orderB = b.order || 0;
-            return orderA - orderB;
-        });
-        
-        sortedDestinations.forEach((destination, sortedIndex) => {
-            // Trouver l'index original dans le tableau destinations
-            const originalIndex = this.destinations.indexOf(destination);
-            const card = this.createDestinationCard(destination, originalIndex);
-            list.appendChild(card);
-        });
     },
     
     /**
@@ -332,9 +291,53 @@ const Destinations = {
         const originalTargetOrder = targetDestination.order;
         
         // MISE À JOUR IMMÉDIATE DE L'UI (Optimistic UI)
-        const tempOrder = draggedDestination.order;
-        draggedDestination.order = targetDestination.order;
-        targetDestination.order = tempOrder;
+        // Calculer les nouveaux ordres corrects selon les positions
+        const sortedDestinations = [...this.destinations].sort((a, b) => {
+            const orderA = a.order || 0;
+            const orderB = b.order || 0;
+            return orderA - orderB;
+        });
+        
+        // Trouver les positions dans la liste triée
+        const draggedPosition = sortedDestinations.findIndex(d => d.firestoreId === draggedDestination.firestoreId);
+        const targetPosition = sortedDestinations.findIndex(d => d.firestoreId === targetDestination.firestoreId);
+        
+        // Mettre à jour les ordres pour correspondre aux nouvelles positions
+        if (draggedPosition !== -1 && targetPosition !== -1) {
+            if (draggedPosition < targetPosition) {
+                // Déplacement vers le bas
+                for (let i = draggedPosition; i < targetPosition; i++) {
+                    const dest = this.destinations.find(d => d.firestoreId === sortedDestinations[i].firestoreId);
+                    const nextDest = this.destinations.find(d => d.firestoreId === sortedDestinations[i + 1].firestoreId);
+                    if (dest && nextDest) {
+                        dest.order = nextDest.order;
+                    }
+                }
+                const finalDest = this.destinations.find(d => d.firestoreId === sortedDestinations[targetPosition].firestoreId);
+                if (finalDest) {
+                    finalDest.order = originalDraggedOrder;
+                }
+            } else {
+                // Déplacement vers le haut
+                for (let i = draggedPosition; i > targetPosition; i--) {
+                    const dest = this.destinations.find(d => d.firestoreId === sortedDestinations[i].firestoreId);
+                    const prevDest = this.destinations.find(d => d.firestoreId === sortedDestinations[i - 1].firestoreId);
+                    if (dest && prevDest) {
+                        dest.order = prevDest.order;
+                    }
+                }
+                const finalDest = this.destinations.find(d => d.firestoreId === sortedDestinations[targetPosition].firestoreId);
+                if (finalDest) {
+                    finalDest.order = originalDraggedOrder;
+                }
+            }
+        }
+        
+        // Debug pour vérifier les ordres après mise à jour
+        console.log('🔍 Ordres après mise à jour:');
+        this.destinations.forEach((dest, index) => {
+            console.log(`  ${index}: ${dest.name} - order: ${dest.order}`);
+        });
         
         // Re-render immédiatement pour le feedback visuel
         this.render();
@@ -347,6 +350,9 @@ const Destinations = {
             ]);
             
             console.log('✅ Réorganisation sauvegardée avec succès');
+
+            // Recharger les destinations
+            await this.loadDestinations();
             
         } catch (error) {
             console.error('❌ Erreur réorganisation:', error);
@@ -541,14 +547,22 @@ const Destinations = {
             return;
         }
         
+        // Si déjà en cours de suppression, ignorer
+        if (this.isDeleting) {
+            console.log('🚫 Suppression déjà en cours, ignore le clic');
+            return;
+        }
+        
         console.log('🔧 Suppression directe par FirestoreId:', destinationId);
         
-        // Confirmation de suppression
-        const confirmDelete = confirm(`Êtes-vous sûr de vouloir supprimer "${destination.name || 'cette destination'}" ?`);
+        // Marquer comme en cours de suppression
+        this.isDeleting = true;
         
-        if (!confirmDelete) {
-            console.log('🚫 Suppression annulée par l\'utilisateur');
-            return;
+        // Trouver le bouton de suppression et le mettre en loading
+        const deleteButton = document.querySelector(`#destination-${index} .delete-btn`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="loading-spinner-small"></span>';
         }
         
         try {
@@ -560,12 +574,18 @@ const Destinations = {
             // Mettre à jour les ordres des destinations suivantes
             await this.updateOrdersAfterDeletion(destination.order);
             
-            // Recharger les destinations
-            await this.loadDestinations();
-            
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
             alert('Erreur lors de la suppression de la destination: ' + error.message);
+        } finally {
+            // Réactiver le bouton
+            if (deleteButton) {
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<span class="material-icons">delete</span>';
+            }
+            
+            // Marquer comme terminé
+            this.isDeleting = false;
         }
     },
     
@@ -610,6 +630,9 @@ const Destinations = {
             alert('Certaines destinations n\'ont pas pu être réordonnées. Veuillez rafraîchir la page.');
         } else {
             console.log('✅ Tous les ordres mis à jour avec succès');
+
+            // Recharger les destinations
+            await this.loadDestinations();
         }
     },
     
@@ -669,13 +692,6 @@ const Destinations = {
      */
     async loadDestinations() {
         try {
-            if (!window.firebaseService.isAuthenticated()) {
-                console.log('🔒 Utilisateur non connecté');
-                this.destinations = [];
-                this.render();
-                return;
-            }
-
             console.log('🔍 Chargement des destinations...');
             const destinations = await window.firebaseService.getDirectDestinations();
             
@@ -692,7 +708,7 @@ const Destinations = {
             
             this.destinations = destinations;
             this.render();
-            
+                        
             // Afficher les destinations sur la carte
             if (window.displayDestinationsOnMap) {
                 window.displayDestinationsOnMap();
@@ -710,25 +726,41 @@ const Destinations = {
      */
     async saveDestination(index) {
         const destination = this.destinations[index];
+        const saveButton = document.querySelector(`#form-${index} .btn-save`);
         
-        // Récupérer les valeurs du formulaire
-        const title = document.getElementById(`title-${index}`).value;
-        const address = document.getElementById(`address-${index}`).value;
-        const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
-        const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
-        const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
+        // Si déjà en cours de sauvegarde, ignorer
+        if (this.isSaving) {
+            console.log('🚫 Sauvegarde déjà en cours, ignore le clic');
+            return;
+        }
         
-        // Mettre à jour l'objet destination
-        destination.name = title;
-        destination.duration = { days, hours, minutes };
+        // Marquer comme en cours de sauvegarde
+        this.isSaving = true;
         
-        // Si une adresse a été sélectionnée via la recherche, utiliser ses données
-        if (this.selectedAddress && this.selectedAddress.address === address) {
-            // Utiliser address comme objet contenant toutes les données
-            destination.address = this.selectedAddress;
+        // Désactiver le bouton et afficher le loading
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
         }
         
         try {
+            // Récupérer les valeurs du formulaire
+            const title = document.getElementById(`title-${index}`).value;
+            const address = document.getElementById(`address-${index}`).value;
+            const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
+            const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
+            const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
+            
+            // Mettre à jour l'objet destination
+            destination.name = title;
+            destination.duration = { days, hours, minutes };
+            
+            // Si une adresse a été sélectionnée via la recherche, utiliser ses données
+            if (this.selectedAddress && this.selectedAddress.address === address) {
+                // Utiliser address comme objet contenant toutes les données
+                destination.address = this.selectedAddress;
+            }
+            
             if (!destination.firestoreId) {
                 // C'est une nouvelle destination (pas d'ID Firestore), l'ajouter à Firebase
                 await window.firebaseService.addDestinationToItinerary(destination);
@@ -748,6 +780,15 @@ const Destinations = {
         } catch (error) {
             console.error('❌ Erreur sauvegarde destination:', error);
             alert('Erreur lors de la sauvegarde de la destination');
+        } finally {
+            // Réactiver le bouton et restaurer le texte
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '💾 Enregistrer';
+            }
+            
+            // Marquer comme terminé
+            this.isSaving = false;
         }
     },
     
