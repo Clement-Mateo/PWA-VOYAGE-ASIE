@@ -49,13 +49,77 @@
 /* Popups */
 .leaflet-popup-content-wrapper {
     border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
     padding: 0 !important;
 }
 
 .leaflet-popup-content {
     margin: 0 !important;
     min-width: 200px;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+}
+
+.leaflet-popup-content .destination-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.leaflet-popup-content .destination-title {
+    margin: 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.leaflet-popup-content .destination-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.leaflet-popup-content .edit-btn {
+    background: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.leaflet-popup-content .delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.leaflet-popup-content .material-icons {
+    font-size: 14px;
+}
+
+.leaflet-popup-content .destination-address {
+    margin: 8px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.leaflet-popup-content .destination-duration {
+    margin: 8px 0;
+    color: #666;
+    font-size: 14px;
 }
 
 .leaflet-popup-tip {
@@ -68,10 +132,6 @@
     border-radius: 50% !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
     transition: transform 0.2s ease !important;
-}
-
-.leaflet-marker-icon:hover {
-    transform: scale(1.1) !important;
 }
 
 /* Polylines */

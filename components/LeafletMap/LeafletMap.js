@@ -315,18 +315,22 @@ class LeafletMap {
                 const order = destination.order || 0;
                 
                 let popupContent = `
-                    <div style="min-width: 200px;">
-                        <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>
-                        <p style="margin: 2px 0; font-size: 12px; color: #666;">Ordre: ${order}</p>`;
-                
-                if (destination.address && destination.address.address) {
-                    popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address.address}</p>`;
-                }
-                
-                popupContent += `
-                        <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
-                    </div>`;
-                
+                    <div class="destination-card">
+                        <div class="destination-header">
+                            <h3 class="destination-title">${name}</h3>
+                            <div class="destination-actions">
+                                <button class="edit-btn" onclick="Destinations.editDestination(${index})">
+                                    <span class="material-icons">edit</span>
+                                </button>
+                                <button class="delete-btn" onclick="Destinations.deleteDestination(${index})">
+                                    <span class="material-icons">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
+                        <p class="destination-duration">⏱️ ${order}</p>
+                    </div>
+                `;
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
                     .addTo(this.leafletMap)
                     .bindPopup(popupContent);
