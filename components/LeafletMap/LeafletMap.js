@@ -319,10 +319,10 @@ class LeafletMap {
                         <div class="destination-header">
                             <h3 class="destination-title">${name}</h3>
                             <div class="destination-actions">
-                                <button class="edit-btn" onclick="Destinations.editDestination(${index})">
+                                <button class="edit-btn" onclick="Destinations.show(); setTimeout(() => Destinations.editDestination(${index}), 300)">
                                     <span class="material-icons">edit</span>
                                 </button>
-                                <button class="delete-btn" onclick="Destinations.deleteDestination(${index})">
+                                <button class="delete-btn" onclick="Destinations.show(); setTimeout(() => Destinations.deleteDestination(${index}), 300)">
                                     <span class="material-icons">delete</span>
                                 </button>
                             </div>
