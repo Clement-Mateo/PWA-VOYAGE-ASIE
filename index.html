@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="components/Login/Login.css">
     <link rel="stylesheet" href="components/Destinations/Destinations.css">
     <link rel="stylesheet" href="components/Destinations/ChooseAddress/ChooseAddress.css">
+    <link rel="stylesheet" href="components/LeafletMap/LeafletMap.css">
 </head>
 <body>
     <div id="map"></div>
@@ -139,6 +140,7 @@
     <script src="components/Login/Login.js"></script>
     <script src="components/Destinations/Destinations.js"></script>
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
+    <script src="components/LeafletMap/LeafletMap.js"></script>
     
     <!-- Component Manager -->
     <script type="module">
@@ -152,6 +154,7 @@
         window.ComponentManager = ComponentManager;
         window.Destinations = Destinations;
         window.ChooseAddress = ChooseAddress;
+        window.LeafletMap = LeafletMap;
         
         // Initialiser les composants quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
@@ -175,6 +178,15 @@
                 window.Destinations.init();
             }
             
+            // Initialiser LeafletMap
+            if (window.LeafletMap) {
+                const mapInstance = new window.LeafletMap(); // Utiliser LeafletMap
+                mapInstance.init();
+                mapInstance.exportForLegacy();
+                window.MapInstance = mapInstance;
+                console.log('✅ LeafletMap initialisée et exportée pour compatibilité');
+            }
+            
             await ComponentManager.initAll();
         });
     </script>
@@ -185,238 +197,30 @@
         let currentSelectedResult;
         let isSearching = false;
         let isOnline = navigator.onLine;
-        window.destinationMarkers = []; // Stocker les marqueurs de destinations
         
-        // Variable pour stocker les décorateurs de flèches
-        window.arrowDecorators = [];
-        
-        // Initialisation de la carte
-        let map = L.map('map', {
-            center: [20, 0],
-            zoom: 2,
-            minZoom: 2,
-            maxZoom: 18,
-            worldCopyJump: false, // Désactiver la coupure visible
-            continuousWorld: true, // Monde continu fluide
-            zoomControl: false,
-            maxBounds: [[-85, -Infinity], [85, Infinity]], // Bloquer vertical mais horizontal infini
-            maxBoundsViscosity: 0.0, // Fluidité maximale
-            inertia: true, // Scroll fluide
-            bounceAtZoomLimits: false // Pas de rebond
-        });
-        
-        // Différents styles de cartes
-        const mapStyles = {
-            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }),
-            maptiler: L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YSAwtO41576Mnmte3DQN', {
-                attribution: '© MapTiler © OpenStreetMap contributors'
-            }),
-            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '© Esri'
-            }),
-            terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenTopoMap'
-            }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© CartoDB'
-            })
-        };
-        
-        // Style par défaut
-        let currentLayer = mapStyles.maptiler;
-        currentLayer.addTo(map);
-        
-        // Ajouter les contrôles de zoom
-        L.control.zoom({
-            position: 'bottomright'
-        }).addTo(map);
-        
-        // Fonctions de carte
-        function changeMapStyle() {
-            const style = document.getElementById('mapStyle').value;
-            map.removeLayer(currentLayer);
-            currentLayer = mapStyles[style];
-            currentLayer.addTo(map);
-        }
-        
-        // Fonction pour calculer les patterns de flèches
-        function calculateArrowPatterns(fromCoords, toCoords, zoomLevel) {
-            // Calculer la distance en pixels
-            const point1 = map.latLngToContainerPoint(fromCoords);
-            const point2 = map.latLngToContainerPoint(toCoords);
-            const pixelDistance = Math.sqrt(
-                Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)
-            );
+        // Fonction de déconnexion
+        function handleLogout() {
+            console.log('Tentative de déconnexion...');
             
-            const maxArrows = Math.max(1, Math.min(Math.floor(zoomLevel), 8));
+            if (window.MapInstance && window.MapInstance.cleanMap) {
+                window.MapInstance.cleanMap();
+            }
             
-            console.log('🔍 Pixel distance:', pixelDistance, 'Zoom level:', zoomLevel, 'Max arrows:', maxArrows);
-            
-            if (pixelDistance < 200) {
-                // Moins de 200px : une seule flèche au milieu
-                return [{
-                    offset: '50%',
-                    repeat: 0,
-                    symbol: L.Symbol.arrowHead({
-                        pixelSize: 16,
-                        polygon: true,
-                        pathOptions: {
-                            stroke: false,
-                            fill: true,
-                            fillColor: '#4285F4',
-                            fillOpacity: 0.6
+            if (window.firebaseService) {
+                window.firebaseService.signOut()
+                    .then(() => {
+                        console.log('Déconnexion réussie');
+                        if (window.updateUserPanel) {
+                            window.updateUserPanel();
                         }
                     })
-                }];
+                    .catch((error) => {
+                        console.error('Erreur de déconnexion:', error);
+                    });
             } else {
-                // Plus de 200px : flèches adaptées au zoom
-                const patterns = [];
-                const segmentCount = Math.min(Math.floor(pixelDistance / 100), maxArrows);
-                
-                for (let i = 0; i < segmentCount; i++) {
-                    const percentageOffset = ((i + 1) / (segmentCount + 1)) * 100;
-                    
-                    patterns.push({
-                        offset: percentageOffset + '%',
-                        repeat: 0,
-                        symbol: L.Symbol.arrowHead({
-                            pixelSize: 16,
-                            polygon: true,
-                            pathOptions: {
-                                stroke: false,
-                                fill: true,
-                                fillColor: '#4285F4',
-                                fillOpacity: 0.6
-                            }
-                        })
-                    });
-                }
-                
-                return patterns;
+                console.error('FirebaseService non disponible pour la déconnexion');
             }
         }
-        
-        // Fonction pour créer les flèches sur une ligne
-        function createArrowsOnLine(line, fromCoords, toCoords, zoomLevel) {
-            const patterns = calculateArrowPatterns(fromCoords, toCoords, zoomLevel);
-            const arrowDecorator = L.polylineDecorator(line, {
-                patterns: patterns,
-                map: map
-            }).addTo(map);
-            
-            return arrowDecorator;
-        }
-        async function displayDestinationsOnMap() {
-            console.log('🗺 displayDestinationsOnMap appelée');
-            
-            window.cleanMap();
-            
-            if (!window.firebaseService.isAuthenticated()) {
-                console.log('🔒 Utilisateur non connecté');
-                return;
-            }
-            
-            try {
-                const destinations = await window.firebaseService.getDirectDestinations();
-                
-                if (destinations.length > 0) {
-                    // Trier les destinations par order
-                    const sortedDestinations = destinations.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    
-                    // Filtrer les destinations avec des coordonnées valides
-                    const validDestinations = sortedDestinations.filter(destination => 
-                        typeof destination === 'object' && 
-                        destination.address && 
-                        destination.address.location && 
-                        destination.address.location.lat && 
-                        destination.address.location.lng
-                    );
-                    
-                    // Créer les traits directionnels entre destinations consécutives
-                    for (let i = 0; i < validDestinations.length - 1; i++) {
-                        const fromDest = validDestinations[i];
-                        const toDest = validDestinations[i + 1];
-                        
-                        const fromCoords = [fromDest.address.location.lat, fromDest.address.location.lng];
-                        const toCoords = [toDest.address.location.lat, toDest.address.location.lng];
-                        
-                        // Créer une polyline avec flèche directionnelle utilisant le plugin
-                        const line = L.polyline([fromCoords, toCoords], {
-                            color: '#4285F4',
-                            weight: 3,
-                            opacity: 0.8,
-                            dashArray: '10, 5'
-                        }).addTo(map);
-                        
-                        // Créer les flèches avec la fonction simplifiée
-                        const arrowDecorator = createArrowsOnLine(line, fromCoords, toCoords, map.getZoom());
-                        
-                        destinationMarkers.push(line);
-                        destinationMarkers.push(arrowDecorator);
-                        arrowDecorators.push(arrowDecorator);
-                    }
-                    
-                    // Créer les marqueurs pour chaque destination
-                    validDestinations.forEach((destination, index) => {
-                        const name = destination.name || 'Destination sans nom';
-                        const order = destination.order || 0;
-                        
-                        let popupContent = `
-                            <div style="min-width: 200px;">
-                                <h4 style="margin: 0 0 5px 0; color: #333;">${name}</h4>
-                                <p style="margin: 2px 0; font-size: 12px; color: #666;">Ordre: ${order}</p>`;
-                        
-                        if (destination.address && destination.address.address) {
-                            popupContent += `<p style="margin: 5px 0; color: #666;">${destination.address.address}</p>`;
-                        }
-                        
-                        popupContent += `
-                                <p style="margin: 5px 0; font-size: 12px; color: #999;">Destination individuelle</p>
-                            </div>`;
-                        
-                        const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
-                            .addTo(map)
-                            .bindPopup(popupContent);
-                        
-                        destinationMarkers.push(marker);
-                    });
-                    
-                    console.log(`✅ ${destinationMarkers.length} marqueur(s) et trait(s) affiché(s)`);
-                    
-                    // Ajuster la vue pour voir tous les marqueurs
-                    const group = new L.featureGroup(destinationMarkers);
-                    map.fitBounds(group.getBounds().pad(0.1));
-                } else {
-                    console.log('❌ Aucune destination à afficher');
-                }
-                
-            } catch (error) {
-                console.error('❌ Erreur affichage destinations:', error);
-            }
-        }
-        
-        // Fonction pour rafraîchir les flèches quand le zoom change
-        function updateArrowsOnZoom() {
-            // Effacer les décorateurs existants
-            arrowDecorators.forEach(decorator => map.removeLayer(decorator));
-            arrowDecorators = [];
-            
-            // Recréer les flèches avec le nouveau niveau de zoom
-            destinationMarkers.forEach(marker => {
-                if (marker instanceof L.Polyline) {
-                    // C'est une ligne, recréer les flèches
-                    const fromCoords = marker.getLatLngs()[0];
-                    const toCoords = marker.getLatLngs()[1];
-                    const arrowDecorator = createArrowsOnLine(marker, fromCoords, toCoords, map.getZoom());
-                    arrowDecorators.push(arrowDecorator);
-                }
-            });
-        }
-        
-        // Ajouter un écouteur d'événement pour le zoom
-        map.on('zoomend', updateArrowsOnZoom);
         
         // Mettre à jour l'affichage des destinations après connexion
         async function updateUserPanel() {
@@ -433,9 +237,8 @@
                 }
                 
                 // Afficher la carte
-                const mapElement = document.getElementById('map');
-                if (mapElement) {
-                    mapElement.style.display = 'block';
+                if (window.MapInstance) {
+                    window.MapInstance.show();
                 }
                 
                 // Charger et afficher les destinations
@@ -472,98 +275,52 @@
                 }
                 
                 // Effacer les marqueurs lors de la déconnexion
-                destinationMarkers.forEach(marker => map.removeLayer(marker));
-                destinationMarkers = [];
+                if (window.MapInstance && window.MapInstance.cleanMap) {
+                    window.MapInstance.cleanMap();
+                }
             }
         }
         
         // Vérifier l'état de connexion au chargement
-        window.firebase.auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                window.firebaseService.user = user;
-                console.log('Utilisateur connecté:', user.email);
-                
-                // Créer un itinéraire si aucun n'existe
-                await window.firebaseService.ensureUserItinerary();
-                
-                updateUserPanel();
-            } else {
-                window.firebaseService.user = null;
-                console.log('Utilisateur déconnecté');
-                
-                // Effacer les marqueurs lors de la déconnexion
-                destinationMarkers.forEach(marker => map.removeLayer(marker));
-                destinationMarkers = [];
-                
-                updateUserPanel();
-            }
-        });
-
-        /**
-         * Réinitialiser complètement la carte (nettoyer tous les éléments)
-         */
-        function cleanMap() {
-            console.log('🧹 Nettoyage complet de la carte');
-            
-            // Utiliser la variable locale 'map' (objet Leaflet valide)
-            if (map && typeof map === 'object') {                
-                
-                // Parcourir tous les layers et supprimer ceux qui ne sont pas des tiles
-                const layersToRemove = [];
-                map.eachLayer((layer) => {
-                    // Garder les tiles de fond (layers avec _tile, _url, ou _html)
-                    const isTileLayer = layer._tile || layer._url || layer._html;
-                    const isGridLayer = layer._cells || layer._s;
-                    
-                    if (!isTileLayer && !isGridLayer) {
-                        layersToRemove.push(layer);
+        setTimeout(() => {
+            if (window.firebase && window.firebase.auth) {
+                window.firebase.auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        window.firebaseService.user = user;
+                        console.log('Utilisateur connecté:', user.email);
+                        
+                        // Créer un itinéraire si aucun n'existe
+                        await window.firebaseService.ensureUserItinerary();
+                        
+                        updateUserPanel();
+                    } else {
+                        window.firebaseService.user = null;
+                        console.log('Utilisateur déconnecté');
+                        
+                        updateUserPanel();
                     }
                 });
-                
-                // Supprimer tous les layers identifiés
-                layersToRemove.forEach((layer) => {
-                    map.removeLayer(layer);
-                });
-                
-                console.log(`✅ ${layersToRemove.length} layers supprimés universellement`);
-                
-                // Vider les tableaux globaux
-                if (window.destinationMarkers) {
-                    window.destinationMarkers = [];
-                }
-                if (window.arrowDecorators) {
-                    window.arrowDecorators = [];
-                }
-                
-                console.log('✅ Carte vidée avec succès');
             } else {
-                console.warn('⚠️ map est null ou non initialisé, impossible de nettoyer la carte');
+                console.warn('⚠️ Firebase non encore initialisé, nouvelle tentative dans 2 secondes');
+                setTimeout(() => {
+                    if (window.firebase && window.firebase.auth) {
+                        window.firebase.auth.onAuthStateChanged(async (user) => {
+                            if (user) {
+                                window.firebaseService.user = user;
+                                console.log('Utilisateur connecté:', user.email);
+                                await window.firebaseService.ensureUserItinerary();
+                                updateUserPanel();
+                            } else {
+                                window.firebaseService.user = null;
+                                console.log('Utilisateur déconnecté');
+                                updateUserPanel();
+                            }
+                        });
+                    }
+                }, 2000);
             }
-        }
-        
-        // Fonction de déconnexion
-        function handleLogout() {
-            console.log('Tentative de déconnexion...');
-            
-            window.cleanMap();
-            
-            if (window.firebaseService) {
-                window.firebaseService.signOut()
-                    .then(() => {
-                        console.log('Déconnexion réussie');
-                        updateUserPanel();
-                        
-                        // Réafficher les boutons si nécessaire
-                        updateUserPanel();
-                    })
-                    .catch((error) => {
-                        console.error('Erreur de déconnexion:', error);
-                    });
-            } else {
-                console.error('FirebaseService non disponible pour la déconnexion');
-            }
-        }
-        
+        }, 1000);
+
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
             isOnline = true;
@@ -575,74 +332,9 @@
             console.log('Connexion perdue - API désactivée');
         });
         
-        // Support tactile pour mobile
-        if ('ontouchstart' in window) {
-            map.dragging.enable();
-            map.touchZoom.enable();
-            map.doubleClickZoom.enable();
-            map.scrollWheelZoom.enable();
-        }
-        
-        // Calculer les limites en fonction de la taille de l'écran
-        function getScreenBounds() {
-            const bounds = map.getBounds();
-            const screenLatRange = bounds.getNorth() - bounds.getSouth();
-            const centerLat = map.getCenter().lat;
-            
-            // Calculer les limites pour que la carte remplisse exactement l'écran
-            const maxNorth = centerLat + (screenLatRange / 2);
-            const maxSouth = centerLat - (screenLatRange / 2);
-            
-            return {
-                north: Math.min(maxNorth, 85),  // Ne pas dépasser 85°N
-                south: Math.max(maxSouth, -85)  // Ne pas dépasser 85°S
-            };
-        }
-        
-        // Scroll horizontal fluide sans démarcation
-        map.on('dragend', function() {
-            const center = map.getCenter();
-            const zoom = map.getZoom();
-            const bounds = getScreenBounds();
-            
-            // Bloquer seulement vertical selon la taille de l'écran
-            if (center.lat < bounds.south) center.lat = bounds.south;
-            if (center.lat > bounds.north) center.lat = bounds.north;
-            
-            // Horizontal TOTALEMENT libre - pas de correction
-            // continuousWorld: true gère le wrap automatiquement
-            
-            // Remettre seulement si on sort verticalement
-            map.setView([center.lat, center.lng], zoom, { animate: false });
-        });
-        
-        // Scroll fluide pendant le drag
-        map.on('drag', function() {
-            const center = map.getCenter();
-            const bounds = getScreenBounds();
-            
-            // Bloquer seulement vertical pendant le drag
-            if (center.lat < bounds.south || center.lat > bounds.north) {
-                // Corriger seulement vertical
-                const correctedLat = Math.max(bounds.south, Math.min(bounds.north, center.lat));
-                map.setView([correctedLat, center.lng], map.getZoom(), { animate: false });
-            }
-        });
-        
-        // Contrôler le zoom
-        map.on('zoomend', function() {
-            const zoom = map.getZoom();
-            if (zoom < 2) map.setZoom(2);
-            if (zoom > 18) map.setZoom(18);
-        });
-        
-        console.log('🌍 Carte configurée : horizontal fluide sans démarcation, vertical adapté');
-        
         // Exporter les fonctions globalement
-        window.displayDestinationsOnMap = displayDestinationsOnMap;
         window.updateUserPanel = updateUserPanel;
-        window.changeMapStyle = changeMapStyle;
-        window.map = map;
+        window.handleLogout = handleLogout;
     </script>
 </body>
 </html>
