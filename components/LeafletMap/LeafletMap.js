@@ -328,7 +328,7 @@ class LeafletMap {
                             </div>
                         </div>
                         <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
-                        <p class="destination-duration">⏱️ ${order}</p>
+                        <p class="destination-duration">⏱️ ${window.Destinations.formatDuration(destination.duration)}</p>
                     </div>
                 `;
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
