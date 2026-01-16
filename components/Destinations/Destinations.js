@@ -5,33 +5,6 @@
 
 console.log('🔍 Destinations.js: Début du chargement');
 
-// Attendre que la police soit chargée
-function waitForFont() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log('🔍 Destinations: Vérification du chargement de la police...');
-            const testElement = document.createElement('span');
-            testElement.className = 'material-symbols-outlined';
-            testElement.textContent = 'edit';
-            testElement.style.fontFamily = "'Material Symbols Outlined', sans-serif";
-            document.body.appendChild(testElement);
-            
-            const computedStyle = window.getComputedStyle(testElement);
-            const fontLoaded = computedStyle.fontFamily.includes('Material Symbols');
-            
-            document.body.removeChild(testElement);
-            
-            if (fontLoaded) {
-                console.log('✅ Destinations: Police Material Symbols chargée');
-                resolve();
-            } else {
-                console.log('⏳ Destinations: Police pas encore chargée, nouvelle tentative...');
-                setTimeout(waitForFont, 100);
-            }
-        }, 100);
-    });
-}
-
 const Destinations = {
     isVisible: false,
     destinations: [],
@@ -181,11 +154,29 @@ const Destinations = {
                         <button class="delete-btn" onclick="Destinations.deleteDestination(${index})">
                             <span class="material-icons">delete</span>
                         </button>
+                        <button class="expand-btn" onclick="Destinations.toggleDestinationCard(${index})" title="Déplier">
+                            <span class="material-icons">expand_more</span>
+                        </button>
                     ` : ''}
                 </div>
             </div>
             <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
             <p class="destination-duration">⏱️ ${durationText}</p>
+            
+            <!-- Section des activités (visible quand dépliée) -->
+            <div class="destination-activities" id="activities-${index}" style="display: none;">
+                <div class="activities-header">
+                    <h4>Activités</h4>
+                </div>
+                <div class="activities-list" id="activities-list-${index}">
+                    <!-- Les activités seront chargées ici -->
+                </div>
+                <button class="add-activity-btn" onclick="Destinations.addActivity(${index})" title="Ajouter une activité">
+                    <span class="material-icons">add_circle</span>
+                    Ajouter une activité
+                </button>
+            </div>
+            
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
@@ -421,6 +412,27 @@ const Destinations = {
         // Ouvrir ce formulaire
         form.classList.add('show');
         card.classList.add('editing');
+    },
+    
+    /**
+     * Ajouter une activité à une destination
+     */
+    addActivity(index) {
+        const destination = this.destinations[index];
+        if (!destination || !destination.firestoreId) {
+            console.error('❌ Destination invalide pour ajouter une activité');
+            return;
+        }
+        
+        console.log('🔧 Ajout d\'activité pour la destination:', destination.name);
+        
+        // Définir la destination actuelle pour l'activité
+        if (window.Activity) {
+            window.Activity.setCurrentDestination(destination);
+            window.Activity.showActivityPopup();
+        } else {
+            console.error('❌ Activity non disponible');
+        }
     },
     
     /**
@@ -720,7 +732,34 @@ const Destinations = {
             this.render();
         }
     },
-    
+
+    // Obtenir le pays depuis les coordonnées (API Nominatim)
+    async getCountryFromCoordinates(lat, lng) {
+        try {
+            // Utiliser l'API Nominatim en anglais (standard et fiable)
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en`
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data && data.address && data.address.country) {
+                const countryName = data.address.country;
+                console.log(`🌍 Pays retourné par l'API (anglais): ${countryName}`);
+                return countryName;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Erreur lors du géocodage inverse:', error);
+            return null;
+        }
+    },
+
     /**
      * Sauvegarder une destination modifiée
      */
@@ -751,14 +790,31 @@ const Destinations = {
             const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
             const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
             
+            // Validation : l'adresse est obligatoire
+            if (!address || !address.trim()) {
+                alert('L\'adresse est obligatoire pour créer une destination');
+                return;
+            }
+            
             // Mettre à jour l'objet destination
             destination.name = title;
             destination.duration = { days, hours, minutes };
             
-            // Si une adresse a été sélectionnée via la recherche, utiliser ses données
-            if (this.selectedAddress && this.selectedAddress.address === address) {
-                // Utiliser address comme objet contenant toutes les données
-                destination.address = this.selectedAddress;
+            destination.address = {
+                address: address,
+                location: this.selectedAddress ? this.selectedAddress.location : null
+            };
+            
+            // Détecter le pays via les coordonnées et le stocker
+            if (destination.address.location) {
+                const country = await this.getCountryFromCoordinates(
+                    destination.address.location.lat, 
+                    destination.address.location.lng
+                );
+                if (country) {
+                    destination.address.country = country;
+                    console.log(`🌍 Pays détecté et stocké: ${country}`);
+                }
             }
             
             if (!destination.firestoreId) {
@@ -786,61 +842,188 @@ const Destinations = {
                 saveButton.disabled = false;
                 saveButton.innerHTML = '💾 Enregistrer';
             }
+    
+    }
+    },
+
+    // Déplier/Replier une carte destination
+    toggleDestinationCard(index) {
+        const card = document.getElementById(`destination-${index}`);
+        const activitiesSection = document.getElementById(`activities-${index}`);
+        const expandBtn = card.querySelector('.expand-btn span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        const isExpanded = activitiesSection.style.display !== 'none';
+        
+        if (isExpanded) {
+            // Replier
+            activitiesSection.style.display = 'none';
+            expandBtn.textContent = 'expand_more';
+            card.classList.remove('expanded');
+        } else {
+            // Déplier
+            activitiesSection.style.display = 'block';
+            expandBtn.textContent = 'expand_less';
+            card.classList.add('expanded');
             
-            // Marquer comme terminé
-            this.isSaving = false;
+            // Charger les activités pour cette destination
+            this.loadActivitiesForDestination(index);
         }
     },
-    
+
+    // Charger les activités pour une destination spécifique
+    async loadActivitiesForDestination(index) {
+        const destination = this.destinations[index];
+        if (!destination || !destination.firestoreId) return;
+        
+        try {
+            // Charger les activités depuis Firebase avec la bonne syntaxe
+            const activitiesCollection = window.firebase.collection(
+                window.firebaseService.db,
+                'destinations',
+                destination.firestoreId,
+                'activities'
+            );
+            
+            console.log('🔍 Requête Firebase pour activités:', {
+                destinationId: destination.firestoreId,
+                userId: window.firebaseService.user.uid,
+                collectionPath: `destinations/${destination.firestoreId}/activities`
+            });
+            
+            // Ajouter un filtre par userId pour debug
+            const q = window.firebase.query(
+                activitiesCollection,
+                window.firebase.where('userId', '==', window.firebaseService.user.uid)
+            );
+            
+            const querySnapshot = await window.firebase.getDocs(q);
+            
+            console.log('🔍 Résultat de la requête:', {
+                empty: querySnapshot.empty,
+                size: querySnapshot.size,
+                docs: querySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+            });
+            
+            const activitiesList = document.getElementById(`activities-list-${index}`);
+            activitiesList.innerHTML = '';
+            
+            if (querySnapshot.empty) {
+                activitiesList.innerHTML = '<p style="color: #666; padding: 10px;">Aucune activité pour cette destination</p>';
+            } else {
+                querySnapshot.forEach(doc => {
+                    const activity = doc.data();
+                    console.log('🔍 Activité trouvée:', { id: doc.id, userId: activity.userId, name: activity.name });
+                    
+                    const activityElement = document.createElement('div');
+                    activityElement.className = 'activity-item';
+                    
+                    // Créer le contenu HTML proprement
+                    let activityHTML = `
+                        <div class="activity-info">
+                            <div class="activity-header">
+                                <strong>${activity.name}</strong>
+                                <div class="activity-actions">
+                                    <button class="activity-edit-btn" onclick="window.Activity.editActivity('${doc.id}', ${index})" title="Modifier l'activité">
+                                        <span class="material-icons">edit</span>
+                                    </button>
+                                    <button class="activity-delete-btn" onclick="window.Destinations.deleteActivity('${doc.id}', ${index}, this)" title="Supprimer l'activité">
+                                        <span class="material-icons">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                    `;
+                    
+                    if (activity.arrivalTime && activity.departureTime) {
+                        activityHTML += `<span class="activity-time">${activity.arrivalTime} - ${activity.departureTime}</span>`;
+                    }
+                    
+                    // Afficher le prix en gérant tous les cas (objet, nombre, string, etc.)
+                    const displayPrice = activity.price ? 
+                        (typeof activity.price === 'object' ? activity.price.amount : activity.price) : 0;
+                    const displayCurrency = activity.localPrice || 0;
+                    const displayCurrencyCode = activity.localCurrencyCode || ''; // Type de monnaie (JPY, USD, etc.)
+                    
+                    if (displayPrice > 0 || displayCurrency > 0) {
+                        activityHTML += `
+                            <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
+                        `;
+                    }
+                    
+                    // Afficher le type d'activité si présent
+                    if (activity.activityType) {
+                        activityHTML += `
+                            <span class="activity-type">${activity.activityType}</span>
+                        `;
+                    }
+                    
+                    activityHTML += `
+                        </div>
+                    `;
+                    
+                    activityElement.innerHTML = activityHTML;
+                    activitiesList.appendChild(activityElement);
+                });
+                
+            }
+            
+        } catch (error) {
+            console.error('Erreur lors du chargement des activités:', error);
+            console.error('Détails complets de l\'erreur:', {
+                code: error.code,
+                message: error.message,
+                stack: error.stack
+            });
+            const activitiesList = document.getElementById(`activities-list-${index}`);
+            if (activitiesList) {
+                activitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des activités</p>';
+            }
+        }
+    },
+
+    // Supprimer une activité
+    async deleteActivity(activityId, destinationIndex, buttonElement) {
+        const destination = this.destinations[destinationIndex];
+        if (!destination || !destination.firestoreId) return;
+
+        // Désactiver le bouton et afficher le loading
+        if (buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span class="loading-spinner"></span>';
+        }
+
+        try {
+            // Supprimer l'activité de Firebase
+            const activityRef = window.firebase.doc(
+                window.firebaseService.db,
+                'destinations',
+                destination.firestoreId,
+                'activities',
+                activityId
+            );
+            
+            await window.firebase.deleteDoc(activityRef);
+            console.log('✅ Activité supprimée:', activityId);
+            
+            // Recharger la liste des activités
+            await this.loadActivitiesForDestination(destinationIndex);
+            
+        } catch (error) {
+            console.error('❌ Erreur suppression activité:', error);
+            alert('Erreur lors de la suppression de l\'activité');
+        } finally {
+            // Réactiver le bouton et restaurer l'icône
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<span class="material-icons">delete</span>';
+            }
+        }
+    },
+
     /**
      * Afficher le formulaire d'ajout
      */
-    showAddForm() {
-        // Masquer tous les formulaires d'édition
-        document.querySelectorAll('.destination-form.show').forEach(f => {
-            f.classList.remove('show');
-        });
-        document.querySelectorAll('.destination-card.editing').forEach(c => {
-            c.classList.remove('editing');
-        });
-        
-        // Créer une destination vide pour l'ajout
-        const newDestination = {
-            name: '',
-            address: '',
-            duration: { days: 0, hours: 0, minutes: 0 },
-            order: this.destinations.length // Order = position dans la liste
-        };
-        
-        // Ajouter la nouvelle destination à la FIN du tableau
-        this.destinations.push(newDestination);
-        
-        // Créer une card pour la nouvelle destination
-        const container = document.getElementById('destinationsList');
-        if (container) {
-            const list = container.querySelector('.destinations-list') || document.createElement('div');
-            list.className = 'destinations-list';
-            
-            // L'index de la nouvelle destination est le dernier
-            const newIndex = this.destinations.length - 1;
-            const card = this.createDestinationCard(newDestination, newIndex);
-            card.classList.add('editing');
-            list.appendChild(card); // Ajouter à la fin
-            
-            if (!container.querySelector('.destinations-list')) {
-                container.appendChild(list);
-            }
-            
-            // Ouvrir automatiquement le formulaire
-            const form = document.getElementById(`form-${newIndex}`);
-            if (form) {
-                form.classList.add('show');
-            }
-            
-            // Mettre à jour la visibilité du bouton "Ajouter"
-            this.updateAddButtonVisibility();
-        }
-    },
     
     /**
      * Ajouter une nouvelle destination
