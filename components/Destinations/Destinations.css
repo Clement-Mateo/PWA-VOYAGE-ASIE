@@ -14,13 +14,13 @@
     position: fixed;
     right: 0;
     top: 0;
-    width: 320px;
+    width: 420px;
     height: 100vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    z-index: 1001;
+    z-index: 1000;
     overflow-y: auto;
 }
 
@@ -46,30 +46,26 @@
 }
 
 .destinations-list {
-    padding: 20px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
 .destination-card {
     background: white;
     border-radius: 12px;
-    padding: 20px;
+    padding: 18px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
     transition: all 0.3s ease;
     position: relative;
+    flex: 0 0 auto;
 }
 
 .destination-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.destination-card.editing {
-    border: 2px solid #4CAF50;
-    background: #f8fff8;
 }
 
 .destination-card.dragging {
@@ -86,6 +82,10 @@
 .destination-card.expanded {
     border: 2px solid #667eea;
     background: #f0f4ff;
+}
+
+.destination-card.editing .expand-btn {
+    display: none;
 }
 
 .destination-header {
@@ -484,6 +484,9 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-save {
@@ -493,6 +496,11 @@
 
 .btn-save:hover {
     background: #45a049;
+}
+
+.btn-save .material-icons,
+.btn-cancel .material-icons {
+    font-size: 16px;
 }
 
 .btn-save:disabled {
@@ -545,7 +553,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin: 20px;
+    margin: 0;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
