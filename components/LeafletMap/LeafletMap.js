@@ -121,7 +121,7 @@ class LeafletMap {
                     pathOptions: {
                         stroke: false,
                         fill: true,
-                        fillColor: '#4285F4',
+                        fillColor: 'var(--primary-blue)',
                         fillOpacity: 0.6
                     }
                 })
@@ -142,7 +142,7 @@ class LeafletMap {
                         pathOptions: {
                             stroke: false,
                             fill: true,
-                            fillColor: '#4285F4',
+                            fillColor: 'var(--primary-blue)',
                             fillOpacity: 0.6
                         }
                     })
@@ -296,7 +296,7 @@ class LeafletMap {
                 const toCoords = [toDest.address.location.lat, toDest.address.location.lng];
                 
                 const line = L.polyline([fromCoords, toCoords], {
-                    color: '#4285F4',
+                    color: 'var(--primary-blue)',
                     weight: 3,
                     opacity: 0.8,
                     dashArray: '10, 5'

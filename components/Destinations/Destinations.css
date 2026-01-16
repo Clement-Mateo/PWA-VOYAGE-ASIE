@@ -16,8 +16,8 @@
     top: 0;
     width: 420px;
     height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    background: var(--secondary-purple-light);
+    box-shadow: -4px 0 20px var(--gary);
     transform: translateX(100%);
     transition: transform 0.3s ease;
     z-index: 1000;
@@ -30,9 +30,9 @@
 
 .destinations-header {
     padding: 20px;
-    background: rgba(255,255,255,0.1);
+    background: var(--white-transparent-1);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid var(--white-transparent-2);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -56,8 +56,8 @@
     background: white;
     border-radius: 12px;
     padding: 18px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px var(--gary);
+    border: 1px solid var(--gary);
     transition: all 0.3s ease;
     position: relative;
     flex: 0 0 auto;
@@ -65,7 +65,7 @@
 
 .destination-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 24px var(--shadow-medium);
 }
 
 .destination-card.dragging {
@@ -75,13 +75,13 @@
 }
 
 .destination-card.drag-over {
-    border: 2px dashed #2196F3;
-    background: #e3f2fd;
+    border: 2px dashed var(--primary-blue);
+    background: var(--gary);
 }
 
 .destination-card.expanded {
-    border: 2px solid #667eea;
-    background: #f0f4ff;
+    border: 2px solid var(--secondary-purple-light);
+    background: var(--gary);
 }
 
 .destination-card.editing .expand-btn {
@@ -98,7 +98,7 @@
 .destination-title {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--gray-dark);
     margin: 0;
     flex: 1;
 }
@@ -124,38 +124,38 @@
 }
 
 .edit-btn {
-    color: #4CAF50;
+    color: var(--success-green);
 }
 
 .edit-btn:hover {
-    background: #e3f2fd;
-    color: #1976d2;
+    background: var(--black-transparent-05);
+    color: var(--info-blue-dark);
 }
 
 .delete-btn {
-    color: #f44336;
+    color: var(--error-red);
 }
 
 .delete-btn:hover {
-    background: #ffebee;
+    background: var(--shadow-accent);
 }
 
 .expand-btn {
-    color: #667eea;
+    color: var(--secondary-purple-light);
 }
 
 .expand-btn:hover {
-    background: #e8eaf6;
+    background: var(--gary);
 }
 
 .destination-address {
-    color: #666;
+    color: var(--gray-dark);
     font-size: 14px;
     margin-bottom: 8px;
 }
 
 .destination-duration {
-    color: #666;
+    color: var(--gray-dark);
     font-size: 14px;
     margin-bottom: 15px;
 }
@@ -164,7 +164,7 @@
     display: none;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--gary);
 }
 
 .destination-form.show {
@@ -175,9 +175,9 @@
 .destination-activities {
     margin-top: 20px;
     padding: 15px;
-    background: #f8f9fa;
+    background: var(--background-light);
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--gary);
 }
 
 .activities-header {
@@ -189,13 +189,13 @@
 
 .activities-header h4 {
     margin: 0;
-    color: #333;
+    color: var(--gray-dark);
     font-size: 16px;
     font-weight: 600;
 }
 
 .add-activity-btn {
-    background: #4CAF50;
+    background: var(--success-green);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -209,7 +209,7 @@
 }
 
 .add-activity-btn:hover {
-    background: #45a049;
+    background: var(--success-green-dark);
     transform: translateY(-1px);
 }
 
@@ -223,7 +223,7 @@
     background: white;
     border-radius: 6px;
     margin-bottom: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--gary);
 }
 
 .activity-info {
@@ -233,7 +233,7 @@
 }
 
 .activity-info strong {
-    color: #333;
+    color: var(--gray-dark);
     font-size: 14px;
     font-weight: 600;
 }
@@ -264,17 +264,17 @@
 }
 
 .activity-edit-btn:hover {
-    background: #e3f2fd;
-    color: #1976d2;
+    background: var(--gary);
+    color: var(--info-blue-dark);
 }
 
 .activity-delete-btn {
-    color: #d32f2f;
+    color: var(--accent-red);
 }
 
 .activity-delete-btn:hover {
-    background: #ffebee;
-    color: #d32f2f;
+    background: var(--shadow-accent);
+    color: var(--accent-red);
 }
 
 .activity-edit-btn .material-icons,
@@ -291,19 +291,19 @@
     display: inline-block;
     width: 16px;
     height: 16px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #d32f2f;
+    border: 2px solid var(--white);
+    border-top: 2px solid var(--accent-red);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
 .activity-time {
-    color: #666;
+    color: var(--gray-dark);
     font-size: 12px;
 }
 
 .activity-price {
-    color: #4CAF50;
+    color: var(--success-green);
     font-size: 13px;
     font-weight: 500;
 }
@@ -337,7 +337,7 @@
 .destination-title {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--gray-dark);
     margin: 0;
     flex: 1;
 }
@@ -352,13 +352,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #000;
+    color: var(--black);
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
 }
 
 .edit-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--black-transparent-05);
+    color: var(--info-blue-dark);
 }
 
 .delete-btn {
@@ -371,25 +372,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #dc3545;
+    color: var(--accent-red);
     font-family: 'Material Symbols Outlined', sans-serif;
     font-size: 18px;
 }
 
 .delete-btn:hover {
-    background: rgba(220, 53, 69, 0.1);
-    color: #c82333;
+    background: var(--accent-red-transparent-1);
+    color: var(--accent-red-dark);
 }
 
 .destination-address {
-    color: #666;
+    color: var(--gray-dark);
     font-size: 14px;
     margin: 5px 0;
     line-height: 1.4;
 }
 
 .destination-duration {
-    color: #888;
+    color: var(--gray-dark);
     font-size: 13px;
     margin: 5px 0;
 }
@@ -398,7 +399,7 @@
     display: none;
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--gary);
 }
 
 .destination-form.show {
@@ -431,15 +432,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: var(--gray-dark);
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
     z-index: 10;
 }
 
 .address-search-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #333;
+    background: var(--black-transparent-05);
+    color: var(--gray-dark);
 }
 
 .form-group {
@@ -450,7 +451,7 @@
 .form-label {
     display: block;
     font-size: 13px;
-    color: #555;
+    color: var(--gray-dark);
     margin-bottom: 5px;
     font-weight: 500;
 }
@@ -458,7 +459,7 @@
 .form-input {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--gary);
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.2s ease;
@@ -466,8 +467,8 @@
 
 .form-input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--secondary-purple-light);
+    box-shadow: 0 0 0 3px var(--shadow-primary);
 }
 
 .form-actions {
@@ -490,12 +491,12 @@
 }
 
 .btn-save {
-    background: #4CAF50;
+    background: var(--success-green);
     color: white;
 }
 
 .btn-save:hover {
-    background: #45a049;
+    background: var(--success-green-dark);
 }
 
 .btn-save .material-icons,
@@ -504,7 +505,7 @@
 }
 
 .btn-save:disabled {
-    background: #cccccc;
+    background: var(--background-hover);
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -513,7 +514,7 @@
     display: inline-block;
     width: 16px;
     height: 16px;
-    border: 2px solid #ffffff;
+    border: 2px solid var(--white);
     border-radius: 50%;
     border-top-color: transparent;
     animation: spin 1s ease-in-out infinite;
@@ -528,23 +529,23 @@
     display: inline-block;
     width: 12px;
     height: 12px;
-    border: 1.5px solid #dc3545;
+    border: 1.5px solid var(--accent-red);
     border-radius: 50%;
     border-top-color: transparent;
     animation: spin 1s ease-in-out infinite;
 }
 
 .btn-cancel {
-    background: #f44336;
+    background: var(--error-red);
     color: white;
 }
 
 .btn-cancel:hover {
-    background: #da190b;
+    background: var(--error-red-dark);
 }
 
 .add-destination-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--secondary-purple-light);
     color: white;
     border: none;
     border-radius: 12px;
@@ -554,19 +555,19 @@
     cursor: pointer;
     transition: all 0.3s ease;
     margin: 0;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px var(--primary-blue-transparent-3);
 }
 
 .add-destination-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 16px var(--primary-blue-transparent-4);
 }
 
 .close-panel-btn {
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(255,255,255,0.2);
+    background: var(--white-transparent-2);
     border: none;
     border-radius: 50%;
     width: 30px;
@@ -578,7 +579,7 @@
 }
 
 .close-panel-btn:hover {
-    background: rgba(255,255,255,0.3);
+    background: var(--white-transparent-3);
 }
 
 /* Responsive */

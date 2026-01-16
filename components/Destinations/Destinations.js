@@ -192,11 +192,11 @@ const Destinations = {
                     <label class="form-label">Durée</label>
                     <div style="display: flex; gap: 5px; align-items: center;">
                         <input type="number" class="form-input" id="days-${index}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'days')">
-                        <span style="font-size: 12px; color: #666; min-width: 12px;">j</span>
+                        <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">j</span>
                         <input type="number" class="form-input" id="hours-${index}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'hours')">
-                        <span style="font-size: 12px; color: #666; min-width: 12px;">h</span>
+                        <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">h</span>
                         <input type="number" class="form-input" id="minutes-${index}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'minutes')">
-                        <span style="font-size: 12px; color: #666; min-width: 12px;">m</span>
+                        <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -924,7 +924,7 @@ const Destinations = {
             activitiesList.innerHTML = '';
             
             if (querySnapshot.empty) {
-                activitiesList.innerHTML = '<p style="color: #666; padding: 10px;">Aucune activité pour cette destination</p>';
+                activitiesList.innerHTML = '<p style="color: var(--gray-light); padding: 10px;">Aucune activité pour cette destination</p>';
             } else {
                 querySnapshot.forEach(doc => {
                     const activity = doc.data();

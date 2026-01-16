@@ -5,7 +5,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--shadow-dark);
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -27,7 +27,7 @@
     max-width: 500px;
     max-height: 80vh;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px var(--shadow-medium);
     transform: scale(0.9);
     transition: transform 0.3s ease;
 }
@@ -38,7 +38,7 @@
 
 .choose-address-header {
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--secondary-purple-light);
     color: white;
     display: flex;
     justify-content: space-between;
@@ -52,7 +52,7 @@
 }
 
 .close-btn {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--gary);
     border: none;
     border-radius: 50%;
     width: 30px;
@@ -64,7 +64,7 @@
 }
 
 .close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--gary);
 }
 
 .choose-address-body {
@@ -82,7 +82,7 @@
 .address-search-input {
     flex: 1;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--gary);
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.2s ease;
@@ -90,12 +90,12 @@
 
 .address-search-input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--secondary-purple-light);
+    box-shadow: 0 0 0 3px var(--shadow-primary);
 }
 
 .search-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--secondary-purple-light);
     border: none;
     border-radius: 8px;
     width: 50px;
@@ -119,7 +119,7 @@
 
 .address-result-item {
     padding: 15px;
-    border: 1px solid #eee;
+    border: 1px solid var(--gary);
     border-radius: 8px;
     margin-bottom: 10px;
     cursor: pointer;
@@ -127,25 +127,25 @@
 }
 
 .address-result-item:hover {
-    background: #f8f9fa;
-    border-color: #667eea;
+    background: var(--background-light);
+    border-color: var(--secondary-purple-light);
     transform: translateY(-1px);
 }
 
 .address-name {
     font-weight: 600;
-    color: #333;
+    color: var(--gary);
     margin-bottom: 5px;
 }
 
 .address-details {
-    color: #666;
+    color: var(--gary);
     font-size: 14px;
 }
 
 .no-results {
     text-align: center;
-    color: #666;
+    color: var(--gary);
     padding: 20px;
     font-style: italic;
 }

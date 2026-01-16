@@ -1,4 +1,62 @@
-/* Styles globaux de l'application */
+/* ========================================
+   VARIABLES DE COULEURS CENTRALISÉES
+   ======================================== */
+
+:root {
+    /* Couleurs primaires */
+
+    --primary-blue: #153484;
+    --primary-dark: #0E2358;
+    --primary-darker: #07112C;
+    
+    /* Couleurs secondaires */
+    --secondary-purple-light: #9936FC;
+    --secondary-purple-dark: #7F04FB;
+    --secondary-blue-aqua: #1FD7E0;
+    --secondary-blue-aqua-dark: #18ACB4;
+    --secondary-blue-majorelle: #7874F1;
+    --secondary-blue-majorelle-dark: #4B45ED;
+    --accent-red: #dc3545;
+    --accent-red-dark: #c82333;
+    
+    /* Couleurs neutres */
+    --white: #ffffff;
+    --black: #000000;
+    --gary: #efefef;
+    
+    /* Couleurs de statut */
+    --success-green: #4CAF50;
+    --success-green-dark: #45a049;
+    --error-red: #f44336;
+    --error-red-dark: #da190b;
+    --info-blue: #2196F3;
+    --info-blue-dark: #1976d2;
+    
+    /* Couleurs spécifiques */
+    --background-light: #ffffff;
+    --background-hover: #efefef;
+    
+    /* Couleurs RGB spécifiques */
+    --white-transparent-1: rgba(255, 255, 255, 0.1);
+    --white-transparent-2: rgba(255, 255, 255, 0.2);
+    --black-transparent-05: rgba(0, 0, 0, 0.05);
+    --accent-red-transparent-1: rgba(220, 53, 69, 0.1);
+    --primary-blue-transparent-3: rgba(102, 126, 234, 0.3);
+    --primary-blue-transparent-4: rgba(102, 126, 234, 0.4);
+    --white-transparent-3: rgba(255, 255, 255, 0.3);
+    --shadow-black-15: rgba(0, 0, 0, 0.15);
+    
+    /* Ombres et transparences */
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.2);
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+    --shadow-primary: rgba(0, 124, 186, 0.4);
+    --shadow-accent: rgba(220, 53, 69, 0.4);
+}
+
+/* ========================================
+   STYLES GLOBAUX DE L'APPLICATION
+   ======================================== */
 
 * {
     margin: 0;
@@ -24,16 +82,16 @@ body {
 
 /* Styles pour les flèches directionnelles */
 .direction-arrow {
-    stroke: #4285F4;
+    stroke: var(--primary-blue);
     stroke-width: 3;
     fill: none;
 }
 
 .arrow-icon {
-    color: #4285F4;
+    color: var(--primary-blue);
     font-size: 16px;
     font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 2px var(--shadow-dark);
     transform: rotate(var(--rotation, 0deg));
 }
 
@@ -41,11 +99,11 @@ body {
 .auth-btn, .destinations-toggle-btn {
     position: fixed;
     z-index: 1000;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--secondary-purple-light);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px var(--gray-dark);
     transition: all 0.3s ease;
     width: 50px;
     height: 50px;
@@ -66,7 +124,7 @@ body {
 
 .auth-btn:hover, .destinations-toggle-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px var(--shadow-dark);
 }
 
 .add-btn {
@@ -76,14 +134,14 @@ body {
     height: 50px;
     font-size: 24px;
     font-weight: bold;
-    color: white;
-    background: #007cba;
+    color: var(--white);
+    background: var(--primary-dark);
 }
 
 .add-btn:hover {
     transform: scale(1.1);
-    background: #005a87;
-    box-shadow: 0 4px 15px rgba(0, 124, 186, 0.4);
+    background: var(--primary-darker);
+    box-shadow: 0 4px 15px var(--shadow-primary);
 }
 
 /* Masquer les boutons quand un popup est ouvert */
@@ -127,8 +185,8 @@ body.has-popup .logout-btn {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: #dc3545;
-    color: white;
+    background: var(--accent-red);
+    color: var(--white);
     border: none;
     cursor: pointer;
     display: flex;
@@ -136,14 +194,14 @@ body.has-popup .logout-btn {
     justify-content: center;
     font-size: 20px;
     font-weight: bold;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 10px var(--gray-dark);
     transition: all 0.3s;
 }
 
 .logout-btn:hover {
     transform: scale(1.1);
-    background: #c82333;
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    background: var(--accent-red-dark);
+    box-shadow: 0 4px 15px var(--shadow-accent);
 }
 
 /* Contrôles de carte */
@@ -152,15 +210,15 @@ body.has-popup .logout-btn {
     top: 10px;
     left: 10px;
     z-index: 1000;
-    background: white;
+    background: var(--white);
     padding: 10px;
     border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--gary);
 }
 
 #mapStyle {
     padding: 5px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--gary);
     border-radius: 3px;
     font-size: 14px;
 }
