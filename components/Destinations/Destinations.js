@@ -78,9 +78,6 @@ const Destinations = {
                 <button class="close-panel-btn" onclick="Destinations.hide()">×</button>
             </div>
             <div class="destinations-list" id="destinationsList"></div>
-            <button class="add-destination-btn" onclick="Destinations.showAddForm()">
-                + Ajouter une destination
-            </button>
         `;
         
         return panel;
@@ -203,8 +200,8 @@ const Destinations = {
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button class="btn-save" onclick="Destinations.saveDestination(${index})">💾 Enregistrer</button>
-                    <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})">❌ Annuler</button>
+                    <button class="btn-save" onclick="Destinations.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
+                    <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
                 </div>
             </div>
         `;
@@ -661,7 +658,17 @@ const Destinations = {
         container.innerHTML = '';
         
         if (this.destinations.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune destination</p>';
+            const list = document.createElement('div');
+            list.className = 'destinations-list';
+            
+            // Ajouter le bouton "Ajouter une destination" même s'il n'y a pas de destinations
+            const addButton = document.createElement('button');
+            addButton.className = 'add-destination-btn';
+            addButton.onclick = () => this.showAddForm();
+            addButton.textContent = '+ Ajouter une destination';
+            list.appendChild(addButton);
+            
+            container.appendChild(list);
         } else {
             const list = document.createElement('div');
             list.className = 'destinations-list';
@@ -679,6 +686,13 @@ const Destinations = {
                 const card = this.createDestinationCard(destination, originalIndex);
                 list.appendChild(card);
             });
+            
+            // Ajouter le bouton "Ajouter une destination" à la fin
+            const addButton = document.createElement('button');
+            addButton.className = 'add-destination-btn';
+            addButton.onclick = () => this.showAddForm();
+            addButton.textContent = '+ Ajouter une destination';
+            list.appendChild(addButton);
             
             container.appendChild(list);
         }
