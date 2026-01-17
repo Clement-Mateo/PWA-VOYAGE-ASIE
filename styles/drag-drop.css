@@ -11,14 +11,14 @@
 }
 
 .destination-card.drag-over {
-    border: 2px dashed #007bff;
-    background-color: rgba(0, 123, 255, 0.1);
+    border: 2px dashed var(--primary-blue);
+    background-color: var(--shadow-primary);
     transform: scale(1.02);
 }
 
 .destination-card.draggable:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--shadow-medium);
 }
 
 /* Curseur personnalisé pour le drag */
