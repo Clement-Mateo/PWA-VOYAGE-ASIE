@@ -269,8 +269,8 @@ const Activity = {
                     </div>
                 </div>
                 <div class="activity-popup-footer">
-                    <button class="btn-cancel-activity" onclick="Activity.hideActivityPopup()">Annuler</button>
-                    <button class="btn-validate-activity" onclick="Activity.saveActivity()">Enregistrer</button>
+                    <button class="btn-cancel" onclick="Activity.hideActivityPopup()">Annuler</button>
+                    <button class="btn-save" onclick="Activity.saveActivity()">Enregistrer</button>
                 </div>
             </div>
         `;
