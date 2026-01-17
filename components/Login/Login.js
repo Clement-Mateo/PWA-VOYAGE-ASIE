@@ -8,75 +8,48 @@ const Login = {
     template: `
         <div class="login-container" id="loginContainer">
             <div class="login-card">
-                <div class="login-header">
-                    <h1 class="login-title" id="loginTitle">Voyage Asie</h1>
-                    <p class="login-subtitle" id="loginSubtitle">Connectez-vous pour planifier vos aventures</p>
-                </div>
-                
-                <div class="login-form-container">
-                    <!-- Formulaire de connexion -->
-                    <div class="login-form" id="loginForm">
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
+                <div class="login-content">
+                    <h1 class="login-title">Connection</h1>
+                    
+                    <div class="login-form-container">
+                        <!-- Formulaire de connexion -->
+                        <div class="login-form" id="loginForm">
                             <input type="email" class="form-input" id="loginEmail" placeholder="votre@email.com" autocomplete="email">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Mot de passe</label>
+                            
                             <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+                            
+                            <button class="btn-login-primary" onclick="Login.login()">Se connecter</button>
                         </div>
                         
-                        <button class="btn-login-primary" onclick="Login.login()">Se connecter</button>
-                    </div>
-                    
-                    <!-- Formulaire d'inscription -->
-                    <div class="register-form" id="registerForm" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
+                        <!-- Formulaire d'inscription -->
+                        <div class="register-form" id="registerForm" style="display: none;">
                             <input type="email" class="form-input" id="registerEmail" placeholder="votre@email.com" autocomplete="email">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Mot de passe</label>
+                            
                             <input type="password" class="form-input" id="registerPassword" placeholder="••••••••" autocomplete="new-password">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Confirmer le mot de passe</label>
+                            
                             <input type="password" class="form-input" id="confirmPassword" placeholder="••••••••" autocomplete="new-password">
+                            
+                            <button class="btn-login-primary" onclick="Login.register()">S'inscrire</button>
                         </div>
                         
-                        <button class="btn-login-primary" onclick="Login.register()">S'inscrire</button>
-                    </div>
-                    
-                    <!-- Lien pour basculer -->
-                    <div class="login-switch">
-                        <span id="loginSwitchText">Pas encore de compte ?</span>
-                        <button class="btn-link" id="loginSwitchBtn" onclick="Login.switchMode()">S'inscrire</button>
-                    </div>
-                    
-                    <!-- Lien mot de passe oublié (uniquement en mode login) -->
-                    <div class="login-forgot-password" id="forgotPasswordSection">
-                        <button class="btn-link btn-forgot-password" onclick="Login.showResetForm()">Mot de passe oublié ?</button>
-                    </div>
-                    
-                    <!-- Formulaire de réinitialisation -->
-                    <div class="reset-form" id="resetForm" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
+                        <!-- Formulaire de réinitialisation -->
+                        <div class="reset-form" id="resetForm" style="display: none;">
                             <input type="email" class="form-input" id="resetEmail" placeholder="votre@email.com" autocomplete="email">
-                        </div>
-                        
-                        <button class="btn-login-primary" onclick="Login.resetPassword()">Envoyer le lien</button>
-                        
-                        <div class="reset-back">
-                            <button class="btn-link" onclick="Login.backToLogin()">← Retour à la connexion</button>
+                            
+                            <button class="btn-login-primary" onclick="Login.resetPassword()">Réinitialiser</button>
                         </div>
                     </div>
-                </div>
-                
-                <div class="login-footer">
-                    <p class="login-footer-text">Application de voyage interactive</p>
+                    
+                    <div class="login-links">
+                        <p class="login-text">
+                            Pas encore de compte ? 
+                            <a href="#" class="login-link" onclick="Login.goToRegister()">S'inscrire</a>
+                        </p>
+                        
+                        <p class="login-text">
+                            <a href="#" class="login-link" onclick="Login.goToResetPassword()">Mot de passe oublié ?</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -186,6 +159,36 @@ const Login = {
             const destinationsBtn = document.querySelector('.destinations-toggle-btn');
             if (authBtn) authBtn.style.display = 'flex';
             if (destinationsBtn) destinationsBtn.style.display = 'block';
+        }
+    },
+
+    // Aller à la page d'inscription
+    goToRegister() {
+        console.log('Aller à la page d\'inscription');
+        
+        // Masquer la page de connexion
+        this.hide();
+        
+        // Afficher la page d'inscription
+        if (window.Register) {
+            window.Register.show();
+        } else {
+            console.error('Composant Register non disponible');
+        }
+    },
+
+    // Aller à la page de réinitialisation
+    goToResetPassword() {
+        console.log('Aller à la page de réinitialisation');
+        
+        // Masquer la page de connexion
+        this.hide();
+        
+        // Afficher la page de réinitialisation
+        if (window.ResetPassword) {
+            window.ResetPassword.show();
+        } else {
+            console.error('Composant ResetPassword non disponible');
         }
     },
 

@@ -1,9 +1,9 @@
 /* ========================================
-   PAGE DE CONNEXION - DESIGN GLASSMORPHISME
+   PAGE D'INSCRIPTION - DESIGN NEUROMORPHIQUE
    ======================================== */
 
 /* Conteneur principal avec fond de carte du monde */
-.login-container {
+.register-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -18,8 +18,8 @@
     z-index: 9999;
 }
 
-/* Carte de connexion avec effet glassmorphisme */
-.login-card {
+/* Carte d'inscription avec effet glassmorphisme */
+.register-card {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-backdrop);
     -webkit-backdrop-filter: var(--glass-backdrop);
@@ -35,7 +35,7 @@
 }
 
 /* Contenu de la carte */
-.login-content {
+.register-content {
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -43,7 +43,7 @@
 }
 
 /* Titre principal */
-.login-title {
+.register-title {
     color: var(--glass-text);
     font-size: 32px;
     font-weight: 700;
@@ -53,7 +53,7 @@
 }
 
 /* Conteneur des formulaires */
-.login-form-container {
+.register-form-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -89,8 +89,8 @@
     transform: translateY(-2px);
 }
 
-/* Bouton de connexion principal - STYLE NEUROMORPHIQUE */
-.btn-login-primary {
+/* Bouton d'inscription principal - STYLE NEUROMORPHIQUE */
+.btn-register-primary {
     width: 100%;
     padding: 16px 24px;
     background: var(--primary-blue); /* Couleur de fond similaire à l'image */
@@ -114,7 +114,7 @@
         inset 1px 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.btn-login-primary:hover {
+.btn-register-primary:hover {
     /* Style néuromorphique HOVER - plus sombre */
     background: #d0c5d7;
     box-shadow: 
@@ -123,7 +123,7 @@
         inset 1px 1px 2px rgba(255, 255, 255, 0.2);
 }
 
-.btn-login-primary:active {
+.btn-register-primary:active {
     /* Style néuromorphique PRESSED - effet rentré */
     background: #c0b5c7;
     box-shadow: 
@@ -133,8 +133,8 @@
     transform: scale(0.98);
 }
 
-.btn-login-primary:disabled {
-    background: var(--gary);
+.btn-register-primary:disabled {
+    background: var(--gray);
     color: var(--gray-dark);
     cursor: not-allowed;
     transform: none;
@@ -142,21 +142,21 @@
 }
 
 /* Liens en bas */
-.login-links {
+.register-links {
     display: flex;
     flex-direction: column;
     gap: 15px;
     align-items: center;
 }
 
-.login-text {
+.register-text {
     color: var(--glass-link);
     font-size: 14px;
     margin: 0;
     text-align: center;
 }
 
-.login-link {
+.register-link {
     color: var(--glass-text);
     text-decoration: none;
     font-weight: 600;
@@ -164,25 +164,51 @@
     border-bottom: 1px solid transparent;
 }
 
-.login-link:hover {
+.register-link:hover {
     color: var(--white);
     border-bottom-color: var(--white);
     transform: translateY(-1px);
 }
 
+/* Messages d'erreur et succès */
+.register-error {
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.register-success {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-    .login-container {
+    .register-container {
         padding: 20px;
     }
     
-    .login-card {
+    .register-card {
         max-width: 100%;
         padding: 30px 20px;
         margin: 0;
     }
     
-    .login-title {
+    .register-title {
         font-size: 28px;
     }
     
@@ -191,22 +217,22 @@
         font-size: 15px;
     }
     
-    .btn-login-primary {
+    .btn-register-primary {
         padding: 14px 20px;
         font-size: 15px;
     }
 }
 
 @media (max-width: 480px) {
-    .login-card {
+    .register-card {
         padding: 25px 15px;
     }
     
-    .login-title {
+    .register-title {
         font-size: 24px;
     }
     
-    .login-content {
+    .register-content {
         gap: 25px;
     }
 }
