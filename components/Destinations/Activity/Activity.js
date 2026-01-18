@@ -436,6 +436,24 @@ const Activity = {
         }
     },
 
+    // Ajouter un spinner au bouton save
+    showSaveButtonLoading() {
+        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
+        }
+    },
+
+    // Restaurer le bouton save
+    restoreSaveButton() {
+        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<span class="material-icons">save</span> Enregistrer';
+        }
+    },
+
     // Modifier une activité existante
     async editActivity(activityId, destinationIndex) {
         const destination = window.Destinations.destinations[destinationIndex];
@@ -501,6 +519,9 @@ const Activity = {
             return;
         }
 
+        // Afficher le spinner sur le bouton save
+        this.showSaveButtonLoading();
+
         try {
             // Référence au document de l'activité
             const activityRef = window.firebase.doc(
@@ -518,6 +539,9 @@ const Activity = {
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour de l\'activité dans Firebase:', error);
             throw error;
+        } finally {
+            // Restaurer le bouton save
+            this.restoreSaveButton();
         }
     },
 
@@ -527,6 +551,9 @@ const Activity = {
             console.error('❌ Aucune destination définie ou pas de firestoreId');
             return;
         }
+
+        // Afficher le spinner sur le bouton save
+        this.showSaveButtonLoading();
 
         try {
             // Ajouter l'activité à la collection d'activités de la destination
@@ -544,6 +571,9 @@ const Activity = {
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de l\'activité dans Firebase:', error);
             alert('Erreur lors de la sauvegarde de l\'activité');
+        } finally {
+            // Restaurer le bouton save
+            this.restoreSaveButton();
         }
     },
 

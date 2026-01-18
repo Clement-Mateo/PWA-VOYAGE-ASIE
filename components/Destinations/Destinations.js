@@ -103,6 +103,7 @@ const Destinations = {
     
     /**
      * Créer une card de destination en mode lecture seule
+     * (utilisée dans la popup au clic sur un marqueur)
      */
     createDestinationReadCard(destination, index = null) {
         const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
@@ -128,111 +129,6 @@ const Destinations = {
                 </div>
                 <p class="destination-address">${destination.address ? destination.address.address : 'Adresse non spécifiée'}</p>
                 <p class="destination-duration">⏱️ ${durationText}</p>
-            </div>
-        `;
-    },
-    
-    /**
-     * Créer une card de destination en mode édition
-     */
-    createDestinationEditCard(destination, index) {
-        const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
-        const durationText = this.formatDuration(duration);
-        
-        return `
-            <div class="destination-card editing">
-                <div class="destination-header">
-                    <h3 class="destination-title">${destination.name || 'Destination sans nom'}</h3>
-                    <div class="destination-actions">
-                        <button class="delete-btn" onclick="Destinations.deleteDestination(${index})">
-                            <span class="material-icons">delete</span>
-                        </button>
-                    </div>
-                </div>
-                <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
-                <p class="destination-duration">⏱️ ${durationText}</p>
-                
-                <div class="destination-form show">
-                    <div class="form-group">
-                        <label class="form-label">Adresse</label>
-                        <div class="address-input-container">
-                            <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
-                            <button class="address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
-                                <span class="material-icons">search</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nom</label>
-                        <input type="text" class="form-input" id="title-${index}" value="${destination.name || ''}" placeholder="Nom de la destination">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Durée</label>
-                        <div style="display: flex; gap: 5px; align-items: center;">
-                            <input type="number" class="form-input" id="days-${index}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'days')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">j</span>
-                            <input type="number" class="form-input" id="hours-${index}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'hours')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">h</span>
-                            <input type="number" class="form-input" id="minutes-${index}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'minutes')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">m</span>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn-save" onclick="Destinations.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
-                        <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
-    /**
-     * Créer une card de destination en mode création
-     */
-    createDestinationCreateCard(index) {
-        return `
-            <div class="destination-card editing">
-                <div class="destination-header">
-                    <h3 class="destination-title">Nouvelle destination</h3>
-                    <div class="destination-actions">
-                        <button class="btn-delete" onclick="Destinations.cancelCreation()">
-                            <span class="material-icons">delete</span>
-                        </button>
-                    </div>
-                </div>
-                <p class="destination-address">Adresse à spécifier</p>
-                <p class="destination-duration">⏱️ 0j 0h 0m</p>
-                
-                <div class="destination-form show">
-                    <div class="form-group">
-                        <label class="form-label">Adresse</label>
-                        <div class="address-input-container">
-                            <input type="text" class="form-input address-input" id="address-${index}" placeholder="Adresse" readonly>
-                            <button class="address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
-                                <span class="material-icons">search</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nom</label>
-                        <input type="text" class="form-input" id="title-${index}" placeholder="Nom de la destination">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Durée</label>
-                        <div style="display: flex; gap: 5px; align-items: center;">
-                            <input type="number" class="form-input" id="days-${index}" value="0" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'days')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">j</span>
-                            <input type="number" class="form-input" id="hours-${index}" value="0" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'hours')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">h</span>
-                            <input type="number" class="form-input" id="minutes-${index}" value="0" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'minutes')">
-                            <span style="font-size: 12px; color: #666; min-width: 12px;">m</span>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn-save" onclick="Destinations.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
-                        <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
-                    </div>
-                </div>
             </div>
         `;
     },
@@ -704,7 +600,7 @@ const Destinations = {
         this.isDeleting = true;
         
         // Trouver le bouton de suppression et le mettre en loading
-        const deleteButton = document.querySelector(`#destination-${index} .delete-btn`);
+        const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
         if (deleteButton) {
             deleteButton.disabled = true;
             deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
@@ -1194,7 +1090,7 @@ const Destinations = {
         // Désactiver le bouton et afficher le loading
         if (buttonElement) {
             buttonElement.disabled = true;
-            buttonElement.innerHTML = '<span class="loading-spinner"></span>';
+            buttonElement.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
 
         try {
