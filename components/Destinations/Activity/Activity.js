@@ -193,6 +193,44 @@ const Activity = {
                     label.textContent = `Prix (${localCurrency.name})`;
                     console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
                 }
+                
+                // Réinitialiser le formulaire pour une nouvelle activité
+                const form = document.getElementById('activityForm');
+                if (form) {
+                    form.reset();
+                }
+                
+                // Réinitialiser tous les champs manuellement pour être sûr
+                const nameField = document.getElementById('activityName');
+                const arrivalField = document.getElementById('arrivalTime');
+                const departureField = document.getElementById('departureTime');
+                const priceAmount = document.getElementById('priceAmount');
+                const localCurrencyField = document.getElementById('localCurrency');
+                const typeField = document.getElementById('activityType');
+                
+                // En mode ajout, réinitialiser tout
+                if (!this.editingActivityId) {
+                    if (nameField) nameField.value = '';
+                    if (arrivalField) arrivalField.value = '';
+                    if (departureField) departureField.value = '';
+                    if (priceAmount) priceAmount.value = '';
+                    if (localCurrencyField) localCurrencyField.value = '';
+                    if (typeField) typeField.value = '';
+                }
+                // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
+                
+                // Réinitialiser l'ID d'édition si on n'est pas en mode édition
+                if (!this.editingActivityId) {
+                    this.editingActivityId = null;
+                }
+                
+                // Mettre à jour le titre si on n'est pas en mode édition
+                const title = popup.querySelector('.activity-popup-title');
+                if (title && !this.editingActivityId) {
+                    title.textContent = 'Ajouter une activité';
+                } else {
+                    title.textContent = 'Modifier une activité';
+                }
             } else {
                 // Créer le popup s'il n'existe pas
                 await this.createActivityPopup();
@@ -225,7 +263,7 @@ const Activity = {
         popup.innerHTML = `
             <div class="activity-popup-content">
                 <div class="activity-popup-header">
-                    <h3 class="activity-popup-title">Ajouter une activité</h3>
+                    <h3 class="activity-popup-title">${this.editingActivityId ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
                     <button class="btn-close-activity" onclick="Activity.hideActivityPopup()">×</button>
                 </div>
                 <div class="activity-form">
@@ -296,7 +334,7 @@ const Activity = {
     hideActivityPopup() {
         const popup = document.getElementById('activityPopup');
         if (popup) {
-            popup.style.display = 'none';
+            popup.classList.remove('active');
         }
         
         // Réinitialiser l'ID d'édition
@@ -437,12 +475,14 @@ const Activity = {
                 const arrivalField = document.getElementById('arrivalTime');
                 const departureField = document.getElementById('departureTime');
                 const priceField = document.getElementById('priceAmount');
+                const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
                 if (nameField) nameField.value = activityData.name || '';
                 if (arrivalField) arrivalField.value = activityData.arrivalTime || '';
                 if (departureField) departureField.value = activityData.departureTime || '';
                 if (priceField) priceField.value = activityData.price || 0;
+                if (localCurrencyField) localCurrencyField.value = activityData.localPrice || 0;
                 if (typeField) typeField.value = activityData.activityType || '';
                 
                 console.log('✅ Formulaire pré-rempli avec les données de l\'activité');
