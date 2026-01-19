@@ -22,7 +22,8 @@
     /* Couleurs neutres */
     --white: #ffffff;
     --black: #000000;
-    --gary: #efefef;
+    --gray: #efefef;
+    --dark-gray: #777777;
     
     /* Couleurs de statut */
     --success-green: #4CAF50;
@@ -324,12 +325,12 @@ body.has-popup .logout-btn {
     background: var(--white);
     padding: 10px;
     border-radius: 5px;
-    box-shadow: 0 2px 10px var(--gary);
+    box-shadow: 0 2px 10px var(--gray);
 }
 
 #mapStyle {
     padding: 5px;
-    border: 1px solid var(--gary);
+    border: 1px solid var(--gray);
     border-radius: 3px;
     font-size: 14px;
 }
