@@ -175,9 +175,6 @@ const Register = {
                 if (user) {
                     console.log('Inscription réussie:', user.email);
                     
-                    // Mettre à jour le profil utilisateur avec le nom
-                    await window.firebaseService.updateProfile({ displayName: name });
-                    
                     // Masquer la page d'inscription
                     this.hide();
                     
@@ -187,7 +184,7 @@ const Register = {
                     }
                     
                     // Afficher un message de succès
-                    this.showSuccess('Inscription réussie ! Bienvenue ' + name);
+                    this.showSuccess('Inscription réussie ! Bienvenue');
                 } else {
                     console.error('Échec de l\'inscription');
                     this.showError('Échec de l\'inscription');
