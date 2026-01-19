@@ -157,15 +157,18 @@
     
     <!-- Component Manager -->
     <script type="module">
-        // Importer les composants
+        // Les composants sont déjà disponibles globalement
+        // Importer uniquement ComponentManager
         import { ComponentManager } from './components/ComponentManager.js';
-        import { Destinations } from './components/Destinations/Destinations.js';
-        import { Activity } from './components/Destinations/Activity/Activity.js';
-        import { ChooseAddress } from './components/Destinations/ChooseAddress/ChooseAddress.js';
-        import { LeafletMap } from './components/LeafletMap/LeafletMap.js';
-        import { Login } from './components/auth/Login.js';
-        import { Register } from './components/auth/Register.js';
-        import { ResetPassword } from './components/auth/ResetPassword.js';
+        
+        // Récupérer les composants depuis window
+        const Destinations = window.Destinations;
+        const Activity = window.Activity;
+        const ChooseAddress = window.ChooseAddress;
+        const LeafletMap = window.LeafletMap;
+        const Login = window.Login;
+        const Register = window.Register;
+        const ResetPassword = window.ResetPassword;
         
         // Enregistrer les composants
         ComponentManager.register('destinations', Destinations);

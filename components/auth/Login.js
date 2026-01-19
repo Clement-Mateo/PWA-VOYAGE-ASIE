@@ -299,6 +299,5 @@ const Login = {
     }
 };
 
-// Exporter le composant
-export { Login };
+// Le composant est disponible globalement via window.Login
 window.Login = Login;

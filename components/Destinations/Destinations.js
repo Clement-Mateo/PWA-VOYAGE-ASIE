@@ -1181,6 +1181,5 @@ const Destinations = {
     }
 };
 
-// Exporter le composant
-export { Destinations };
+// Le composant est disponible globalement via window.Destinations
 window.Destinations = Destinations;
