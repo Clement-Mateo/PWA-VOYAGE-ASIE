@@ -183,8 +183,8 @@ const Register = {
                         window.updateUserPanel();
                     }
                     
-                    // Afficher un message de succès
-                    this.showSuccess('Inscription réussie ! Bienvenue');
+                    // Afficher un message de succès avec snackbar
+                    showSuccessSnackBar('Inscription réussie ! Bienvenue');
                 } else {
                     console.error('Échec de l\'inscription');
                     this.showError('Échec de l\'inscription');
@@ -201,17 +201,22 @@ const Register = {
             // Gérer les erreurs Firebase spécifiques
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage = 'Cet email est déjà utilisé';
+                showErrorSnackBar(errorMessage);
             } else if (error.code === 'auth/invalid-email') {
                 errorMessage = 'Email invalide';
+                showErrorSnackBar(errorMessage);
             } else if (error.code === 'auth/operation-not-allowed') {
                 errorMessage = 'Opération non autorisée';
+                showErrorSnackBar(errorMessage);
             } else if (error.code === 'auth/weak-password') {
                 errorMessage = 'Mot de passe trop faible';
+                showErrorSnackBar(errorMessage);
             } else if (error.message) {
                 errorMessage = error.message;
+                showErrorSnackBar(errorMessage);
+            } else {
+                showErrorSnackBar(errorMessage);
             }
-            
-            this.showError(errorMessage);
         } finally {
             // Réactiver le bouton
             this.setLoadingState(false);

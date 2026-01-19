@@ -165,7 +165,7 @@ const Login = {
         console.log('Tentative de connexion avec:', email);
         
         if (!email || !password) {
-            this.showError('Veuillez remplir tous les champs');
+            showErrorSnackBar('Veuillez remplir tous les champs');
             return;
         }
         
@@ -189,15 +189,15 @@ const Login = {
                         window.updateUserPanel();
                     }
                     
-                    // Afficher un message de succès
-                    this.showSuccess('Connexion réussie !');
+                    // Afficher un message de succès avec snackbar
+                    showSuccessSnackBar('Connexion réussie !');
                 } else {
                     console.error('Échec de connexion');
-                    this.showError('Échec de connexion. Vérifiez vos identifiants.');
+                    showErrorSnackBar('Échec de connexion. Vérifiez vos identifiants.');
                 }
             } else {
                 console.error('FirebaseService non disponible');
-                this.showError('Service Firebase non disponible');
+                showErrorSnackBar('Service Firebase non disponible');
             }
             
         } catch (error) {
@@ -219,7 +219,7 @@ const Login = {
                 errorMessage = error.message;
             }
             
-            this.showError(errorMessage);
+            showErrorSnackBar(errorMessage);
         } finally {
             // Réactiver le bouton
             this.setLoadingState(false);

@@ -127,7 +127,7 @@ class FirebaseService {
             console.error('Erreur création compte:', error);
             console.error('Error code:', error.code);
             console.error('Error message:', error.message);
-            return null;
+            throw error; // Propager l'erreur pour que Register.js puisse la traiter
         }
     }
 
