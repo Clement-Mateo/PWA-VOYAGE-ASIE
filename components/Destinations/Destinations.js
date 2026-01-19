@@ -607,10 +607,32 @@ const Destinations = {
         }
         
         try {
-            // Supprimer la destination
-            await window.firebaseService.deleteDestinationById(destinationId);
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour supprimer la destination');
+                return;
+            }
             
-            console.log('✅ Destination supprimée:', destination);
+            // Utiliser firebaseService pour supprimer la destination
+            const success = await window.firebaseService.deleteDestination(
+                currentItinerary.id,
+                destinationId
+            );
+            
+            if (success) {
+                console.log('✅ Destination supprimée:', destinationId);
+                
+                // Recharger les destinations
+                await this.loadDestinations();
+                
+                // Nettoyer la carte
+                if (window.MapInstance && window.MapInstance.cleanMap) {
+                    window.MapInstance.cleanMap();
+                }
+            } else {
+                console.error('❌ Échec de la suppression de la destination');
+            }
             
             // Mettre à jour les ordres des destinations suivantes
             await this.updateOrdersAfterDeletion(destination.order);
@@ -751,7 +773,7 @@ const Destinations = {
     async loadDestinations() {
         try {
             console.log('🔍 Chargement des destinations...');
-            const destinations = await window.firebaseService.getDirectDestinations();
+            const destinations = await window.firebaseService.getDestinations();
             
             console.log('🔍 Destinations chargées:', destinations);
             console.log('🔍 Analyse des IDs:');
@@ -978,18 +1000,28 @@ const Destinations = {
         if (!destination || !destination.firestoreId) return;
         
         try {
-            // Charger les activités depuis Firebase avec la bonne syntaxe
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé');
+                return;
+            }
+            
+            // Charger les activités depuis Firebase avec la nouvelle syntaxe
             const activitiesCollection = window.firebase.collection(
                 window.firebaseService.db,
+                'itineraries',
+                currentItinerary.id,
                 'destinations',
                 destination.firestoreId,
                 'activities'
             );
             
             console.log('🔍 Requête Firebase pour activités:', {
+                itineraryId: currentItinerary.id,
                 destinationId: destination.firestoreId,
                 userId: window.firebaseService.user.uid,
-                collectionPath: `destinations/${destination.firestoreId}/activities`
+                collectionPath: `itineraries/${currentItinerary.id}/destinations/${destination.firestoreId}/activities`
             });
             
             // Ajouter un filtre par userId pour debug
@@ -1094,20 +1126,28 @@ const Destinations = {
         }
 
         try {
-            // Supprimer l'activité de Firebase
-            const activityRef = window.firebase.doc(
-                window.firebaseService.db,
-                'destinations',
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour supprimer l\'activité');
+                return;
+            }
+            
+            // Utiliser firebaseService pour supprimer l'activité
+            const success = await window.firebaseService.deleteActivity(
+                currentItinerary.id,
                 destination.firestoreId,
-                'activities',
                 activityId
             );
             
-            await window.firebase.deleteDoc(activityRef);
-            console.log('✅ Activité supprimée:', activityId);
-            
-            // Recharger la liste des activités
-            await this.loadActivitiesForDestination(destinationIndex);
+            if (success) {
+                console.log('✅ Activité supprimée:', activityId);
+                
+                // Recharger la liste des activités
+                await this.loadActivitiesForDestination(destinationIndex);
+            } else {
+                console.error('❌ Échec de la suppression de l\'activité');
+            }
             
         } catch (error) {
             console.error('❌ Erreur suppression activité:', error);

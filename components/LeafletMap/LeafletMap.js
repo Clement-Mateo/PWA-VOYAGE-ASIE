@@ -379,7 +379,7 @@ class LeafletMap {
         window.arrowDecorators = this.arrowDecorators;
         window.displayDestinationsOnMap = async () => {
             if (window.firebaseService && window.firebaseService.isAuthenticated()) {
-                const destinations = await window.firebaseService.getDirectDestinations();
+                const destinations = await window.firebaseService.getDestinations();
                 this.displayDestinations(destinations);
             }
         };
