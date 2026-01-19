@@ -225,64 +225,104 @@ const Activity = {
             // Vérifier si le popup existe déjà
             let popup = document.getElementById('activityPopup');
             
-            if (popup) {
-                // Si le popup existe, mettre à jour la devise locale
-                const localCurrency = await this.getLocalCurrency();
-                const label = popup.querySelector('label[for="localCurrency"]');
-                if (label) {
-                    label.textContent = `Prix (${localCurrency.name})`;
-                    console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
-                }
-                
-                // Réinitialiser le formulaire pour une nouvelle activité
-                const form = document.getElementById('activityForm');
-                if (form) {
-                    form.reset();
-                }
-                
-                // Réinitialiser tous les champs manuellement pour être sûr
-                const nameField = document.getElementById('activityName');
-                const arrivalField = document.getElementById('arrivalTime');
-                const departureField = document.getElementById('departureTime');
-                const priceAmount = document.getElementById('priceAmount');
-                const localCurrencyField = document.getElementById('localCurrency');
-                const typeField = document.getElementById('activityType');
-                
-                // En mode ajout, réinitialiser tout
-                if (!this.editingActivityId) {
-                    if (nameField) nameField.value = '';
-                    if (arrivalField) arrivalField.value = '';
-                    if (departureField) departureField.value = '';
-                    if (priceAmount) priceAmount.value = '';
-                    if (localCurrencyField) localCurrencyField.value = '';
-                    if (typeField) typeField.value = '';
-                }
-                // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
-                
-                // Réinitialiser l'ID d'édition si on n'est pas en mode édition
-                if (!this.editingActivityId) {
-                    this.editingActivityId = null;
-                }
-                
-                // Mettre à jour le titre si on n'est pas en mode édition
-                const title = popup.querySelector('.activity-popup-title');
-                if (title && !this.editingActivityId) {
-                    title.textContent = 'Ajouter une activité';
-                } else {
-                    title.textContent = 'Modifier une activité';
-                }
-            } else {
-                // Créer le popup s'il n'existe pas
-                await this.createActivityPopup();
+            if (!popup) {
+                await this.createActivityPopup(); // Créer le popup s'il n'existe pas
+                popup = document.getElementById('activityPopup'); // Réassigner popup
+
+            }
+
+            popup.classList.add('active');
+
+            // Réinitialiser le formulaire pour une nouvelle activité
+            const form = document.getElementById('activityForm');
+            if (form) {
+                form.reset();
             }
             
-            popup = document.getElementById('activityPopup');
-            if (popup) {
-                popup.classList.add('active');
+            // Réinitialiser tous les champs manuellement pour être sûr
+            const nameField = document.getElementById('activityName');
+            const arrivalField = document.getElementById('arrivalTime');
+            const departureField = document.getElementById('departureTime');
+            const priceAmount = document.getElementById('priceAmount');
+            const localCurrencyField = document.getElementById('localCurrency');
+            const typeField = document.getElementById('activityType');
+            
+            // En mode ajout, réinitialiser tout
+            if (!this.editingActivityId) {
+                if (nameField) nameField.value = '';
+                if (arrivalField) arrivalField.value = '';
+                if (departureField) departureField.value = '';
+                if (priceAmount) priceAmount.value = '';
+                if (localCurrencyField) localCurrencyField.value = '';
+                if (typeField) typeField.value = '';
             }
+            // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
+            
+            // Réinitialiser l'ID d'édition si on n'est pas en mode édition
+            if (!this.editingActivityId) {
+                this.editingActivityId = null;
+            }
+            
+            // Mettre à jour le titre si on n'est pas en mode édition
+            const title = popup.querySelector('.activity-popup-title');
+            if (title && !this.editingActivityId) {
+                title.textContent = 'Ajouter une activité';
+            } else {
+                title.textContent = 'Modifier une activité';
+            }
+            
+            // Récupérer la devise locale et valider à chaque ouverture
+            const localCurrency = await this.getLocalCurrency();
+            
+            // Vérifier si on a le taux de change pour cette devise spécifique
+            const hasExchangeRate = this.exchangeRatesCache && this.exchangeRatesCache[localCurrency.code];
+            const hasCurrencyName = localCurrency.name && localCurrency.name !== localCurrency.code;
+            const isNotEuro = localCurrency.code !== 'EUR'; // Masquer si c'est EUR
+            const showCurrencyField = hasExchangeRate && hasCurrencyName && isNotEuro;
+            
+            console.log('🔍 Validation devise locale:', {
+                currency: localCurrency,
+                hasExchangeRate: !!hasExchangeRate,
+                hasCurrencyName: !!hasCurrencyName,
+                isNotEuro: !!isNotEuro,
+                showCurrencyField: showCurrencyField,
+                exchangeRate: hasExchangeRate ? this.exchangeRatesCache[localCurrency.code] : null
+            });
+            
+            // Mettre à jour le label de la devise locale
+            const label = popup.querySelector('label[for="localCurrency"]');
+            if (label) {
+                label.textContent = `Prix (${localCurrency.name})`;
+                console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
+            }
+            
+            // Masquer uniquement le champ de devise locale, garder le champ €
+            const currencyRow = popup.querySelector('#currencyRow');
+            const localCurrencyLabel = popup.querySelector('label[for="localCurrency"]');
+            
+            if (localCurrencyField && currencyRow && localCurrencyLabel) {
+                if (showCurrencyField) {
+                    localCurrencyField.style.display = 'block';
+                    currencyRow.style.display = 'flex';
+                    localCurrencyLabel.style.display = 'block';
+                    currencyRow.classList.add('has-currency');
+                } else {
+                    localCurrencyField.style.display = 'none';
+                    localCurrencyLabel.style.display = 'none';
+                    currencyRow.style.display = 'flex';
+                    currencyRow.classList.remove('has-currency');
+                    // Le champ € prend toute la largeur
+                    const priceAmount = popup.querySelector('#priceAmount');
+                    if (priceAmount) {
+                        priceAmount.style.display = 'block';
+                        priceAmount.style.flex = '1';
+                    }
+                }
+            }
+
         } catch (error) {
             console.error('Erreur lors de l\'ouverture du popup d\'activité:', error);
-            alert('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réessayer.');
+            alert('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réressayer.');
         }
     },
 
@@ -321,14 +361,14 @@ const Activity = {
                             <input type="time" class="form-input" id="departureTime" />
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row" id="currencyRow">
                         <div class="form-group">
                             <label class="form-label" for="priceAmount">Prix (€)</label>
                             <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" oninput="Activity.updateLocalCurrency()" />
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" oninput="Activity.updateEurFromLocalCurrency()" />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" oninput="Activity.updateEurFromLocalCurrency()" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -360,6 +400,11 @@ const Activity = {
     async updateLocalCurrency() {
         const priceAmount = document.getElementById('priceAmount');
         const localCurrencyField = document.getElementById('localCurrency');
+        
+        // Ne faire la conversion que si le champ devise locale existe
+        if (!localCurrencyField) {
+            return;
+        }
         
         if (priceAmount && !isNaN(priceAmount.value) && priceAmount.value) {
             const eurAmount = parseFloat(priceAmount.value) || 0;

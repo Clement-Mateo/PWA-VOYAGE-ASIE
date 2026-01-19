@@ -169,6 +169,36 @@
     margin-top: 5px;
 }
 
+/* Styles spécifiques pour le layout des devises */
+#currencyRow {
+    display: flex;
+    gap: 15px;
+}
+
+#currencyRow .form-group:first-child {
+    flex: 1;
+}
+
+#currencyRow .form-group:last-child {
+    flex: 1;
+}
+
+#currencyRow:not(.has-currency) .form-group:last-child {
+    display: none;
+}
+
+#currencyRow:not(.has-currency) label[for="localCurrency"] {
+    display: none;
+}
+
+#currencyRow:not(.has-currency) #priceAmount {
+    flex: 1;
+}
+
+#currencyRow:not(.has-currency) .form-group:first-child {
+    flex: 1;
+}
+
 /* Footer du popup d'activité */
 .activity-popup-footer {
     display: flex;
