@@ -27,9 +27,7 @@
     <link rel="stylesheet" href="styles/drag-drop.css">
     <link rel="stylesheet" href="styles/buttons.css">
     <link rel="stylesheet" href="styles/form.css">
-    <link rel="stylesheet" href="components/Login/Login.css">
-    <link rel="stylesheet" href="components/Register/Register.css">
-    <link rel="stylesheet" href="components/ResetPassword/ResetPassword.css">
+    <link rel="stylesheet" href="components/auth/auth.css">
     <link rel="stylesheet" href="components/Destinations/Destinations.css">
     <link rel="stylesheet" href="components/Destinations/Activity/Activity.css">
     <link rel="stylesheet" href="components/Destinations/ChooseAddress/ChooseAddress.css">
@@ -144,9 +142,9 @@
     <script src="serviceUtil.js"></script>
     
     <!-- Composants -->
-    <script src="components/Login/Login.js"></script>
-    <script src="components/Register/Register.js"></script>
-    <script src="components/ResetPassword/ResetPassword.js"></script>
+    <script src="components/auth/Login.js"></script>
+    <script src="components/auth/Register.js"></script>
+    <script src="components/auth/ResetPassword.js"></script>
     <script src="components/Destinations/Destinations.js"></script>
     <script src="components/Destinations/Activity/Activity.js"></script>
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
@@ -156,6 +154,13 @@
     <script type="module">
         // Importer les composants
         import { ComponentManager } from './components/ComponentManager.js';
+        import { Destinations } from './components/Destinations/Destinations.js';
+        import { Activity } from './components/Destinations/Activity/Activity.js';
+        import { ChooseAddress } from './components/Destinations/ChooseAddress/ChooseAddress.js';
+        import { LeafletMap } from './components/LeafletMap/LeafletMap.js';
+        import { Login } from './components/auth/Login.js';
+        import { Register } from './components/auth/Register.js';
+        import { ResetPassword } from './components/auth/ResetPassword.js';
         
         // Enregistrer les composants
         ComponentManager.register('destinations', Destinations);
@@ -166,6 +171,7 @@
         window.Activity = Activity;
         window.ChooseAddress = ChooseAddress;
         window.LeafletMap = LeafletMap;
+        window.Login = Login;
         window.Register = Register;
         window.ResetPassword = ResetPassword;
         

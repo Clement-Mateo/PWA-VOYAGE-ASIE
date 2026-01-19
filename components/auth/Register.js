@@ -5,29 +5,29 @@ const Register = {
 
     // Template HTML
     template: `
-        <div class="register-container" id="registerContainer">
-            <div class="register-card">
-                <div class="register-content">
-                    <h1 class="register-title">Inscription</h1>
+        <div class="auth-container" id="registerContainer">
+            <div class="auth-card">
+                <div class="auth-content">
+                    <h1 class="auth-title">Inscription</h1>
                     
-                    <div class="register-form-container">
+                    <div class="auth-form-container">
                         <div class="register-form" id="registerForm">
-                            <input type="text" class="form-input" id="registerName" placeholder="Votre nom complet" autocomplete="name">
+                            <input type="text" class="auth-form-input" id="registerName" placeholder="Votre nom complet" autocomplete="name">
                             
-                            <input type="email" class="form-input" id="registerEmail" placeholder="votre@email.com" autocomplete="email">
+                            <input type="email" class="auth-form-input" id="registerEmail" placeholder="votre@email.com" autocomplete="email">
                             
-                            <input type="password" class="form-input" id="registerPassword" placeholder="••••••••" autocomplete="new-password">
+                            <input type="password" class="auth-form-input" id="registerPassword" placeholder="••••••••" autocomplete="new-password">
                             
-                            <input type="password" class="form-input" id="confirmPassword" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+                            <input type="password" class="auth-form-input" id="confirmPassword" placeholder="Confirmer le mot de passe" autocomplete="new-password">
                             
-                            <button class="btn-register-primary" onclick="Register.register()">S'inscrire</button>
+                            <button class="auth-btn-primary" onclick="Register.register()">S'inscrire</button>
                         </div>
                     </div>
                     
-                    <div class="register-links">
-                        <p class="register-text">
+                    <div class="auth-links">
+                        <p class="auth-text">
                             Déjà un compte ? 
-                            <a href="#" class="register-link" onclick="Register.backToLogin()">Se connecter</a>
+                            <a href="#" class="auth-link" onclick="Register.backToLogin()">Se connecter</a>
                         </p>
                     </div>
                 </div>
@@ -255,7 +255,7 @@ const Register = {
 
     // Gérer l'état de chargement
     setLoadingState(isLoading) {
-        const button = document.querySelector('.btn-register-primary');
+        const button = document.querySelector('.auth-btn-primary');
         
         if (isLoading) {
             button.disabled = true;
@@ -289,9 +289,9 @@ const Register = {
     showSuccess(message) {
         this.clearMessages();
         
-        const container = document.querySelector('.register-card');
+        const container = document.querySelector('.auth-card');
         const successDiv = document.createElement('div');
-        successDiv.className = 'register-success';
+        successDiv.className = 'auth-success';
         successDiv.textContent = message;
         
         container.insertBefore(successDiv, container.firstChild);
@@ -306,8 +306,8 @@ const Register = {
 
     // Effacer tous les messages
     clearMessages() {
-        const errors = document.querySelectorAll('.register-error');
-        const successes = document.querySelectorAll('.register-success');
+        const errors = document.querySelectorAll('.auth-error');
+        const successes = document.querySelectorAll('.auth-success');
         
         errors.forEach(error => error.remove());
         successes.forEach(success => success.remove());
