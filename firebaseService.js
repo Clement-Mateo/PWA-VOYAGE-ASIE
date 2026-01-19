@@ -227,7 +227,6 @@ class FirebaseService {
             const destinationsCollection = window.firebase.collection(this.db, 'itineraries', itineraryId, 'destinations');
             const newDestinationRef = await window.firebase.addDoc(destinationsCollection, {
                 ...destinationData,
-                userId: this.user.uid,
                 createdAt: window.firebase.serverTimestamp(),
                 order: destinationData.order || 0
             });
@@ -240,7 +239,6 @@ class FirebaseService {
             const newDestination = {
                 firestoreId: newDestinationRef.id,
                 ...destinationData,
-                userId: this.user.uid,
                 createdAt: new Date(),
                 order: destinationData.order || 0
             };
@@ -301,7 +299,6 @@ class FirebaseService {
             const destinationsCollection = window.firebase.collection(this.db, 'itineraries', itineraryId, 'destinations');
             const q = window.firebase.query(
                 destinationsCollection,
-                window.firebase.where('userId', '==', this.user.uid),
                 window.firebase.orderBy('order', 'asc')
             );
             
@@ -350,14 +347,14 @@ class FirebaseService {
             
             const newActivityRef = await window.firebase.addDoc(activitiesCollection, {
                 ...activityData,
-                userId: this.user.uid,
-                createdAt: window.firebase.serverTimestamp()
+                // Ne plus ajouter userId - il vient de l'itinéraire
+                createdAt: window.firebase.serverTimestamp(),
+                order: activityData.order || 0
             });
-            
+
             const newActivity = {
                 firestoreId: newActivityRef.id,
                 ...activityData,
-                userId: this.user.uid,
                 createdAt: new Date()
             };
             
@@ -390,7 +387,6 @@ class FirebaseService {
             
             const q = window.firebase.query(
                 activitiesCollection,
-                window.firebase.where('userId', '==', this.user.uid),
                 window.firebase.orderBy('createdAt', 'desc')
             );
             
@@ -425,16 +421,13 @@ class FirebaseService {
                 'activities', 
                 activityId
             );
+        
+            await window.firebase.updateDoc(activityRef, activityData);
             
-            await window.firebase.updateDoc(activityRef, {
-                ...activityData,
-                updatedAt: window.firebase.serverTimestamp()
-            });
-            
-            console.log('Activité mise à jour avec succès:', activityId);
+            console.log('✅ Activité mise à jour avec succès:', activityId);
             return true;
         } catch (error) {
-            console.error('Erreur mise à jour activité:', error);
+            console.error('❌ Erreur mise à jour activité:', error);
             return false;
         }
     }
@@ -446,6 +439,8 @@ class FirebaseService {
         if (!this.user) return false;
         
         try {
+            console.log('Suppression activité:', activityId);
+            
             const activityRef = window.firebase.doc(
                 this.db, 
                 'itineraries', 
@@ -458,10 +453,10 @@ class FirebaseService {
             
             await window.firebase.deleteDoc(activityRef);
             
-            console.log('Activité supprimée avec succès:', activityId);
+            console.log('✅ Activité supprimée avec succès:', activityId);
             return true;
         } catch (error) {
-            console.error('Erreur suppression activité:', error);
+            console.error('❌ Erreur suppression activité:', error);
             return false;
         }
     }

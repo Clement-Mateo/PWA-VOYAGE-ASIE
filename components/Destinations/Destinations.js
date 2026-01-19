@@ -1024,11 +1024,8 @@ const Destinations = {
                 collectionPath: `itineraries/${currentItinerary.id}/destinations/${destination.firestoreId}/activities`
             });
             
-            // Ajouter un filtre par userId pour debug
-            const q = window.firebase.query(
-                activitiesCollection,
-                window.firebase.where('userId', '==', window.firebaseService.user.uid)
-            );
+            // Récupérer toutes les activités de la destination (pas de filtre userId nécessaire)
+            const q = window.firebase.query(activitiesCollection);
             
             const querySnapshot = await window.firebase.getDocs(q);
             

@@ -504,11 +504,9 @@ const Activity = {
             price: activity.price.amount || activity.price,  // Utiliser le montant du prix
             localPrice: activity.localCurrency || 0,
             localCurrencyCode: activity.localCurrencyCode || '',  // Ajouter le code de la monnaie
-            activityType: activity.type || '',
-            userId: this.currentDestination.userId || window.firebaseService.user.uid  // Ajouter userId pour les règles
+            activityType: activity.type || ''
         };
         
-        console.log('🔍 activityForFirebase.userId:', activityForFirebase.userId);
         console.log('🔍 activityForFirebase.price:', activityForFirebase.price);
         console.log('🔍 activityForFirebase complet:', activityForFirebase);
 
