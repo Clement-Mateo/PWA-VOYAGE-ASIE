@@ -102,6 +102,38 @@ const Destinations = {
     },
     
     /**
+     * Créer une card de destination en mode lecture seule
+     * (utilisée dans la popup au clic sur un marqueur)
+     */
+    createDestinationReadCard(destination, index = null) {
+        const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
+        const durationText = this.formatDuration(duration);
+        
+        return `
+            <div class="destination-card">
+                <div class="destination-header">
+                    <h3 class="destination-title">${destination.name || 'Destination sans nom'}</h3>
+                    ${index !== null ? `
+                        <div class="destination-actions">
+                            <button class="btn-edit" onclick="Destinations.show(); setTimeout(() => Destinations.editDestination(${index}), 300)">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-delete" onclick="Destinations.show(); setTimeout(() => Destinations.deleteDestination(${index}), 300)">
+                                <span class="material-icons">delete</span>
+                            </button>
+                            <button class="btn-expand" onclick="Destinations.show(); setTimeout(() => Destinations.toggleDestinationCard(${index}), 300)">
+                                <span class="material-icons">expand_more</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+                <p class="destination-address">${destination.address ? destination.address.address : 'Adresse non spécifiée'}</p>
+                <p class="destination-duration">⏱️ ${durationText}</p>
+            </div>
+        `;
+    },
+    
+    /**
      * Créer une card de destination
      */
     createDestinationCard(destination, index) {
@@ -141,17 +173,17 @@ const Destinations = {
         const durationText = this.formatDuration(duration);
                 
         card.innerHTML = `
-            <div class="destination-header">
+            <div class="destination-header flex-between">
                 <h3 class="destination-title">${destination.name || 'Nouvelle destination'}</h3>
                 <div class="destination-actions">
                     ${destination.firestoreId ? `
-                        <button class="edit-btn" onclick="Destinations.editDestination(${index})">
+                        <button class="btn-edit" onclick="Destinations.editDestination(${index})">
                             <span class="material-icons">edit</span>
                         </button>
-                        <button class="delete-btn" onclick="Destinations.deleteDestination(${index})">
+                        <button class="btn-delete" onclick="Destinations.deleteDestination(${index})">
                             <span class="material-icons">delete</span>
                         </button>
-                        <button class="expand-btn" onclick="Destinations.toggleDestinationCard(${index})" title="Déplier">
+                        <button class="btn-expand" onclick="Destinations.toggleDestinationCard(${index})" title="Déplier">
                             <span class="material-icons">expand_more</span>
                         </button>
                     ` : ''}
@@ -162,7 +194,7 @@ const Destinations = {
             
             <!-- Section des activités (visible quand dépliée) -->
             <div class="destination-activities" id="activities-${index}" style="display: none;">
-                <div class="activities-header">
+                <div class="activities-header flex-between">
                     <h4>Activités</h4>
                 </div>
                 <div class="activities-list" id="activities-list-${index}">
@@ -177,9 +209,9 @@ const Destinations = {
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
-                    <div class="address-input-container">
+                    <div class="address-input-container flex-center">
                         <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
-                        <button class="address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
+                        <button class="btn-icon address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
                             <span class="material-icons">search</span>
                         </button>
                     </div>
@@ -199,7 +231,7 @@ const Destinations = {
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
                 </div>
-                <div class="form-actions">
+                <div class="form-actions flex-center">
                     <button class="btn-save" onclick="Destinations.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
                     <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
                 </div>
@@ -568,10 +600,10 @@ const Destinations = {
         this.isDeleting = true;
         
         // Trouver le bouton de suppression et le mettre en loading
-        const deleteButton = document.querySelector(`#destination-${index} .delete-btn`);
+        const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
         if (deleteButton) {
             deleteButton.disabled = true;
-            deleteButton.innerHTML = '<span class="loading-spinner-small"></span>';
+            deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
         
         try {
@@ -789,11 +821,12 @@ const Destinations = {
         
         // Marquer comme en cours de sauvegarde
         this.isSaving = true;
+        let saveButtonOldHtml = saveButton.innerHTML;
         
         // Désactiver le bouton et afficher le loading
         if (saveButton) {
             saveButton.disabled = true;
-            saveButton.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
+            saveButton.innerHTML = '<svg class="loading-spinner" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="8" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-dasharray="25.133 25.133" stroke-dashoffset="25.133"><animate attributeName="stroke-dashoffset" from="25.133" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrement...';
         }
         
         try {
@@ -854,17 +887,70 @@ const Destinations = {
             // Réactiver le bouton et restaurer le texte
             if (saveButton) {
                 saveButton.disabled = false;
-                saveButton.innerHTML = '💾 Enregistrer';
+                saveButton.innerHTML = saveButtonOldHtml;
             }
+
+            // Marquer comme terminé
+            this.isSaving = false;
     
     }
+    },
+
+    /**
+     * Afficher le formulaire d'ajout
+     */
+    showAddForm() {
+        // Masquer tous les formulaires d'édition
+        document.querySelectorAll('.destination-form.show').forEach(f => {
+            f.classList.remove('show');
+        });
+        document.querySelectorAll('.destination-card.editing').forEach(c => {
+            c.classList.remove('editing');
+        });
+        
+        // Créer une destination vide pour l'ajout
+        const newDestination = {
+            name: '',
+            address: '',
+            duration: { days: 0, hours: 0, minutes: 0 },
+            order: this.destinations.length // Order = position dans la liste
+        };
+        
+        // Ajouter la nouvelle destination à la FIN du tableau
+        this.destinations.push(newDestination);
+        
+        // Créer une card pour la nouvelle destination
+        const container = document.getElementById('destinationsList');
+        if (container) {
+            const list = container.querySelector('.destinations-list') || document.createElement('div');
+            list.className = 'destinations-list';
+            
+            // L'index de la nouvelle destination est le dernier
+            const newIndex = this.destinations.length - 1;
+            const card = this.createDestinationCard(newDestination, newIndex);
+            card.classList.add('editing');
+            list.appendChild(card); // Ajouter à la fin
+            
+            if (!container.querySelector('.destinations-list')) {
+                container.appendChild(list);
+            }
+            
+            // Ouvrir automatiquement le formulaire
+            const form = document.getElementById(`form-${newIndex}`);
+            if (form) {
+                form.classList.add('show');
+            }
+            
+            // Mettre à jour la visibilité du bouton "Ajouter"
+            this.updateAddButtonVisibility();
+        }
     },
 
     // Déplier/Replier une carte destination
     toggleDestinationCard(index) {
         const card = document.getElementById(`destination-${index}`);
         const activitiesSection = document.getElementById(`activities-${index}`);
-        const expandBtn = card.querySelector('.expand-btn span');
+        const expandBtn = card.querySelector('.btn-expand span');
         
         if (!card || !activitiesSection || !expandBtn) return;
         
@@ -936,13 +1022,13 @@ const Destinations = {
                     // Créer le contenu HTML proprement
                     let activityHTML = `
                         <div class="activity-info">
-                            <div class="activity-header">
+                            <div class="activity-header flex-between">
                                 <strong>${activity.name}</strong>
                                 <div class="activity-actions">
-                                    <button class="activity-edit-btn" onclick="window.Activity.editActivity('${doc.id}', ${index})" title="Modifier l'activité">
+                                    <button class="btn-edit" onclick="window.Activity.editActivity('${doc.id}', ${index})" title="Modifier l'activité">
                                         <span class="material-icons">edit</span>
                                     </button>
-                                    <button class="activity-delete-btn" onclick="window.Destinations.deleteActivity('${doc.id}', ${index}, this)" title="Supprimer l'activité">
+                                    <button class="btn-delete" onclick="window.Destinations.deleteActivity('${doc.id}', ${index}, this)" title="Supprimer l'activité">
                                         <span class="material-icons">delete</span>
                                     </button>
                                 </div>
@@ -1004,7 +1090,7 @@ const Destinations = {
         // Désactiver le bouton et afficher le loading
         if (buttonElement) {
             buttonElement.disabled = true;
-            buttonElement.innerHTML = '<span class="loading-spinner"></span>';
+            buttonElement.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
 
         try {

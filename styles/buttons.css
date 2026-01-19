@@ -1,0 +1,113 @@
+/* ========================================
+   BOUTONS GÉNÉRIQUES - STYLES UNIFIÉS
+   ======================================== */
+
+/* Boutons principaux */
+.btn-save, .btn-cancel {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    gap: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.btn-save {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-save:hover {
+    background: #45a049;
+}
+
+.btn-save:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.btn-cancel {
+    background: #f44336;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #da190b;
+}
+
+.btn-save .material-icons,
+.btn-cancel .material-icons {
+    font-size: 14px;
+}
+
+/* Boutons d'action (edit, delete, expand) */
+.btn-edit, .btn-delete, .btn-expand {
+    font-family: 'Material Icons', sans-serif;
+    font-size: 18px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-edit {
+    color: #1976d2;
+}
+
+.btn-edit:hover {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.btn-delete {
+    color: #dc3545;
+    font-family: 'Material Symbols Outlined', sans-serif;
+    min-height: 30px;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #c82333;
+}
+
+.btn-expand {
+    color: #667eea;
+}
+
+.btn-expand:hover {
+    background: #e8eaf6;
+}
+
+/* Spinners */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 8px;
+    overflow: hidden;
+}
+
+.loading-spinner-small {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin: auto;
+    overflow: hidden;
+}
+
+.loading-spinner svg,
+.loading-spinner-small svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}

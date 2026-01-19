@@ -85,50 +85,90 @@ const Activity = {
         return { code: 'EUR', name: 'EUR' };
     },
 
-    // Obtenir la devise pour un pays donné
-    getCountryCurrency(country) {
+    // Obtenir la devise pour un pays donné (via API REST Countries)
+    async getCountryCurrency(country) {
         console.log('🔍 Recherche de devise pour le pays:', country);
         
-        const countryToCurrency = {
-            'Japan': 'JPY',
+        // Mapping de secours pour les pays non disponibles dans REST Countries
+        const fallbackMapping = {
+            'North Korea': 'KPW',
             'South Korea': 'KRW',
-            'China': 'CNY', 
-            'Thailand': 'THB',
-            'Vietnam': 'VND',
-            'United States': 'USD',
-            'USA': 'USD',
-            'France': 'EUR',
-            'Italy': 'EUR',
-            'Spain': 'EUR',
-            'Germany': 'EUR',
-            'UK': 'GBP',
-            'United Kingdom': 'GBP',
-            'England': 'GBP',
-            'South Korea': 'KRW',
-            'Republic of Korea': 'KRW'
+            'Taiwan': 'TWD',
+            'Palestine': 'ILS',
+            'Western Sahara': 'MAD',
+            'Kosovo': 'EUR'
         };
         
-        console.log('🔍 Mapping pays->devise disponible:', Object.keys(countryToCurrency));
-        
-        // Chercher la devise correspondant au pays (comparaison exacte)
-        for (const key in countryToCurrency) {
-            const currencyCode = countryToCurrency[key];
-            console.log(`🔍 Test du pays: "${key}" -> devise: ${currencyCode}`);
+        try {
+            // Utiliser l'API REST Countries pour obtenir la devise
+            const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fullText=false`);
             
-            if (currencyCode) {
-                // Comparaison exacte (pas de lowercase)
-                if (country === key) {
-                    console.log(`✅ Devise trouvée: ${country} -> ${currencyCode}`);
+            if (!response.ok) {
+                console.log(`❌ Pays non trouvé dans REST Countries: ${country}, utilisation de EUR`);
+                return { code: 'EUR', name: 'EUR' };
+            }
+            
+            const data = await response.json();
+            console.log('🔍 Réponse brute de REST Countries:', data);
+            
+            if (data && data.length > 0 && data[0].currencies) {
+                const currencies = data[0].currencies;
+                
+                // Structure: {KPW: {name: "North Korean won"}}
+                const currencyCodes = Object.keys(currencies);
+                if (currencyCodes.length > 0) {
+                    const firstCode = currencyCodes[0];
+                    const currency = {
+                        code: firstCode,
+                        name: currencies[firstCode].name || firstCode
+                    };
+                    
+                    console.log(`✅ Devise trouvée via API: ${country} -> ${currency.code} (${currency.name})`);
                     return { 
-                        code: currencyCode, 
-                        name: currencyCode 
+                        code: currency.code, 
+                        name: currency.name 
                     };
                 }
             }
+            
+            // Si l'API ne trouve pas le pays, essayer le mapping de secours
+            if (fallbackMapping[country]) {
+                const currencyCode = fallbackMapping[country];
+                console.log(`✅ Devise trouvée via fallback: ${country} -> ${currencyCode}`);
+                return { 
+                    code: currencyCode, 
+                    name: currencyCode 
+                };
+            }
+            
+            console.log(`❌ Aucune devise trouvée pour: ${country}, utilisation de EUR`);
+            console.log('Structure de la réponse:', data ? {
+                hasData: !!data,
+                isArray: Array.isArray(data),
+                length: data?.length,
+                firstItem: data?.[0],
+                hasCurrencies: !!data?.[0]?.currencies,
+                currenciesLength: data?.[0]?.currencies?.length
+            } : 'null');
+            
+            return { code: 'EUR', name: 'EUR' };
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la recherche de devise:', error);
+            
+            // En cas d'erreur API, essayer le mapping de secours
+            if (fallbackMapping[country]) {
+                const currencyCode = fallbackMapping[country];
+                console.log(`✅ Devise trouvée via fallback (erreur API): ${country} -> ${currencyCode}`);
+                return { 
+                    code: currencyCode, 
+                    name: currencyCode 
+                };
+            }
+            
+            console.log(`🔄 Utilisation de EUR par défaut pour: ${country}`);
+            return { code: 'EUR', name: 'EUR' };
         }
-        
-        console.log(`❌ Aucune devise trouvée pour: ${country}, utilisation de EUR`);
-        return { code: 'EUR', name: 'EUR' };
     },
 
     // Obtenir le pays depuis les coordonnées (API Nominatim)
@@ -185,26 +225,104 @@ const Activity = {
             // Vérifier si le popup existe déjà
             let popup = document.getElementById('activityPopup');
             
-            if (popup) {
-                // Si le popup existe, mettre à jour la devise locale
-                const localCurrency = await this.getLocalCurrency();
-                const label = popup.querySelector('label[for="localCurrency"]');
-                if (label) {
-                    label.textContent = `Prix (${localCurrency.name})`;
-                    console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
-                }
-            } else {
-                // Créer le popup s'il n'existe pas
-                await this.createActivityPopup();
+            if (!popup) {
+                await this.createActivityPopup(); // Créer le popup s'il n'existe pas
+                popup = document.getElementById('activityPopup'); // Réassigner popup
+
+            }
+
+            popup.classList.add('active');
+
+            // Réinitialiser le formulaire pour une nouvelle activité
+            const form = document.getElementById('activityForm');
+            if (form) {
+                form.reset();
             }
             
-            popup = document.getElementById('activityPopup');
-            if (popup) {
-                popup.classList.add('active');
+            // Réinitialiser tous les champs manuellement pour être sûr
+            const nameField = document.getElementById('activityName');
+            const arrivalField = document.getElementById('arrivalTime');
+            const departureField = document.getElementById('departureTime');
+            const priceAmount = document.getElementById('priceAmount');
+            const localCurrencyField = document.getElementById('localCurrency');
+            const typeField = document.getElementById('activityType');
+            
+            // En mode ajout, réinitialiser tout
+            if (!this.editingActivityId) {
+                if (nameField) nameField.value = '';
+                if (arrivalField) arrivalField.value = '';
+                if (departureField) departureField.value = '';
+                if (priceAmount) priceAmount.value = '';
+                if (localCurrencyField) localCurrencyField.value = '';
+                if (typeField) typeField.value = '';
             }
+            // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
+            
+            // Réinitialiser l'ID d'édition si on n'est pas en mode édition
+            if (!this.editingActivityId) {
+                this.editingActivityId = null;
+            }
+            
+            // Mettre à jour le titre si on n'est pas en mode édition
+            const title = popup.querySelector('.activity-popup-title');
+            if (title && !this.editingActivityId) {
+                title.textContent = 'Ajouter une activité';
+            } else {
+                title.textContent = 'Modifier une activité';
+            }
+            
+            // Récupérer la devise locale et valider à chaque ouverture
+            const localCurrency = await this.getLocalCurrency();
+            
+            // Vérifier si on a le taux de change pour cette devise spécifique
+            const hasExchangeRate = this.exchangeRatesCache && this.exchangeRatesCache[localCurrency.code];
+            const hasCurrencyName = localCurrency.name && localCurrency.name !== localCurrency.code;
+            const isNotEuro = localCurrency.code !== 'EUR'; // Masquer si c'est EUR
+            const showCurrencyField = hasExchangeRate && hasCurrencyName && isNotEuro;
+            
+            console.log('🔍 Validation devise locale:', {
+                currency: localCurrency,
+                hasExchangeRate: !!hasExchangeRate,
+                hasCurrencyName: !!hasCurrencyName,
+                isNotEuro: !!isNotEuro,
+                showCurrencyField: showCurrencyField,
+                exchangeRate: hasExchangeRate ? this.exchangeRatesCache[localCurrency.code] : null
+            });
+            
+            // Mettre à jour le label de la devise locale
+            const label = popup.querySelector('label[for="localCurrency"]');
+            if (label) {
+                label.textContent = `Prix (${localCurrency.name})`;
+                console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
+            }
+            
+            // Masquer uniquement le champ de devise locale, garder le champ €
+            const currencyRow = popup.querySelector('#currencyRow');
+            const localCurrencyLabel = popup.querySelector('label[for="localCurrency"]');
+            
+            if (localCurrencyField && currencyRow && localCurrencyLabel) {
+                if (showCurrencyField) {
+                    localCurrencyField.style.display = 'block';
+                    currencyRow.style.display = 'flex';
+                    localCurrencyLabel.style.display = 'block';
+                    currencyRow.classList.add('has-currency');
+                } else {
+                    localCurrencyField.style.display = 'none';
+                    localCurrencyLabel.style.display = 'none';
+                    currencyRow.style.display = 'flex';
+                    currencyRow.classList.remove('has-currency');
+                    // Le champ € prend toute la largeur
+                    const priceAmount = popup.querySelector('#priceAmount');
+                    if (priceAmount) {
+                        priceAmount.style.display = 'block';
+                        priceAmount.style.flex = '1';
+                    }
+                }
+            }
+
         } catch (error) {
             console.error('Erreur lors de l\'ouverture du popup d\'activité:', error);
-            alert('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réessayer.');
+            alert('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réressayer.');
         }
     },
 
@@ -225,7 +343,7 @@ const Activity = {
         popup.innerHTML = `
             <div class="activity-popup-content">
                 <div class="activity-popup-header">
-                    <h3 class="activity-popup-title">Ajouter une activité</h3>
+                    <h3 class="activity-popup-title">${this.editingActivityId ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
                     <button class="btn-close-activity" onclick="Activity.hideActivityPopup()">×</button>
                 </div>
                 <div class="activity-form">
@@ -243,14 +361,14 @@ const Activity = {
                             <input type="time" class="form-input" id="departureTime" />
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row" id="currencyRow">
                         <div class="form-group">
                             <label class="form-label" for="priceAmount">Prix (€)</label>
-                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" onchange="Activity.updateLocalCurrency()" />
+                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" oninput="Activity.updateLocalCurrency()" />
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" readonly />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" oninput="Activity.updateEurFromLocalCurrency()" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -269,8 +387,8 @@ const Activity = {
                     </div>
                 </div>
                 <div class="activity-popup-footer">
-                    <button class="btn-cancel-activity" onclick="Activity.hideActivityPopup()">Annuler</button>
-                    <button class="btn-validate-activity" onclick="Activity.saveActivity()">Enregistrer</button>
+                    <button class="btn-cancel" onclick="Activity.hideActivityPopup()">Annuler</button>
+                    <button class="btn-save" onclick="Activity.saveActivity()">Enregistrer</button>
                 </div>
             </div>
         `;
@@ -280,11 +398,16 @@ const Activity = {
 
     // Mettre à jour le champ de devise locale lors de la saisie du prix en euros
     async updateLocalCurrency() {
-        const priceAmount = document.getElementById('priceAmount').value;
+        const priceAmount = document.getElementById('priceAmount');
         const localCurrencyField = document.getElementById('localCurrency');
         
-        if (priceAmount && !isNaN(priceAmount)) {
-            const eurAmount = parseFloat(priceAmount) || 0;
+        // Ne faire la conversion que si le champ devise locale existe
+        if (!localCurrencyField) {
+            return;
+        }
+        
+        if (priceAmount && !isNaN(priceAmount.value) && priceAmount.value) {
+            const eurAmount = parseFloat(priceAmount.value) || 0;
             const localAmount = await this.convertEurToLocalCurrency(eurAmount);
             localCurrencyField.value = localAmount.toFixed(2);
         } else {
@@ -292,11 +415,27 @@ const Activity = {
         }
     },
 
+    // Mettre à jour le champ en euros à partir de la devise locale
+    async updateEurFromLocalCurrency() {
+        const localCurrencyField = document.getElementById('localCurrency');
+        const priceAmount = document.getElementById('priceAmount');
+        
+        if (localCurrencyField && !isNaN(localCurrencyField.value) && localCurrencyField.value) {
+            const localAmount = parseFloat(localCurrencyField.value) || 0;
+            const localCurrencyInfo = await this.getLocalCurrency();
+            const rate = this.exchangeRatesCache[localCurrencyInfo.code] || 1;
+            const eurAmount = localAmount / rate;
+            priceAmount.value = eurAmount.toFixed(2);
+        } else {
+            priceAmount.value = '';
+        }
+    },
+
     // Cacher le popup d'activité
     hideActivityPopup() {
         const popup = document.getElementById('activityPopup');
         if (popup) {
-            popup.style.display = 'none';
+            popup.classList.remove('active');
         }
         
         // Réinitialiser l'ID d'édition
@@ -398,6 +537,24 @@ const Activity = {
         }
     },
 
+    // Ajouter un spinner au bouton save
+    showSaveButtonLoading() {
+        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
+        }
+    },
+
+    // Restaurer le bouton save
+    restoreSaveButton() {
+        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<span class="material-icons">save</span> Enregistrer';
+        }
+    },
+
     // Modifier une activité existante
     async editActivity(activityId, destinationIndex) {
         const destination = window.Destinations.destinations[destinationIndex];
@@ -437,12 +594,14 @@ const Activity = {
                 const arrivalField = document.getElementById('arrivalTime');
                 const departureField = document.getElementById('departureTime');
                 const priceField = document.getElementById('priceAmount');
+                const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
                 if (nameField) nameField.value = activityData.name || '';
                 if (arrivalField) arrivalField.value = activityData.arrivalTime || '';
                 if (departureField) departureField.value = activityData.departureTime || '';
                 if (priceField) priceField.value = activityData.price || 0;
+                if (localCurrencyField) localCurrencyField.value = activityData.localPrice || 0;
                 if (typeField) typeField.value = activityData.activityType || '';
                 
                 console.log('✅ Formulaire pré-rempli avec les données de l\'activité');
@@ -461,6 +620,9 @@ const Activity = {
             return;
         }
 
+        // Afficher le spinner sur le bouton save
+        this.showSaveButtonLoading();
+
         try {
             // Référence au document de l'activité
             const activityRef = window.firebase.doc(
@@ -478,6 +640,9 @@ const Activity = {
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour de l\'activité dans Firebase:', error);
             throw error;
+        } finally {
+            // Restaurer le bouton save
+            this.restoreSaveButton();
         }
     },
 
@@ -487,6 +652,9 @@ const Activity = {
             console.error('❌ Aucune destination définie ou pas de firestoreId');
             return;
         }
+
+        // Afficher le spinner sur le bouton save
+        this.showSaveButtonLoading();
 
         try {
             // Ajouter l'activité à la collection d'activités de la destination
@@ -504,6 +672,9 @@ const Activity = {
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de l\'activité dans Firebase:', error);
             alert('Erreur lors de la sauvegarde de l\'activité');
+        } finally {
+            // Restaurer le bouton save
+            this.restoreSaveButton();
         }
     },
 

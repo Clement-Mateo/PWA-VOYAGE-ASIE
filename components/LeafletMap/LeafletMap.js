@@ -311,26 +311,9 @@ class LeafletMap {
             
             // Créer les marqueurs
             validDestinations.forEach((destination, index) => {
-                const name = destination.name || 'Destination sans nom';
-                const order = destination.order || 0;
+                // Utiliser la méthode de Destinations.js pour créer la card complète avec boutons
+                const popupContent = window.Destinations.createDestinationReadCard(destination, index);
                 
-                let popupContent = `
-                    <div class="destination-card">
-                        <div class="destination-header">
-                            <h3 class="destination-title">${name}</h3>
-                            <div class="destination-actions">
-                                <button class="edit-btn" onclick="Destinations.show(); setTimeout(() => Destinations.editDestination(${index}), 300)">
-                                    <span class="material-icons">edit</span>
-                                </button>
-                                <button class="delete-btn" onclick="Destinations.show(); setTimeout(() => Destinations.deleteDestination(${index}), 300)">
-                                    <span class="material-icons">delete</span>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
-                        <p class="destination-duration">⏱️ ${order}</p>
-                    </div>
-                `;
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
                     .addTo(this.leafletMap)
                     .bindPopup(popupContent);

@@ -4,7 +4,7 @@
 .activity-section {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid var(--gary);
+    border-top: 1px solid #e0e0e0;
 }
 
 .activity-checkbox {
@@ -23,7 +23,7 @@
 .activity-checkbox label {
     cursor: pointer;
     font-size: 14px;
-    color: var(--gray);
+    color: #333;
     user-select: none;
 }
 
@@ -31,36 +31,17 @@
 .activity-list {
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid var(--gray);
+    border: 1px solid #e0e0e0;
     border-radius: 6px;
     padding: 10px;
-    background: var(--background-light);
+    background: #f9f9f9;
 }
 
 .no-activities {
     text-align: center;
-    color: var(--gray);
+    color: #999;
     font-style: italic;
     padding: 20px;
-}
-
-/* Bouton pour ajouter une activité */
-.btn-activity {
-    width: 100%;
-    padding: 12px;
-    background: var(--success-green);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background 0.3s;
-    margin-bottom: 15px;
-}
-
-.btn-activity:hover {
-    background: var(--success-green-dark);
 }
 
 /* Popup d'activité */
@@ -70,7 +51,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--shadow-dark);
+    background: rgba(0, 0, 0, 0.5);
     display: none;
     z-index: 3000;
     align-items: center;
@@ -88,7 +69,7 @@
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 10px 30px var(--shadow-medium);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .activity-popup-header {
@@ -96,14 +77,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid var(--gray);
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .activity-popup-title {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: var(--gray);
+    color: #333;
 }
 
 .btn-close-activity {
@@ -111,7 +92,7 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
-    color: var(--gray);
+    color: #666;
     padding: 0;
     width: 30px;
     height: 30px;
@@ -123,7 +104,7 @@
 }
 
 .btn-close-activity:hover {
-    background: var(--background-hover);
+    background: #f0f0f0;
 }
 
 /* Formulaire d'activité */
@@ -139,14 +120,14 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: var(--gray);
+    color: #333;
     font-size: 14px;
 }
 
 .form-input {
     width: 100%;
     padding: 10px;
-    border: 1px solid var(--gray);
+    border: 1px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.3s;
@@ -154,8 +135,8 @@
 
 .form-input:focus {
     outline: none;
-    border-color: var(--primary-dark);
-    box-shadow: 0 0 0 2px var(--shadow-primary);
+    border-color: #007cba;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.1);
 }
 
 .form-row {
@@ -188,43 +169,44 @@
     margin-top: 5px;
 }
 
+/* Styles spécifiques pour le layout des devises */
+#currencyRow {
+    display: flex;
+    gap: 15px;
+}
+
+#currencyRow .form-group:first-child {
+    flex: 1;
+}
+
+#currencyRow .form-group:last-child {
+    flex: 1;
+}
+
+#currencyRow:not(.has-currency) .form-group:last-child {
+    display: none;
+}
+
+#currencyRow:not(.has-currency) label[for="localCurrency"] {
+    display: none;
+}
+
+#currencyRow:not(.has-currency) #priceAmount {
+    flex: 1;
+}
+
+#currencyRow:not(.has-currency) .form-group:first-child {
+    flex: 1;
+}
+
 /* Footer du popup d'activité */
 .activity-popup-footer {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
     padding: 20px;
-    border-top: 1px solid var(--gray);
-    background: var(--background-light);
-}
-
-.btn-cancel-activity,
-.btn-validate-activity {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s;
-}
-
-.btn-cancel-activity {
-    background: var(--gray);
-    color: white;
-}
-
-.btn-cancel-activity:hover {
-    background: var(--gray);
-}
-
-.btn-validate-activity {
-    background: var(--primary-dark);
-    color: white;
-}
-
-.btn-validate-activity:hover {
-    background: var(--primary-darker);
+    border-top: 1px solid #e0e0e0;
+    background: #f9f9f9;
 }
 
 /* Responsive */
@@ -245,10 +227,5 @@
     
     .activity-popup-footer {
         flex-direction: column;
-    }
-    
-    .btn-cancel-activity,
-    .btn-validate-activity {
-        width: 100%;
     }
 }
