@@ -284,11 +284,11 @@ const Activity = {
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label" for="priceAmount">Prix (€)</label>
-                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" onchange="Activity.updateLocalCurrency()" />
+                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" oninput="Activity.updateLocalCurrency()" />
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" readonly />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" oninput="Activity.updateEurFromLocalCurrency()" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -318,15 +318,31 @@ const Activity = {
 
     // Mettre à jour le champ de devise locale lors de la saisie du prix en euros
     async updateLocalCurrency() {
-        const priceAmount = document.getElementById('priceAmount').value;
+        const priceAmount = document.getElementById('priceAmount');
         const localCurrencyField = document.getElementById('localCurrency');
         
-        if (priceAmount && !isNaN(priceAmount)) {
-            const eurAmount = parseFloat(priceAmount) || 0;
+        if (priceAmount && !isNaN(priceAmount.value) && priceAmount.value) {
+            const eurAmount = parseFloat(priceAmount.value) || 0;
             const localAmount = await this.convertEurToLocalCurrency(eurAmount);
             localCurrencyField.value = localAmount.toFixed(2);
         } else {
             localCurrencyField.value = '';
+        }
+    },
+
+    // Mettre à jour le champ en euros à partir de la devise locale
+    async updateEurFromLocalCurrency() {
+        const localCurrencyField = document.getElementById('localCurrency');
+        const priceAmount = document.getElementById('priceAmount');
+        
+        if (localCurrencyField && !isNaN(localCurrencyField.value) && localCurrencyField.value) {
+            const localAmount = parseFloat(localCurrencyField.value) || 0;
+            const localCurrencyInfo = await this.getLocalCurrency();
+            const rate = this.exchangeRatesCache[localCurrencyInfo.code] || 1;
+            const eurAmount = localAmount / rate;
+            priceAmount.value = eurAmount.toFixed(2);
+        } else {
+            priceAmount.value = '';
         }
     },
 
