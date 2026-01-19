@@ -1144,5 +1144,6 @@ const Destinations = {
     }
 };
 
-// Exporter globalement
+// Exporter le composant
+export { Destinations };
 window.Destinations = Destinations;

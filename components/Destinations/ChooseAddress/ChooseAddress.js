@@ -341,5 +341,6 @@ const ChooseAddress = {
     }
 };
 
-// Exporter globalement
+// Exporter le composant
+export { ChooseAddress };
 window.ChooseAddress = ChooseAddress;

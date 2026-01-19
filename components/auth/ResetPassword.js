@@ -5,23 +5,23 @@ const ResetPassword = {
 
     // Template HTML
     template: `
-        <div class="reset-password-container" id="resetPasswordContainer">
-            <div class="reset-password-card">
-                <div class="reset-password-content">
-                    <h1 class="reset-password-title">Mot de passe oublié</h1>
-                    <p class="reset-password-subtitle">Entrez votre adresse email pour recevoir un lien de réinitialisation</p>
+        <div class="auth-container" id="resetPasswordContainer">
+            <div class="auth-card">
+                <div class="auth-content">
+                    <h1 class="auth-title">Mot de passe oublié</h1>
+                    <p class="auth-subtitle">Entrez votre adresse email pour recevoir un lien de réinitialisation</p>
                     
-                    <div class="reset-password-form-container">
+                    <div class="auth-form-container">
                         <div class="reset-password-form" id="resetPasswordForm">
-                            <input type="email" class="form-input" id="resetEmail" placeholder="votre@email.com" autocomplete="email">
+                            <input type="email" class="auth-form-input" id="resetEmail" placeholder="votre@email.com" autocomplete="email">
                             
-                            <button class="btn-reset-primary" onclick="ResetPassword.resetPassword()">Envoyer le lien</button>
+                            <button class="auth-btn-primary" onclick="ResetPassword.resetPassword()">Envoyer le lien</button>
                         </div>
                     </div>
                     
-                    <div class="reset-password-links">
-                        <p class="reset-password-text">
-                            <a href="#" class="reset-password-link" onclick="ResetPassword.backToLogin()">Retour à la connexion</a>
+                    <div class="auth-links">
+                        <p class="auth-text">
+                            <a href="#" class="auth-link" onclick="ResetPassword.backToLogin()">Retour à la connexion</a>
                         </p>
                     </div>
                 </div>
@@ -214,7 +214,7 @@ const ResetPassword = {
 
     // Gérer l'état de chargement
     setLoadingState(isLoading) {
-        const button = document.querySelector('.btn-reset-primary');
+        const button = document.querySelector('.auth-btn-primary');
         
         if (isLoading) {
             button.disabled = true;
@@ -248,9 +248,9 @@ const ResetPassword = {
     showSuccess(message) {
         this.clearMessages();
         
-        const container = document.querySelector('.reset-password-card');
+        const container = document.querySelector('.auth-card');
         const successDiv = document.createElement('div');
-        successDiv.className = 'reset-password-success';
+        successDiv.className = 'auth-success';
         successDiv.textContent = message;
         
         container.insertBefore(successDiv, container.firstChild);
@@ -265,13 +265,14 @@ const ResetPassword = {
 
     // Effacer tous les messages
     clearMessages() {
-        const errors = document.querySelectorAll('.reset-password-error');
-        const successes = document.querySelectorAll('.reset-password-success');
+        const errors = document.querySelectorAll('.auth-error');
+        const successes = document.querySelectorAll('.auth-success');
         
         errors.forEach(error => error.remove());
         successes.forEach(success => success.remove());
     }
 };
 
-// Exporter globalement
+// Exporter le composant
+export { ResetPassword };
 window.ResetPassword = ResetPassword;

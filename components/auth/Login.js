@@ -5,30 +5,30 @@ const Login = {
 
     // Template HTML
     template: `
-        <div class="login-container" id="loginContainer">
-            <div class="login-card">
-                <div class="login-content">
-                    <h1 class="login-title">Voyage Asie</h1>
-                    <p class="login-subtitle">Connectez-vous pour planifier vos aventures</p>
+        <div class="auth-container" id="loginContainer">
+            <div class="auth-card">
+                <div class="auth-content">
+                    <h1 class="auth-title">Voyage Asie</h1>
+                    <p class="auth-subtitle">Connectez-vous pour planifier vos aventures</p>
                     
-                    <div class="login-form-container">
+                    <div class="auth-form-container">
                         <div class="login-form" id="loginForm">
-                            <input type="email" class="form-input" id="loginEmail" placeholder="votre@email.com" autocomplete="email">
+                            <input type="email" class="auth-form-input" id="loginEmail" placeholder="votre@email.com" autocomplete="email">
                             
-                            <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+                            <input type="password" class="auth-form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
                             
-                            <button class="btn-login-primary" onclick="Login.login()">Se connecter</button>
+                            <button class="auth-btn-primary" onclick="Login.login()">Se connecter</button>
                         </div>
                     </div>
                     
-                    <div class="login-links">
-                        <p class="login-text">
+                    <div class="auth-links">
+                        <p class="auth-text">
                             Pas encore de compte ? 
-                            <a href="#" class="login-link" onclick="Login.goToRegister()">S'inscrire</a>
+                            <a href="#" class="auth-link" onclick="Login.goToRegister()">S'inscrire</a>
                         </p>
                         
-                        <p class="login-text">
-                            <a href="#" class="login-link" onclick="Login.goToResetPassword()">Mot de passe oublié ?</a>
+                        <p class="auth-text">
+                            <a href="#" class="auth-link" onclick="Login.goToResetPassword()">Mot de passe oublié ?</a>
                         </p>
                     </div>
                 </div>
@@ -240,7 +240,7 @@ const Login = {
 
     // Gérer l'état de chargement
     setLoadingState(isLoading) {
-        const button = document.querySelector('.btn-login-primary');
+        const button = document.querySelector('.auth-btn-primary');
         
         if (isLoading) {
             button.disabled = true;
@@ -274,9 +274,9 @@ const Login = {
     showSuccess(message) {
         this.clearMessages();
         
-        const container = document.querySelector('.login-card');
+        const container = document.querySelector('.auth-card');
         const successDiv = document.createElement('div');
-        successDiv.className = 'login-success';
+        successDiv.className = 'auth-success';
         successDiv.textContent = message;
         
         container.insertBefore(successDiv, container.firstChild);
@@ -291,13 +291,14 @@ const Login = {
 
     // Effacer tous les messages
     clearMessages() {
-        const errors = document.querySelectorAll('.login-error');
-        const successes = document.querySelectorAll('.login-success');
+        const errors = document.querySelectorAll('.auth-error');
+        const successes = document.querySelectorAll('.auth-success');
         
         errors.forEach(error => error.remove());
         successes.forEach(success => success.remove());
     }
 };
 
-// Exporter globalement
+// Exporter le composant
+export { Login };
 window.Login = Login;

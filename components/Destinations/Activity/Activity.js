@@ -690,4 +690,5 @@ const Activity = {
 };
 
 // Exporter le composant
+export { Activity };
 window.Activity = Activity;
