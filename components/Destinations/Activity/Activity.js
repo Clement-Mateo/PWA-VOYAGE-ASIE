@@ -322,7 +322,7 @@ const Activity = {
 
         } catch (error) {
             console.error('Erreur lors de l\'ouverture du popup d\'activité:', error);
-            alert('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réressayer.');
+            showErrorSnackBar('Impossible d\'ouvrir le formulaire d\'activité. Veuillez réessayer.');
         }
     },
 
@@ -466,7 +466,7 @@ const Activity = {
         const activityType = document.getElementById('activityType').value;
 
         if (!name.trim()) {
-            alert('Veuillez saisir un nom d\'activité');
+            showErrorSnackBar('Veuillez saisir un nom d\'activité');
             return;
         }
 
@@ -609,7 +609,7 @@ const Activity = {
             
         } catch (error) {
             console.error('❌ Erreur chargement activité pour modification:', error);
-            alert('Erreur lors du chargement de l\'activité');
+            showErrorSnackBar('Erreur lors du chargement de l\'activité');
         }
     },
 
@@ -671,7 +671,7 @@ const Activity = {
             
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de l\'activité dans Firebase:', error);
-            alert('Erreur lors de la sauvegarde de l\'activité');
+            showErrorSnackBar('Erreur lors de la sauvegarde de l\'activité');
         } finally {
             // Restaurer le bouton save
             this.restoreSaveButton();
