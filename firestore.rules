@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Itinéraires - Accès complet pour le propriétaire
+    match /itineraries/{itineraryId} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // Destinations - Sous-collection de l'itinéraire
+      match /destinations/{destinationId} {
+        allow read, write, delete: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.userId;
+        allow create: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.userId;
+        
+        // Activités - Sous-collection de la destination
+        match /activities/{activityId} {
+          allow read, write, delete: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.userId;
+          allow create: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.userId;
+        }
+      }
+    }
+  }
+}

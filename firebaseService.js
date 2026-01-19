@@ -177,75 +177,79 @@ class FirebaseService {
             return null;
         }
         
-        try {
+        try {   
             console.log('Création itinéraire avec nom:', nom);
-            console.log('User ID:', this.user.uid);
             
             const itinerary = {
                 nom: nom,
                 userId: this.user.uid,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                destinations: []
+                createdAt: window.firebase.serverTimestamp(),
+                updatedAt: window.firebase.serverTimestamp()
             };
             
-            console.log('Données itinéraire:', itinerary);
+            const docRef = await window.firebase.addDoc(
+                window.firebase.collection(this.db, 'itineraries'),
+                itinerary
+            );
             
-            const docRef = await window.firebase.addDoc(window.firebase.collection(this.db, 'itineraries'), itinerary);
-            console.log('Itinéraire créé avec ID:', docRef.id);
-            return { id: docRef.id, ...itinerary };
+            const createdItinerary = { id: docRef.id, ...itinerary };
+            console.log('✅ Itinéraire créé:', createdItinerary.id);
+            
+            return createdItinerary;
         } catch (error) {
             console.error('Erreur création itinéraire:', error);
-            console.error('Error details:', error.code, error.message);
             return null;
         }
     }
 
+    /**
+     * Ajouter une destination à la sous-collection destinations d'un itinéraire
+     */
     async addDestination(itineraryId, destinationData) {
-    if (!this.user) return null;
-    
-    try {
-        console.log('Ajout destination à itinéraire:', itineraryId);
-        console.log('Données destination:', destinationData);
+        if (!this.user) return null;
         
-        // Récupérer l'itinéraire actuel
-        const itineraryRef = window.firebase.doc(this.db, 'itineraries', itineraryId);
-        const itinerarySnap = await window.firebase.getDoc(itineraryRef);
-        
-        if (!itinerarySnap.exists()) {
-            console.error('Itinéraire non trouvé:', itineraryId);
+        try {
+            console.log('Ajout destination à itinéraire:', itineraryId);
+            console.log('Données destination:', destinationData);
+            
+            // Vérifier que l'itinéraire existe
+            const itineraryRef = window.firebase.doc(this.db, 'itineraries', itineraryId);
+            const itinerarySnap = await window.firebase.getDoc(itineraryRef);
+            
+            if (!itinerarySnap.exists()) {
+                console.error('Itinéraire non trouvé:', itineraryId);
+                return null;
+            }
+            
+            console.log('Itinéraire trouvé, création de la destination dans la sous-collection...');
+            
+            // Créer la destination dans la sous-collection destinations de l'itinéraire
+            const destinationsCollection = window.firebase.collection(this.db, 'itineraries', itineraryId, 'destinations');
+            const newDestinationRef = await window.firebase.addDoc(destinationsCollection, {
+                ...destinationData,
+                createdAt: window.firebase.serverTimestamp(),
+                order: destinationData.order || 0
+            });
+            
+            // Mettre à jour le timestamp de l'itinéraire
+            await window.firebase.updateDoc(itineraryRef, {
+                updatedAt: window.firebase.serverTimestamp()
+            });
+            
+            const newDestination = {
+                firestoreId: newDestinationRef.id,
+                ...destinationData,
+                createdAt: new Date(),
+                order: destinationData.order || 0
+            };
+            
+            console.log('Destination ajoutée avec succès dans la sous-collection:', newDestination);
+            return newDestination;
+        } catch (error) {
+            console.error('Erreur ajout destination:', error);
             return null;
         }
-        
-        const itineraryData = itinerarySnap.data();
-        console.log('Itinéraire actuel:', itineraryData);
-        
-        // Ajouter la destination avec toutes ses données
-            const newDestination = {
-                id: Math.random().toString(36).substr(2, 9),
-                ...destinationData,
-                userId: this.user.uid,
-                createdAt: new Date()
-            };
-        
-        console.log('Nouvelle destination complète:', newDestination);
-        
-        // Mettre à jour l'itinéraire avec la nouvelle destination
-            const updatedDestinations = itineraryData.destinations || [];
-            updatedDestinations.push(newDestination);
-            
-            await window.firebase.updateDoc(itineraryRef, {
-                destinations: updatedDestinations,
-                updatedAt: new Date()
-            });
-        
-        console.log('Destination ajoutée avec succès:', newDestination);
-        return newDestination;
-    } catch (error) {
-        console.error('Erreur ajout destination:', error);
-        return null;
     }
-}
 
     /**
      * Récupérer tous les itinéraires de l'utilisateur connecté
@@ -272,43 +276,33 @@ class FirebaseService {
     }
 
     /**
-     * Récupérer les destinations d'un itinéraire
+     * Récupérer toutes les destinations de l'utilisateur depuis la sous-collection de son itinéraire
      */
-    async getDestinations(itineraryId) {
-        if (!this.user) return [];
-        
-        try {
-            const q = window.firebase.query(
-                window.firebase.collection(this.db, 'destinations'),
-                window.firebase.where('itineraryId', '==', itineraryId),
-                window.firebase.where('userId', '==', this.user.uid),
-                window.firebase.orderBy('createdAt')
-            );
-            const snapshot = await window.firebase.getDocs(q);
-            
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error('Erreur récupération destinations:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Récupérer toutes les destinations de l'utilisateur connecté
-     */
-    async getDirectDestinations() {
+    async getDestinations() {
         if (!this.user) return [];
         
         try {
             console.log('🔍 Recherche destinations pour userId:', this.user.uid);
             
-            // Requête filtrée SANS orderBy (car orderBy nécessite un index)
+            // D'abord récupérer l'itinéraire de l'utilisateur
+            const itineraries = await this.getItineraries();
+            
+            if (itineraries.length === 0) {
+                console.log('📭 Aucun itinéraire trouvé pour cet utilisateur');
+                return [];
+            }
+            
+            const itineraryId = itineraries[0].id;
+            console.log('🗺️ Itinéraire trouvé:', itineraryId);
+            
+            // Récupérer les destinations depuis la sous-collection destinations de l'itinéraire
+            const destinationsCollection = window.firebase.collection(this.db, 'itineraries', itineraryId, 'destinations');
             const q = window.firebase.query(
-                window.firebase.collection(this.db, 'destinations'),
-                window.firebase.where('userId', '==', this.user.uid)
+                destinationsCollection,
+                window.firebase.orderBy('order', 'asc')
             );
             
-            console.log('🔍 Requête Firestore créée');
+            console.log('🔍 Requête Firestore créée pour la sous-collection');
             
             const snapshot = await window.firebase.getDocs(q);
             
@@ -317,17 +311,194 @@ class FirebaseService {
             const destinations = snapshot.docs.map((doc, index) => ({ 
                 firestoreId: doc.id, 
                 ...doc.data(),
-                order: doc.data().order !== undefined ? doc.data().order : index // Ajouter order si manquant
+                order: doc.data().order !== undefined ? doc.data().order : index
             }));
             
-            console.log('✅ Destinations récupérées:', destinations.length);
+            console.log('✅ Destinations récupérées depuis la sous-collection:', destinations.length);
             console.log('🔍 Détails des destinations:', destinations);
             
             return destinations;
         } catch (error) {
-            console.error('❌ Erreur récupération destinations:', error.message);
+            console.error('❌ Erreur récupération destinations depuis la sous-collection:', error.message);
             console.error('❌ Code erreur:', error.code);
             return [];
+        }
+    }
+
+    /**
+     * Ajouter une activité à la sous-collection activities d'une destination
+     */
+    async addActivity(itineraryId, destinationId, activityData) {
+        if (!this.user) return null;
+        
+        try {
+            console.log('Ajout activité à destination:', destinationId, 'dans itinéraire:', itineraryId);
+            console.log('Données activité:', activityData);
+            
+            // Créer l'activité dans la sous-collection activities de la destination
+            const activitiesCollection = window.firebase.collection(
+                this.db, 
+                'itineraries', 
+                itineraryId, 
+                'destinations', 
+                destinationId, 
+                'activities'
+            );
+            
+            const newActivityRef = await window.firebase.addDoc(activitiesCollection, {
+                ...activityData,
+                // Ne plus ajouter userId - il vient de l'itinéraire
+                createdAt: window.firebase.serverTimestamp(),
+                order: activityData.order || 0
+            });
+
+            const newActivity = {
+                firestoreId: newActivityRef.id,
+                ...activityData,
+                createdAt: new Date()
+            };
+            
+            console.log('Activité ajoutée avec succès dans la sous-collection:', newActivity);
+            return newActivity;
+        } catch (error) {
+            console.error('Erreur ajout activité:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Récupérer toutes les activités d'une destination
+     */
+    async getActivitiesForDestination(itineraryId, destinationId) {
+        if (!this.user) return [];
+        
+        try {
+            console.log('🔍 Recherche activités pour destination:', destinationId);
+            
+            // Récupérer les activités depuis la sous-collection activities de la destination
+            const activitiesCollection = window.firebase.collection(
+                this.db, 
+                'itineraries', 
+                itineraryId, 
+                'destinations', 
+                destinationId, 
+                'activities'
+            );
+            
+            const q = window.firebase.query(
+                activitiesCollection,
+                window.firebase.orderBy('createdAt', 'desc')
+            );
+            
+            const snapshot = await window.firebase.getDocs(q);
+            
+            const activities = snapshot.docs.map(doc => ({ 
+                firestoreId: doc.id, 
+                ...doc.data()
+            }));
+            
+            console.log('✅ Activités récupérées depuis la sous-collection:', activities.length);
+            return activities;
+        } catch (error) {
+            console.error('❌ Erreur récupération activités depuis la sous-collection:', error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Mettre à jour une activité
+     */
+    async updateActivity(itineraryId, destinationId, activityId, activityData) {
+        if (!this.user) return false;
+        
+        try {
+            const activityRef = window.firebase.doc(
+                this.db, 
+                'itineraries', 
+                itineraryId, 
+                'destinations', 
+                destinationId, 
+                'activities', 
+                activityId
+            );
+        
+            await window.firebase.updateDoc(activityRef, activityData);
+            
+            console.log('✅ Activité mise à jour avec succès:', activityId);
+            return true;
+        } catch (error) {
+            console.error('❌ Erreur mise à jour activité:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Supprimer une activité
+     */
+    async deleteActivity(itineraryId, destinationId, activityId) {
+        if (!this.user) return false;
+        
+        try {
+            console.log('Suppression activité:', activityId);
+            
+            const activityRef = window.firebase.doc(
+                this.db, 
+                'itineraries', 
+                itineraryId, 
+                'destinations', 
+                destinationId, 
+                'activities', 
+                activityId
+            );
+            
+            await window.firebase.deleteDoc(activityRef);
+            
+            console.log('✅ Activité supprimée avec succès:', activityId);
+            return true;
+        } catch (error) {
+            console.error('❌ Erreur suppression activité:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Supprimer une destination et toutes ses activités
+     */
+    async deleteDestination(itineraryId, destinationId) {
+        if (!this.user) return false;
+        
+        try {
+            console.log('Suppression destination:', destinationId, 'et ses activités');
+            
+            // D'abord supprimer toutes les activités de cette destination
+            const activities = await this.getActivitiesForDestination(itineraryId, destinationId);
+            
+            for (const activity of activities) {
+                await this.deleteActivity(itineraryId, destinationId, activity.firestoreId);
+            }
+            
+            // Ensuite supprimer la destination
+            const destinationRef = window.firebase.doc(
+                this.db, 
+                'itineraries', 
+                itineraryId, 
+                'destinations', 
+                destinationId
+            );
+            
+            await window.firebase.deleteDoc(destinationRef);
+            
+            // Mettre à jour le timestamp de l'itinéraire
+            const itineraryRef = window.firebase.doc(this.db, 'itineraries', itineraryId);
+            await window.firebase.updateDoc(itineraryRef, {
+                updatedAt: window.firebase.serverTimestamp()
+            });
+            
+            console.log('Destination et ses activités supprimées avec succès:', destinationId);
+            return true;
+        } catch (error) {
+            console.error('Erreur suppression destination:', error);
+            return false;
         }
     }
 
@@ -384,7 +555,7 @@ class FirebaseService {
     }
 
     /**
-     * Ajouter une destination à l'itinéraire actuel
+     * Ajouter une destination à l'itinéraire actuel (nouvelle architecture)
      */
     async addDestinationToItinerary(destination) {
         if (!this.user) {
@@ -397,37 +568,48 @@ class FirebaseService {
             if (itineraries.length > 0) {
                 const currentItinerary = itineraries[0];
                 
-                const destinationWithItineraryId = {
+                // Utiliser la nouvelle méthode addDestination qui crée dans la sous-collection
+                const destinationData = {
                     ...destination,
-                    itineraryId: currentItinerary.id,
-                    userId: this.user.uid
+                    order: destination.order || 0
                 };
                 
-                const docRef = await window.firebase.addDoc(
-                    window.firebase.collection(this.db, 'destinations'),
-                    destinationWithItineraryId
-                );
+                const newDestination = await this.addDestination(currentItinerary.id, destinationData);
                 
-                // Stocker l'ID Firestore dans l'objet destination
-                const destinationWithId = {
-                    ...destinationWithItineraryId,
-                    firestoreId: docRef.id
-                };
-                
-                console.log('✅ Destination ajoutée à Firebase avec ID:', docRef.id);
-                console.log('✅ Destination complète:', destinationWithId);
-                return currentItinerary.id;
+                if (newDestination) {
+                    console.log('✅ Destination ajoutée à l\'itinéraire:', newDestination);
+                    return newDestination;
+                } else {
+                    throw new Error('Échec de l\'ajout de la destination');
+                }
             } else {
                 throw new Error('Aucun itinéraire trouvé');
             }
         } catch (error) {
-            console.error('❌ Erreur ajout destination:', error.message);
+            console.error('❌ Erreur ajout destination à l\'itinéraire:', error);
             throw error;
         }
     }
 
+    // Méthodes utilitaires
+
     /**
-     * Mettre à jour une destination existante
+     * Obtenir l'itinéraire actuel de l'utilisateur
+     */
+    async getCurrentItinerary() {
+        if (!this.user) return null;
+        
+        try {
+            const itineraries = await this.getItineraries();
+            return itineraries.length > 0 ? itineraries[0] : null;
+        } catch (error) {
+            console.error('Erreur récupération itinéraire actuel:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Mettre à jour une destination existante (nouvelle architecture)
      */
     async updateDestination(destination) {
         if (!this.user) {
@@ -435,29 +617,38 @@ class FirebaseService {
         }
         
         try {
-            // Mettre à jour directement le document par son firestoreId
-            const docRef = window.firebase.doc(this.db, 'destinations', destination.firestoreId);
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await this.getCurrentItinerary();
+            if (!currentItinerary) {
+                throw new Error('Aucun itinéraire trouvé');
+            }
             
-            await window.firebase.updateDoc(docRef, {
-                name: destination.name,
-                address: destination.address,
-                duration: destination.duration,
-                order: destination.order,
-                updatedAt: new Date()
+            // Mettre à jour la destination dans la sous-collection
+            const destinationRef = window.firebase.doc(
+                this.db, 
+                'itineraries', 
+                currentItinerary.id, 
+                'destinations', 
+                destination.firestoreId
+            );
+            
+            await window.firebase.updateDoc(destinationRef, {
+                ...destination,
+                updatedAt: window.firebase.serverTimestamp()
             });
-
-            console.log('✅ Destination mise à jour dans Firebase:', destination.name);
+            
+            // Mettre à jour le timestamp de l'itinéraire
+            const itineraryRef = window.firebase.doc(this.db, 'itineraries', currentItinerary.id);
+            await window.firebase.updateDoc(itineraryRef, {
+                updatedAt: window.firebase.serverTimestamp()
+            });
+            
+            console.log('✅ Destination mise à jour avec succès:', destination.firestoreId);
+            return true;
         } catch (error) {
-            console.error('❌ Erreur mise à jour destination:', error.message);
+            console.error('❌ Erreur mise à jour destination:', error);
             throw error;
         }
-    }
-
-    /**
-     * Vérifier si l'utilisateur est connecté
-     */
-    isAuthenticated() {
-        return this.user !== null;
     }
 
     /**
@@ -468,34 +659,80 @@ class FirebaseService {
     }
 
     /**
-     * Supprimer une destination directement par son ID (méthode alternative)
+     * Vérifier si l'utilisateur est authentifié
      */
-    async deleteDestinationById(destinationId) {
-        if (!this.isAuthenticated()) {
-            throw new Error('Utilisateur non authentifié');
-        }
+    isAuthenticated() {
+        return this.user !== null;
+    }
 
-        if (!destinationId) {
-            throw new Error('ID de destination invalide');
+    /**
+     * Tester les permissions Firestore
+     */
+    async testPermissions() {
+        if (!this.user) {
+            console.error('❌ Utilisateur non connecté pour tester les permissions');
+            return false;
         }
 
         try {
-            const { doc, deleteDoc } = this.getFirebaseFunctions();
-            const userId = this.getUserId();
+            console.log('🧪 Test des permissions Firestore...');
             
-            console.log('🔧 Suppression directe par ID:', destinationId);
-            console.log('🔍 UserId de l\'utilisateur:', userId);
+            // Test 1: Obtenir l'itinéraire
+            const itineraries = await this.getItineraries();
+            console.log('✅ Test itinéraires:', itineraries.length, 'trouvés');
             
-            // Supprimer directement le document de destination
-            const destinationRef = doc(this.db, 'destinations', destinationId);
-            await deleteDoc(destinationRef);
-
-            console.log('✅ Destination supprimée directement par ID:', destinationId);
+            if (itineraries.length === 0) {
+                console.log('ℹ️ Aucun itinéraire, création pour le test...');
+                await this.createItineraryForUser(this.user.uid);
+                const newItineraries = await this.getItineraries();
+                console.log('✅ Test création itinéraire:', newItineraries.length, 'créés');
+            }
+            
+            // Test 2: Obtenir les destinations
+            const destinations = await this.getDestinations();
+            console.log('✅ Test destinations:', destinations.length, 'récupérées');
+            
+            // Test 3: Créer une destination de test
+            if (destinations.length > 0) {
+                const testDestination = {
+                    name: 'Destination Test',
+                    address: { name: 'Test Address', location: { lat: 0, lng: 0 } },
+                    order: 999
+                };
+                
+                const currentItinerary = await this.getCurrentItinerary();
+                const newDestination = await this.addDestination(currentItinerary.id, testDestination);
+                console.log('✅ Test création destination:', newDestination ? 'succès' : 'échec');
+                
+                // Test 4: Créer une activité de test
+                if (newDestination) {
+                    const testActivity = {
+                        name: 'Activité Test',
+                        price: { amount: 0, currency: 'EUR' }
+                    };
+                    
+                    const newActivity = await this.addActivity(
+                        currentItinerary.id, 
+                        newDestination.firestoreId, 
+                        testActivity
+                    );
+                    console.log('✅ Test création activité:', newActivity ? 'succès' : 'échec');
+                    
+                    // Nettoyer
+                    if (newActivity) {
+                        await this.deleteActivity(currentItinerary.id, newDestination.firestoreId, newActivity.firestoreId);
+                        await this.deleteDestination(currentItinerary.id, newDestination.firestoreId);
+                    }
+                }
+            }
+            
+            console.log('✅ Test permissions terminé avec succès');
             return true;
-
         } catch (error) {
-            console.error('❌ Erreur suppression directe destination:', error);
-            throw error;
+            console.error('❌ Erreur test permissions:', error);
+            console.error('Code erreur:', error.code);
+            console.error('Message erreur:', error.message);
+            return false;
         }
     }
 }

@@ -504,11 +504,9 @@ const Activity = {
             price: activity.price.amount || activity.price,  // Utiliser le montant du prix
             localPrice: activity.localCurrency || 0,
             localCurrencyCode: activity.localCurrencyCode || '',  // Ajouter le code de la monnaie
-            activityType: activity.type || '',
-            userId: this.currentDestination.userId || window.firebaseService.user.uid  // Ajouter userId pour les règles
+            activityType: activity.type || ''
         };
         
-        console.log('🔍 activityForFirebase.userId:', activityForFirebase.userId);
         console.log('🔍 activityForFirebase.price:', activityForFirebase.price);
         console.log('🔍 activityForFirebase complet:', activityForFirebase);
 
@@ -561,9 +559,18 @@ const Activity = {
         if (!destination || !destination.firestoreId) return;
 
         try {
-            // Charger l'activité depuis Firebase
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour modifier l\'activité');
+                return;
+            }
+            
+            // Charger l'activité depuis Firebase avec la nouvelle syntaxe
             const activityRef = window.firebase.doc(
                 window.firebaseService.db,
+                'itineraries',
+                currentItinerary.id,
                 'destinations',
                 destination.firestoreId,
                 'activities',
@@ -613,7 +620,7 @@ const Activity = {
         }
     },
 
-    // Mettre à jour une activité existante dans Firebase
+    // Mettre à jour une activité existante via firebaseService
     async updateActivityInFirebase(activityId, activityData) {
         if (!this.currentDestination || !this.currentDestination.firestoreId) {
             console.error('❌ Aucune destination définie ou pas de firestoreId');
@@ -624,18 +631,36 @@ const Activity = {
         this.showSaveButtonLoading();
 
         try {
-            // Référence au document de l'activité
-            const activityRef = window.firebase.doc(
-                window.firebaseService.db,
-                'destinations',
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour mettre à jour l\'activité');
+                return;
+            }
+            
+            // Utiliser firebaseService pour mettre à jour l'activité
+            const success = await window.firebaseService.updateActivity(
+                currentItinerary.id,
                 this.currentDestination.firestoreId,
-                'activities',
-                activityId
+                activityId,
+                activityData
             );
-
-            // Mettre à jour l'activité
-            await window.firebase.updateDoc(activityRef, activityData);
-            console.log('✅ Activité mise à jour dans Firebase:', activityId);
+            
+            if (success) {
+                console.log('✅ Activité mise à jour dans Firebase:', activityId);
+                
+                // Recharger les activités pour cette destination
+                if (window.Destinations && window.Destinations.loadActivitiesForDestination) {
+                    const destinationIndex = window.Destinations.destinations.findIndex(
+                        dest => dest.firestoreId === this.currentDestination.firestoreId
+                    );
+                    if (destinationIndex !== -1) {
+                        await window.Destinations.loadActivitiesForDestination(destinationIndex);
+                    }
+                }
+            } else {
+                console.error('❌ Échec de la mise à jour de l\'activité');
+            }
 
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour de l\'activité dans Firebase:', error);
@@ -646,7 +671,7 @@ const Activity = {
         }
     },
 
-    // Sauvegarder l'activité dans Firebase
+    // Sauvegarder l'activité dans Firebase via firebaseService
     async saveActivityToFirebase(activity) {
         if (!this.currentDestination || !this.currentDestination.firestoreId) {
             console.error('❌ Aucune destination définie ou pas de firestoreId');
@@ -657,17 +682,35 @@ const Activity = {
         this.showSaveButtonLoading();
 
         try {
-            // Ajouter l'activité à la collection d'activités de la destination
-            const activitiesRef = window.firebase.collection(
-                window.firebaseService.db, 
-                'destinations'
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour sauvegarder l\'activité');
+                return;
+            }
+            
+            // Utiliser firebaseService pour ajouter l'activité
+            const newActivity = await window.firebaseService.addActivity(
+                currentItinerary.id,
+                this.currentDestination.firestoreId,
+                activity
             );
             
-            const destinationRef = window.firebase.doc(activitiesRef, this.currentDestination.firestoreId);
-            const activitiesCollection = window.firebase.collection(destinationRef, 'activities');
-            
-            const docRef = await window.firebase.addDoc(activitiesCollection, activity);
-            console.log('✅ Activité sauvegardée dans Firebase avec ID:', docRef.id);
+            if (newActivity) {
+                console.log('✅ Activité sauvegardée dans Firebase avec ID:', newActivity.firestoreId);
+                
+                // Recharger les activités pour cette destination
+                if (window.Destinations && window.Destinations.loadActivitiesForDestination) {
+                    const destinationIndex = window.Destinations.destinations.findIndex(
+                        dest => dest.firestoreId === this.currentDestination.firestoreId
+                    );
+                    if (destinationIndex !== -1) {
+                        await window.Destinations.loadActivitiesForDestination(destinationIndex);
+                    }
+                }
+            } else {
+                console.error('❌ Échec de la sauvegarde de l\'activité');
+            }
             
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de l\'activité dans Firebase:', error);
