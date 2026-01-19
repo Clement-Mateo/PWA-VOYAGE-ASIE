@@ -385,7 +385,7 @@ const Destinations = {
             this.render();
             
             // Notification à l'utilisateur
-            alert('Erreur lors de la réorganisation. L\'ordre a été restauré.');
+            showErrorSnackBar('Erreur lors de la réorganisation. L\'ordre a été restauré.');
         }
         
         this.draggedIndex = undefined;
@@ -617,7 +617,7 @@ const Destinations = {
             
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
-            alert('Erreur lors de la suppression de la destination: ' + error.message);
+            showErrorSnackBar('Erreur lors de la suppression de la destination: ' + error.message);
         } finally {
             // Réactiver le bouton
             if (deleteButton) {
@@ -668,7 +668,7 @@ const Destinations = {
         const failures = results.filter(r => !r.success);
         if (failures.length > 0) {
             console.error('❌ Erreurs lors de la mise à jour des ordres:', failures);
-            alert('Certaines destinations n\'ont pas pu être réordonnées. Veuillez rafraîchir la page.');
+            showErrorSnackBar('Certaines destinations n\'ont pas pu être réordonnées. Veuillez rafraîchir la page.');
         } else {
             console.log('✅ Tous les ordres mis à jour avec succès');
 
@@ -839,7 +839,7 @@ const Destinations = {
             
             // Validation : l'adresse est obligatoire
             if (!address || !address.trim()) {
-                alert('L\'adresse est obligatoire pour créer une destination');
+                showErrorSnackBar('L\'adresse est obligatoire pour créer une destination');
                 return;
             }
             
@@ -882,7 +882,7 @@ const Destinations = {
 
         } catch (error) {
             console.error('❌ Erreur sauvegarde destination:', error);
-            alert('Erreur lors de la sauvegarde de la destination');
+            showErrorSnackBar('Erreur lors de la sauvegarde de la destination');
         } finally {
             // Réactiver le bouton et restaurer le texte
             if (saveButton) {
@@ -1111,7 +1111,7 @@ const Destinations = {
             
         } catch (error) {
             console.error('❌ Erreur suppression activité:', error);
-            alert('Erreur lors de la suppression de l\'activité');
+            showErrorSnackBar('Erreur lors de la suppression de l\'activité');
         } finally {
             // Réactiver le bouton et restaurer l'icône
             if (buttonElement) {
@@ -1139,7 +1139,7 @@ const Destinations = {
             
         } catch (error) {
             console.error('❌ Erreur ajout destination:', error);
-            alert('Erreur lors de l\'ajout de la destination');
+            showErrorSnackBar('Erreur lors de l\'ajout de la destination');
         }
     }
 };

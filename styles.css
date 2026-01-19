@@ -55,6 +55,107 @@
 }
 
 /* ========================================
+   STYLES DES SNACKBARS
+   ======================================== */
+
+.snackbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-medium);
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 300px;
+    max-width: 500px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.snackbar.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.snackbar-content {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    gap: 12px;
+}
+
+.snackbar-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.snackbar-message {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--black);
+    line-height: 1.4;
+}
+
+/* Snackbar d'erreur */
+.error-snackbar {
+    border-left: 4px solid var(--accent-red);
+}
+
+.error-snackbar .snackbar-icon {
+    color: var(--accent-red);
+}
+
+/* Snackbar de succès */
+.success-snackbar {
+    border-left: 4px solid var(--success-green);
+}
+
+.success-snackbar .snackbar-icon {
+    color: var(--success-green);
+}
+
+/* Snackbar d'information */
+.info-snackbar {
+    border-left: 4px solid var(--info-blue);
+}
+
+.info-snackbar .snackbar-icon {
+    color: var(--info-blue);
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+    .snackbar {
+        min-width: 280px;
+        max-width: calc(100vw - 40px);
+        bottom: 16px;
+    }
+    
+    .snackbar-content {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+    
+    .snackbar-icon {
+        font-size: 18px;
+        width: 20px;
+        height: 20px;
+    }
+    
+    .snackbar-message {
+        font-size: 13px;
+    }
+}
+
+/* ========================================
    STYLES GLOBAUX DE L'APPLICATION
    ======================================== */
 
