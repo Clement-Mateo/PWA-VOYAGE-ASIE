@@ -85,50 +85,90 @@ const Activity = {
         return { code: 'EUR', name: 'EUR' };
     },
 
-    // Obtenir la devise pour un pays donné
-    getCountryCurrency(country) {
+    // Obtenir la devise pour un pays donné (via API REST Countries)
+    async getCountryCurrency(country) {
         console.log('🔍 Recherche de devise pour le pays:', country);
         
-        const countryToCurrency = {
-            'Japan': 'JPY',
+        // Mapping de secours pour les pays non disponibles dans REST Countries
+        const fallbackMapping = {
+            'North Korea': 'KPW',
             'South Korea': 'KRW',
-            'China': 'CNY', 
-            'Thailand': 'THB',
-            'Vietnam': 'VND',
-            'United States': 'USD',
-            'USA': 'USD',
-            'France': 'EUR',
-            'Italy': 'EUR',
-            'Spain': 'EUR',
-            'Germany': 'EUR',
-            'UK': 'GBP',
-            'United Kingdom': 'GBP',
-            'England': 'GBP',
-            'South Korea': 'KRW',
-            'Republic of Korea': 'KRW'
+            'Taiwan': 'TWD',
+            'Palestine': 'ILS',
+            'Western Sahara': 'MAD',
+            'Kosovo': 'EUR'
         };
         
-        console.log('🔍 Mapping pays->devise disponible:', Object.keys(countryToCurrency));
-        
-        // Chercher la devise correspondant au pays (comparaison exacte)
-        for (const key in countryToCurrency) {
-            const currencyCode = countryToCurrency[key];
-            console.log(`🔍 Test du pays: "${key}" -> devise: ${currencyCode}`);
+        try {
+            // Utiliser l'API REST Countries pour obtenir la devise
+            const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fullText=false`);
             
-            if (currencyCode) {
-                // Comparaison exacte (pas de lowercase)
-                if (country === key) {
-                    console.log(`✅ Devise trouvée: ${country} -> ${currencyCode}`);
+            if (!response.ok) {
+                console.log(`❌ Pays non trouvé dans REST Countries: ${country}, utilisation de EUR`);
+                return { code: 'EUR', name: 'EUR' };
+            }
+            
+            const data = await response.json();
+            console.log('🔍 Réponse brute de REST Countries:', data);
+            
+            if (data && data.length > 0 && data[0].currencies) {
+                const currencies = data[0].currencies;
+                
+                // Structure: {KPW: {name: "North Korean won"}}
+                const currencyCodes = Object.keys(currencies);
+                if (currencyCodes.length > 0) {
+                    const firstCode = currencyCodes[0];
+                    const currency = {
+                        code: firstCode,
+                        name: currencies[firstCode].name || firstCode
+                    };
+                    
+                    console.log(`✅ Devise trouvée via API: ${country} -> ${currency.code} (${currency.name})`);
                     return { 
-                        code: currencyCode, 
-                        name: currencyCode 
+                        code: currency.code, 
+                        name: currency.name 
                     };
                 }
             }
+            
+            // Si l'API ne trouve pas le pays, essayer le mapping de secours
+            if (fallbackMapping[country]) {
+                const currencyCode = fallbackMapping[country];
+                console.log(`✅ Devise trouvée via fallback: ${country} -> ${currencyCode}`);
+                return { 
+                    code: currencyCode, 
+                    name: currencyCode 
+                };
+            }
+            
+            console.log(`❌ Aucune devise trouvée pour: ${country}, utilisation de EUR`);
+            console.log('Structure de la réponse:', data ? {
+                hasData: !!data,
+                isArray: Array.isArray(data),
+                length: data?.length,
+                firstItem: data?.[0],
+                hasCurrencies: !!data?.[0]?.currencies,
+                currenciesLength: data?.[0]?.currencies?.length
+            } : 'null');
+            
+            return { code: 'EUR', name: 'EUR' };
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la recherche de devise:', error);
+            
+            // En cas d'erreur API, essayer le mapping de secours
+            if (fallbackMapping[country]) {
+                const currencyCode = fallbackMapping[country];
+                console.log(`✅ Devise trouvée via fallback (erreur API): ${country} -> ${currencyCode}`);
+                return { 
+                    code: currencyCode, 
+                    name: currencyCode 
+                };
+            }
+            
+            console.log(`🔄 Utilisation de EUR par défaut pour: ${country}`);
+            return { code: 'EUR', name: 'EUR' };
         }
-        
-        console.log(`❌ Aucune devise trouvée pour: ${country}, utilisation de EUR`);
-        return { code: 'EUR', name: 'EUR' };
     },
 
     // Obtenir le pays depuis les coordonnées (API Nominatim)
