@@ -1,0 +1,313 @@
+// Composant Register pour l'inscription
+const Register = {
+    // État du composant
+    isInitialized: false,
+
+    // Template HTML
+    template: `
+        <div class="register-container" id="registerContainer">
+            <div class="register-card">
+                <div class="register-content">
+                    <h1 class="register-title">Inscription</h1>
+                    
+                    <div class="register-form-container">
+                        <div class="register-form" id="registerForm">
+                            <input type="text" class="form-input" id="registerName" placeholder="Votre nom complet" autocomplete="name">
+                            
+                            <input type="email" class="form-input" id="registerEmail" placeholder="votre@email.com" autocomplete="email">
+                            
+                            <input type="password" class="form-input" id="registerPassword" placeholder="••••••••" autocomplete="new-password">
+                            
+                            <input type="password" class="form-input" id="confirmPassword" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+                            
+                            <button class="btn-register-primary" onclick="Register.register()">S'inscrire</button>
+                        </div>
+                    </div>
+                    
+                    <div class="register-links">
+                        <p class="register-text">
+                            Déjà un compte ? 
+                            <a href="#" class="register-link" onclick="Register.backToLogin()">Se connecter</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    // Initialisation du composant
+    init() {
+        console.log('Register.init() appelé');
+        
+        if (this.isInitialized) {
+            console.log('Register déjà initialisé');
+            return;
+        }
+        
+        // Créer le conteneur d'inscription s'il n'existe pas
+        let container = document.getElementById('registerContainerWrapper');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'registerContainerWrapper';
+            document.body.appendChild(container);
+        }
+        
+        container.innerHTML = this.template;
+        this.setupEventListeners();
+        this.isInitialized = true;
+        console.log('Register initialisé avec succès');
+    },
+
+    // Configuration des écouteurs d'événements
+    setupEventListeners() {
+        // Gérer la soumission avec la touche Entrée
+        const registerName = document.getElementById('registerName');
+        const registerEmail = document.getElementById('registerEmail');
+        const registerPassword = document.getElementById('registerPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+
+        if (registerName) registerName.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.register();
+        });
+        if (registerEmail) registerEmail.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.register();
+        });
+        if (registerPassword) registerPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.register();
+        });
+        if (confirmPassword) confirmPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.register();
+        });
+
+        console.log('Écouteurs d\'événements Register configurés');
+    },
+
+    // Afficher la page d'inscription
+    show() {
+        console.log('Register.show() appelé');
+        
+        if (!this.isInitialized) {
+            this.init();
+        }
+        
+        const container = document.getElementById('registerContainerWrapper');
+        if (container) {
+            container.style.display = 'flex';
+        }
+        
+        // Masquer la carte
+        const mapElement = document.getElementById('map');
+        if (mapElement) {
+            mapElement.style.display = 'none';
+        }
+        
+        // Masquer les boutons flottants
+        const authBtn = document.querySelector('.auth-btn');
+        const destinationsBtn = document.querySelector('.destinations-toggle-btn');
+        if (authBtn) authBtn.style.display = 'none';
+        if (destinationsBtn) destinationsBtn.style.display = 'none';
+        
+        this.resetForm();
+    },
+
+    // Masquer la page d'inscription
+    hide() {
+        console.log('Register.hide() appelé');
+        
+        const container = document.getElementById('registerContainerWrapper');
+        if (container) {
+            container.style.display = 'none';
+        }
+        
+        // Afficher la carte
+        const mapElement = document.getElementById('map');
+        if (mapElement) {
+            mapElement.style.display = 'block';
+        }
+        
+        // Afficher les boutons flottants si l'utilisateur est connecté
+        if (window.firebaseService && window.firebaseService.isAuthenticated()) {
+            const authBtn = document.querySelector('.auth-btn');
+            const destinationsBtn = document.querySelector('.destinations-toggle-btn');
+            if (authBtn) authBtn.style.display = 'flex';
+            if (destinationsBtn) destinationsBtn.style.display = 'block';
+        }
+    },
+
+    // Inscription
+    async register() {
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        console.log('Tentative d\'inscription avec:', email);
+        
+        if (!name || !email || !password || !confirmPassword) {
+            this.showError('Veuillez remplir tous les champs');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            this.showError('Les mots de passe ne correspondent pas');
+            return;
+        }
+        
+        if (password.length < 6) {
+            this.showError('Le mot de passe doit contenir au moins 6 caractères');
+            return;
+        }
+        
+        if (!this.validateEmail(email)) {
+            this.showError('Veuillez entrer une adresse email valide');
+            return;
+        }
+        
+        // Désactiver le bouton pendant l'inscription
+        this.setLoadingState(true);
+        
+        try {
+            // Utiliser firebaseService pour l'inscription
+            if (window.firebaseService) {
+                console.log('Appel de firebaseService.signUp...');
+                const user = await window.firebaseService.signUp(email, password);
+                
+                if (user) {
+                    console.log('Inscription réussie:', user.email);
+                    
+                    // Masquer la page d'inscription
+                    this.hide();
+                    
+                    // Mettre à jour l'interface utilisateur
+                    if (window.updateUserPanel) {
+                        window.updateUserPanel();
+                    }
+                    
+                    // Afficher un message de succès
+                    this.showSuccess('Inscription réussie ! Bienvenue');
+                } else {
+                    console.error('Échec de l\'inscription');
+                    this.showError('Échec de l\'inscription');
+                }
+            } else {
+                console.error('FirebaseService non disponible pour l\'inscription');
+                this.showError('Service Firebase non disponible');
+            }
+            
+        } catch (error) {
+            console.error('Erreur d\'inscription:', error);
+            let errorMessage = 'Erreur d\'inscription';
+            
+            // Gérer les erreurs Firebase spécifiques
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'Cet email est déjà utilisé';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Email invalide';
+            } else if (error.code === 'auth/operation-not-allowed') {
+                errorMessage = 'Opération non autorisée';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Mot de passe trop faible';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            this.showError(errorMessage);
+        } finally {
+            // Réactiver le bouton
+            this.setLoadingState(false);
+        }
+    },
+
+    // Retour à la connexion
+    backToLogin() {
+        console.log('Retour à la page de connexion');
+        
+        // Masquer la page d'inscription
+        this.hide();
+        
+        // Afficher la page de connexion
+        if (window.Login) {
+            window.Login.show();
+        }
+    },
+
+    // Valider un email
+    validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    },
+
+    // Réinitialiser le formulaire
+    resetForm() {
+        document.getElementById('registerName').value = '';
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        
+        // Effacer les messages d'erreur
+        this.clearMessages();
+    },
+
+    // Gérer l'état de chargement
+    setLoadingState(isLoading) {
+        const button = document.querySelector('.btn-register-primary');
+        
+        if (isLoading) {
+            button.disabled = true;
+            button.textContent = 'Inscription...';
+        } else {
+            button.disabled = false;
+            button.textContent = 'S\'inscrire';
+        }
+    },
+
+    // Afficher un message d'erreur
+    showError(message) {
+        this.clearMessages();
+        
+        const form = document.getElementById('registerForm');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'register-error';
+        errorDiv.textContent = message;
+        
+        form.insertBefore(errorDiv, form.firstChild);
+        
+        // Auto-suppression après 5 secondes
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+        }, 5000);
+    },
+
+    // Afficher un message de succès
+    showSuccess(message) {
+        this.clearMessages();
+        
+        const container = document.querySelector('.register-card');
+        const successDiv = document.createElement('div');
+        successDiv.className = 'register-success';
+        successDiv.textContent = message;
+        
+        container.insertBefore(successDiv, container.firstChild);
+        
+        // Auto-suppression après 3 secondes
+        setTimeout(() => {
+            if (successDiv.parentNode) {
+                successDiv.parentNode.removeChild(successDiv);
+            }
+        }, 3000);
+    },
+
+    // Effacer tous les messages
+    clearMessages() {
+        const errors = document.querySelectorAll('.register-error');
+        const successes = document.querySelectorAll('.register-success');
+        
+        errors.forEach(error => error.remove());
+        successes.forEach(success => success.remove());
+    }
+};
+
+// Exporter globalement
+window.Register = Register;
