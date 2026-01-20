@@ -178,11 +178,6 @@ const Register = {
                     // Masquer la page d'inscription
                     this.hide();
                     
-                    // Mettre à jour l'interface utilisateur
-                    if (window.updateUserPanel) {
-                        window.updateUserPanel();
-                    }
-                    
                     // Afficher un message de succès avec snackbar
                     showSuccessSnackBar('Inscription réussie ! Bienvenue');
                 } else {

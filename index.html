@@ -273,8 +273,18 @@
                 
                 // Charger et afficher les destinations
                 if (window.Destinations) {
-                    window.Destinations.loadDestinations();
+                    // Charger les itinéraires d'abord
+                    await window.firebaseService.getItineraries();
+                    
+                    // Créer un itinéraire si aucun n'existe
+                    if (window.firebaseService.itineraries.length === 0) {
+                        await window.firebaseService.createItinerary('Mon itinéraire');
+                    }
+                    
+                    // Afficher le panneau d'abord
                     window.Destinations.show();
+                    // Puis charger les destinations (attendre que tout soit terminé)
+                    await window.Destinations.loadDestinations();
                 }
                 
                 // Afficher le bouton de déconnexion
@@ -311,46 +321,6 @@
             }
         }
         
-        // Vérifier l'état de connexion au chargement
-        setTimeout(() => {
-            if (window.firebase && window.firebase.auth) {
-                window.firebase.auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        window.firebaseService.user = user;
-                        console.log('Utilisateur connecté:', user.email);
-                        
-                        // Créer un itinéraire si aucun n'existe
-                        await window.firebaseService.ensureUserItinerary();
-                        
-                        updateUserPanel();
-                    } else {
-                        window.firebaseService.user = null;
-                        console.log('Utilisateur déconnecté');
-                        
-                        updateUserPanel();
-                    }
-                });
-            } else {
-                console.warn('⚠️ Firebase non encore initialisé, nouvelle tentative dans 2 secondes');
-                setTimeout(() => {
-                    if (window.firebase && window.firebase.auth) {
-                        window.firebase.auth.onAuthStateChanged(async (user) => {
-                            if (user) {
-                                window.firebaseService.user = user;
-                                console.log('Utilisateur connecté:', user.email);
-                                await window.firebaseService.ensureUserItinerary();
-                                updateUserPanel();
-                            } else {
-                                window.firebaseService.user = null;
-                                console.log('Utilisateur déconnecté');
-                                updateUserPanel();
-                            }
-                        });
-                    }
-                }, 2000);
-            }
-        }, 1000);
-
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
             isOnline = true;

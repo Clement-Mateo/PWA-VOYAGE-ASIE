@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carte-monde-v2';
+const CACHE_NAME = 'carte-monde-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -18,6 +18,15 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
+  // Si on est en développement (localhost/127.0.0.1), pas de cache
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  // Sinon (production) : utiliser le cache normalement
   event.respondWith(
     caches.match(event.request)
       .then(response => {
