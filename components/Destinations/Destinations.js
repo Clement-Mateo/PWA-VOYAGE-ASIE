@@ -73,13 +73,17 @@ const Destinations = {
         panel.className = 'destinations-panel';
         
         panel.innerHTML = `
-            <div class="destinations-header"    
-                <h2 class="destinations-title">📍 Destinations</h2>
+            <div class="destinations-header">    
+                <h2 class="destinations-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3" style="transform: translateY(2px); margin-right: 8px;">
+                        <path d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120Zm40 214q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
+                    </svg>
+                    Destinations
+                </h2>
                 <button class="close-panel-btn" onclick="Destinations.hide()">×</button>
             </div>
             <div class="destinations-list" id="destinationsList"></div>
-        `;
-        
+`;
         return panel;
     },
     

@@ -8,7 +8,7 @@ const Login = {
         <div class="auth-container" id="loginContainer">
             <div class="auth-card">
                 <div class="auth-content">
-                    <h1 class="auth-title">Voyage Asie</h1>
+                    <h1 class="auth-title">Connexion</h1>
                     <p class="auth-subtitle">Connectez-vous pour planifier vos aventures</p>
                     
                     <div class="auth-form-container">

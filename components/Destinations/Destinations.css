@@ -72,8 +72,12 @@
     top: 0;
     width: 420px;
     height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-backdrop);
+    -webkit-backdrop-filter: var(--glass-backdrop);
+    border-radius: 20px 0 0 20px; /* Bordures arrondies uniquement sur le côté gauche*/
+    border: 3px solid var(--glass-border);
+    box-shadow: var(--box-shadow-1);
     transform: translateX(100%);
     transition: transform 0.3s ease;
     z-index: 1000;
@@ -85,35 +89,35 @@
 }
 
 .destinations-header {
+    color: var(--font-color-white);
     padding: 20px;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin: 20px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
+    border-radius: 20px;
     position: sticky;
     top: 0;
     z-index: 10;
 }
 
 .destinations-title {
-    color: white;
+    color: var(--font-color-white);
     font-size: 18px;
     font-weight: 600;
     margin: 0;
 }
 
 .destinations-list {
-    padding: 15px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
 .destination-card {
-    background: white;
-    border-radius: 12px;
+    background: var(--white);
+    border-radius: 20px;
     padding: 18px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
+    box-shadow: var(--box-shadow-1);
     transition: all 0.3s ease;
     position: relative;
     flex: 0 0 auto;
@@ -121,7 +125,7 @@
 
 .destination-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    box-shadow: var(--box-shadow-1);
 }
 
 .destination-card.dragging {
@@ -131,13 +135,13 @@
 }
 
 .destination-card.drag-over {
-    border: 2px dashed #2196F3;
-    background: #e3f2fd;
+    border: 2px dashed var(--primary-blue);
+    background:var(--white);
 }
 
 .destination-card.expanded {
-    border: 2px solid #667eea;
-    background: #f0f4ff;
+    border: 2px solid var(--white);
+    background: var(--white);
 }
 
 .destination-card.editing .expand-btn {
@@ -154,7 +158,7 @@
 .destination-title {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--font-color-black);
     margin: 0;
     flex: 1;
 }
@@ -168,13 +172,13 @@
 
 
 .destination-address {
-    color: #666;
+    color: var(--gray-darker);
     font-size: 14px;
     margin-bottom: 8px;
 }
 
 .destination-duration {
-    color: #666;
+    color: var(--gray-darker);
     font-size: 14px;
     margin-bottom: 15px;
 }
@@ -183,7 +187,7 @@
     display: none;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--gray);
 }
 
 .destination-form.show {
@@ -194,9 +198,10 @@
 .destination-activities {
     margin-top: 20px;
     padding: 15px;
-    background: #f8f9fa;
+    background: var(--white);
+    box-shadow: var(--box-shadow-2);
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--white);
 }
 
 .activities-header {
@@ -205,17 +210,18 @@
 
 .activities-header h4 {
     margin: 0;
-    color: #333;
+    color: var(--font-color-black);
     font-size: 16px;
     font-weight: 600;
 }
 
 .add-activity-btn {
-    background: #4CAF50;
-    color: white;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
+    box-shadow: var(--box-shadow-1);
+    color: var(--font-color-white);
     border: none;
     padding: 10px 15px;
-    border-radius: 6px;
+    border-radius: 20px;
     font-size: 14px;
     display: flex;
     align-items: center;
@@ -225,7 +231,8 @@
 }
 
 .add-activity-btn:hover {
-    background: #45a049;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
+    box-shadow: var(--box-shadow-2);
     transform: translateY(-1px);
 }
 
@@ -236,10 +243,10 @@
 
 .activity-item {
     padding: 12px;
-    background: white;
+    background: var(--white);
     border-radius: 6px;
     margin-bottom: 8px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--gray-dark);
 }
 
 .activity-info {
@@ -249,7 +256,7 @@
 }
 
 .activity-info strong {
-    color: #333;
+    color: var(--font-color-black);
     font-size: 14px;
     font-weight: 600;
 }
@@ -268,27 +275,29 @@
 
 
 .activity-time {
-    color: #666;
+    color: var(--font-color-gray);
     font-size: 12px;
 }
 
 .activity-price {
-    color: #4CAF50;
+    color: var(--success-green);
     font-size: 13px;
     font-weight: 500;
 }
 
+/* Destination Form */
 .destination-form {
     display: none;
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--white);
 }
 
 .destination-form.show {
     display: block;
 }
 
+/* Address Input Container */
 .address-input-container {
     gap: 8px;
     align-items: center;
@@ -305,52 +314,54 @@
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    color: #666;
+    color: var(--font-color-gray);
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
     z-index: 10;
 }
 
 .address-search-btn:hover {
-    color: #333;
+    color: var(--font-color-gray-dark);
 }
 
+/* Add Destination Button */
 .add-destination-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
+    color: var(--font-color-white);
     border: none;
-    border-radius: 12px;
+    border-radius: 20px;
     padding: 15px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     margin: 0;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: var(--box-shadow-1);
 }
 
 .add-destination-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: var(--box-shadow-2);
 }
 
+/* Close Panel Button */
 .close-panel-btn {
     position: absolute;
-    top: 20px;
+    top: 15px;
     right: 20px;
-    background: rgba(255,255,255,0.2);
+    background: var(--glass-bg);
     border: none;
     border-radius: 50%;
     width: 30px;
     height: 30px;
     cursor: pointer;
-    color: white;
+    color: var(--white);
     font-size: 18px;
-    transition: background 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .close-panel-btn:hover {
-    background: rgba(255,255,255,0.3);
+    background: var(--gray);
 }
 
 /* Responsive */

@@ -3,19 +3,28 @@
    ======================================== */
 
 :root {
+    /*couleurs polices*/
+    --font-color-black: #000000;
+    --font-color-white: #ffffff;
+    --font-color-gray: #666666;
+    --font-color-gray-dark: #333333;
+
     /* Couleurs primaires */
 
-    --primary-blue: #153484;
-    --primary-dark: #0E2358;
-    --primary-darker: #07112C;
+    --primary-blue: #1966B3;
+    --primary-dark: #14518c;
+    --primary-darker: #0D3359;
     
     /* Couleurs secondaires */
     --secondary-purple-light: #9936FC;
     --secondary-purple-dark: #7F04FB;
+    
     --secondary-blue-aqua: #1FD7E0;
     --secondary-blue-aqua-dark: #18ACB4;
+    
     --secondary-blue-majorelle: #7874F1;
     --secondary-blue-majorelle-dark: #4B45ED;
+    
     --accent-red: #dc3545;
     --accent-red-dark: #c82333;
     
@@ -23,7 +32,8 @@
     --white: #ffffff;
     --black: #000000;
     --gray: #efefef;
-    --dark-gray: #777777;
+    --gray-dark: #cccccc;
+    --gray-darker: #666666;
     
     /* Couleurs de statut */
     --success-green: #4CAF50;
@@ -36,16 +46,7 @@
     /* Couleurs spécifiques */
     --background-light: #ffffff;
     --background-hover: #efefef;
-    
-    /* Variables pour glassmorphisme */
-    --glass-bg: rgba(255, 255, 255, 0.25);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    --glass-backdrop: blur(10px);
-    --glass-input-bg: rgba(255, 255, 255, 0.1);
-    --glass-input-border: rgba(255, 255, 255, 0.3);
-    --glass-text: rgba(255, 255, 255, 0.9);
-    --glass-link: rgba(255, 255, 255, 0.8);
+
     
     /* Couleurs RGB spécifiques */
     --white-transparent-1: rgba(255, 255, 255, 0.1);
@@ -61,8 +62,28 @@
     --shadow-light: rgba(0, 0, 0, 0.1);
     --shadow-medium: rgba(0, 0, 0, 0.2);
     --shadow-dark: rgba(0, 0, 0, 0.3);
-    --shadow-primary: rgba(0, 124, 186, 0.4);
+    --shadow-primary: rgba(255, 255, 255, 0.3);
     --shadow-accent: rgba(220, 53, 69, 0.4);
+
+    /*========== Variables Glassmorphism ==========*/
+    
+    --glass-backdrop: blur(20px);
+    --box-shadow-1: 3px 3px 5px rgba(0, 0, 0, 0.3),
+        -3px -3px 5px rgba(255, 255, 255, 0.1),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+    --box-shadow-2: inset 3px 3px 5px rgba(0, 0, 0, 0.3),
+        inset -3px -3px 5px rgba(255, 255, 255, 0.1),
+        inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    
+    --glass-input-bg: rgba(255, 255, 255, 0.1);
+    --glass-input-border: rgba(255, 255, 255, 0.3);
+    --glass-text: rgba(255, 255, 255, 0.9);
+    --glass-link: rgba(255, 255, 255, 0.8);
+
 }
 
 /* ========================================
@@ -211,11 +232,10 @@ body {
 .auth-btn, .destinations-toggle-btn {
     position: fixed;
     z-index: 1000;
-    background: var(--secondary-purple-light);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 8px var(--gray-dark);
     transition: all 0.3s ease;
     width: 50px;
     height: 50px;
@@ -236,7 +256,6 @@ body {
 
 .auth-btn:hover, .destinations-toggle-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-dark);
 }
 
 .add-btn {
