@@ -273,6 +273,5 @@ const ResetPassword = {
     }
 };
 
-// Exporter le composant
-export { ResetPassword };
+// Le composant est disponible globalement via window.ResetPassword
 window.ResetPassword = ResetPassword;

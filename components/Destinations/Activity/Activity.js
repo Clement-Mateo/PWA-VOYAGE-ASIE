@@ -732,6 +732,5 @@ const Activity = {
     },
 };
 
-// Exporter le composant
-export { Activity };
+// Le composant est disponible globalement via window.Activity
 window.Activity = Activity;

@@ -1,13 +1,13 @@
-const CACHE_NAME = 'carte-monde-v1';
+const CACHE_NAME = 'carte-monde-v2';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/styles.css',
+  '/firebaseService.js',
+  '/serviceUtil.js',
+  '/manifest.json',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
 
 self.addEventListener('install', event => {

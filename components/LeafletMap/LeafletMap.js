@@ -388,6 +388,5 @@ class LeafletMap {
     }
 }
 
-// Exporter la classe avec un nom différent pour éviter les conflits
-export { LeafletMap };
+// La classe est disponible globalement via window.LeafletMap
 window.LeafletMap = LeafletMap;

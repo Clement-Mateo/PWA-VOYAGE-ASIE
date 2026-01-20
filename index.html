@@ -8,14 +8,17 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="var(--primary-blue)">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="CarteInteractive">
     
     <!-- Google Fonts pour Material Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons&display=swap" rel="stylesheet">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -48,11 +51,6 @@
     <!-- Bouton pour afficher les destinations (masqué par défaut) -->
     <button class="destinations-toggle-btn" id="destinationsBtn" style="display: none;" onclick="window.Destinations.toggle()">
         📍
-    </button>
-    
-    <!-- Bouton de test des permissions Firebase -->
-    <button class="auth-btn" id="testPermissionsBtn" style="display: none; background: #ff9800; margin-left: 10px;" onclick="testFirebasePermissions()" title="Tester les permissions Firestore">
-        🧪 Test Permissions
     </button>
     
     <!-- Leaflet JavaScript -->
@@ -157,15 +155,18 @@
     
     <!-- Component Manager -->
     <script type="module">
-        // Importer les composants
+        // Les composants sont déjà disponibles globalement
+        // Importer uniquement ComponentManager
         import { ComponentManager } from './components/ComponentManager.js';
-        import { Destinations } from './components/Destinations/Destinations.js';
-        import { Activity } from './components/Destinations/Activity/Activity.js';
-        import { ChooseAddress } from './components/Destinations/ChooseAddress/ChooseAddress.js';
-        import { LeafletMap } from './components/LeafletMap/LeafletMap.js';
-        import { Login } from './components/auth/Login.js';
-        import { Register } from './components/auth/Register.js';
-        import { ResetPassword } from './components/auth/ResetPassword.js';
+        
+        // Récupérer les composants depuis window
+        const Destinations = window.Destinations;
+        const Activity = window.Activity;
+        const ChooseAddress = window.ChooseAddress;
+        const LeafletMap = window.LeafletMap;
+        const Login = window.Login;
+        const Register = window.Register;
+        const ResetPassword = window.ResetPassword;
         
         // Enregistrer les composants
         ComponentManager.register('destinations', Destinations);
@@ -255,7 +256,6 @@
         async function updateUserPanel() {
             const logoutBtn = document.getElementById('logoutBtn');
             const destinationsBtn = document.getElementById('destinationsBtn');
-            const testPermissionsBtn = document.getElementById('testPermissionsBtn');
             
             if (window.firebaseService.isAuthenticated()) {
                 // Utilisateur connecté
@@ -286,11 +286,6 @@
                 if (destinationsBtn && window.Destinations) {
                     destinationsBtn.style.display = 'block';
                 }
-                
-                // Afficher le bouton de test des permissions
-                if (testPermissionsBtn) {
-                    testPermissionsBtn.style.display = 'block';
-                }
             } else {
                 // Utilisateur déconnecté
                 console.log('🔒 Utilisateur déconnecté - Affichage de la page de connexion');
@@ -307,10 +302,6 @@
                 
                 if (destinationsBtn) {
                     destinationsBtn.style.display = 'none';
-                }
-                
-                if (testPermissionsBtn) {
-                    testPermissionsBtn.style.display = 'none';
                 }
                 
                 // Effacer les marqueurs lors de la déconnexion
@@ -371,32 +362,9 @@
             console.log('Connexion perdue - API désactivée');
         });
         
-        // Fonction de test des permissions Firebase
-        async function testFirebasePermissions() {
-            if (!window.firebaseService || !window.firebaseService.isAuthenticated()) {
-                showErrorSnackBar('Veuillez vous connecter pour tester les permissions');
-                return;
-            }
-            
-            try {
-                showInfoSnackBar('Test des permissions Firestore en cours...');
-                const success = await window.firebaseService.testPermissions();
-                
-                if (success) {
-                    showSuccessSnackBar('✅ Test des permissions réussi !');
-                } else {
-                    showErrorSnackBar('❌ Test des permissions échoué - vérifiez les règles Firestore');
-                }
-            } catch (error) {
-                console.error('Erreur test permissions:', error);
-                showErrorSnackBar('Erreur lors du test des permissions: ' + error.message);
-            }
-        }
-        
         // Exporter les fonctions globalement
         window.updateUserPanel = updateUserPanel;
         window.handleLogout = handleLogout;
-        window.testFirebasePermissions = testFirebasePermissions;
     </script>
 </body>
 </html>

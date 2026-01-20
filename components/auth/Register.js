@@ -314,6 +314,5 @@ const Register = {
     }
 };
 
-// Exporter le composant
-export { Register };
+// Le composant est disponible globalement via window.Register
 window.Register = Register;
