@@ -10,21 +10,13 @@
     --font-color-gray-dark: #333333;
 
     /* Couleurs primaires */
-
     --primary-blue: #1966B3;
     --primary-dark: #14518c;
     --primary-darker: #0D3359;
     
     /* Couleurs secondaires */
     --secondary-purple-light: #9936FC;
-    --secondary-purple-dark: #7F04FB;
-    
-    --secondary-blue-aqua: #1FD7E0;
-    --secondary-blue-aqua-dark: #18ACB4;
-    
     --secondary-blue-majorelle: #7874F1;
-    --secondary-blue-majorelle-dark: #4B45ED;
-    
     --accent-red: #dc3545;
     --accent-red-dark: #c82333;
     
@@ -45,18 +37,6 @@
     
     /* Couleurs spécifiques */
     --background-light: #ffffff;
-    --background-hover: #efefef;
-
-    
-    /* Couleurs RGB spécifiques */
-    --white-transparent-1: rgba(255, 255, 255, 0.1);
-    --white-transparent-2: rgba(255, 255, 255, 0.2);
-    --black-transparent-05: rgba(0, 0, 0, 0.05);
-    --accent-red-transparent-1: rgba(220, 53, 69, 0.1);
-    --primary-blue-transparent-3: rgba(102, 126, 234, 0.3);
-    --primary-blue-transparent-4: rgba(102, 126, 234, 0.4);
-    --white-transparent-3: rgba(255, 255, 255, 0.3);
-    --shadow-black-15: rgba(0, 0, 0, 0.15);
     
     /* Ombres et transparences */
     --shadow-light: rgba(0, 0, 0, 0.1);
@@ -66,7 +46,6 @@
     --shadow-accent: rgba(220, 53, 69, 0.4);
 
     /*========== Variables Glassmorphism ==========*/
-    
     --glass-backdrop: blur(20px);
     --box-shadow-1: 3px 3px 5px rgba(0, 0, 0, 0.3),
         -3px -3px 5px rgba(255, 255, 255, 0.1),
@@ -74,16 +53,10 @@
     --box-shadow-2: inset 3px 3px 5px rgba(0, 0, 0, 0.3),
         inset -3px -3px 5px rgba(255, 255, 255, 0.1),
         inset 1px 1px 2px rgba(0, 0, 0, 0.2);
-
     --glass-bg: rgba(255, 255, 255, 0.25);
     --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    
     --glass-input-bg: rgba(255, 255, 255, 0.1);
     --glass-input-border: rgba(255, 255, 255, 0.3);
-    --glass-text: rgba(255, 255, 255, 0.9);
-    --glass-link: rgba(255, 255, 255, 0.8);
-
 }
 
 /* ========================================
@@ -237,6 +210,7 @@ body {
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
+    color: var(--font-color-white);
     width: 50px;
     height: 50px;
     font-size: 20px;

@@ -114,7 +114,7 @@
 }
 
 .destination-card {
-    background: var(--white);
+    background: var(--background-light);
     border-radius: 20px;
     padding: 18px;
     box-shadow: var(--box-shadow-1);
@@ -125,7 +125,7 @@
 
 .destination-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--box-shadow-1);
+    box-shadow: var(--box-shadow-2);
 }
 
 .destination-card.dragging {
@@ -136,12 +136,12 @@
 
 .destination-card.drag-over {
     border: 2px dashed var(--primary-blue);
-    background:var(--white);
+    background:var(--background-light);
 }
 
 .destination-card.expanded {
     border: 2px solid var(--white);
-    background: var(--white);
+    background: var(--background-light);
 }
 
 .destination-card.editing .expand-btn {
@@ -198,7 +198,7 @@
 .destination-activities {
     margin-top: 20px;
     padding: 15px;
-    background: var(--white);
+    background: var(--background-light);
     box-shadow: var(--box-shadow-2);
     border-radius: 8px;
     border: 1px solid var(--white);
@@ -243,7 +243,7 @@
 
 .activity-item {
     padding: 12px;
-    background: var(--white);
+    background: var(--background-light);
     border-radius: 6px;
     margin-bottom: 8px;
     border: 1px solid var(--gray-dark);
@@ -355,7 +355,7 @@
     width: 30px;
     height: 30px;
     cursor: pointer;
-    color: var(--white);
+    color: var(----font-color-white);
     font-size: 18px;
     transition: all 0.3s ease;
 }
