@@ -4,7 +4,7 @@
 .activity-section {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--gray);
 }
 
 .activity-checkbox {
@@ -23,7 +23,7 @@
 .activity-checkbox label {
     cursor: pointer;
     font-size: 14px;
-    color: #333;
+    color: var(--font-color-black);
     user-select: none;
 }
 
@@ -31,10 +31,10 @@
 .activity-list {
     max-height: 200px;
     overflow-y: auto;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--gray);
     border-radius: 6px;
     padding: 10px;
-    background: #f9f9f9;
+    background: var(--white);
 }
 
 .no-activities {
@@ -63,13 +63,13 @@
 }
 
 .activity-popup-content {
-    background: white;
-    border-radius: 12px;
+    background: var(--white);
+    border-radius: 20px;
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow);
 }
 
 .activity-popup-header {
@@ -77,34 +77,42 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
+    margin: 20px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);  /* Dégradé bleu */
+    box-shadow: var(--shadow);
+    border-radius: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .activity-popup-title {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: var(--white);
 }
 
 .btn-close-activity {
-    background: none;
+    position: absolute;
+    top: 17px;
+    right: 20px;
+    background: var(--glass-bg);
     border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    padding: 0;
+    border-radius: 50%;
     width: 30px;
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: background 0.3s;
+    cursor: pointer;
+    color: var(--white);
+    font-size: 18px;
+    transition: all 0.3s ease;
 }
 
 .btn-close-activity:hover {
-    background: #f0f0f0;
+    background: var(--gray);
 }
 
 /* Formulaire d'activité */

@@ -16,27 +16,28 @@
 }
 
 .btn-save {
-    background: #4CAF50;
-    color: white;
+    background: var(--success-green);
+    color: var(--font-color-white);
 }
 
 .btn-save:hover {
-    background: #45a049;
+    background: var(--success-green-dark);
+
 }
 
 .btn-save:disabled {
-    background: #cccccc;
+    background: var(--gray-dark);
     cursor: not-allowed;
     opacity: 0.7;
 }
 
 .btn-cancel {
-    background: #f44336;
-    color: white;
+    background: var(--error-red);
+    color: var(--font-color-white);
 }
 
 .btn-cancel:hover {
-    background: #da190b;
+    background: var(--error-red-dark);
 }
 
 .btn-save .material-icons,
@@ -60,31 +61,31 @@
 }
 
 .btn-edit {
-    color: #1976d2;
+    color: var(--primary-blue);
 }
 
 .btn-edit:hover {
-    background: #e3f2fd;
-    color: #1565c0;
+    background: var(--gray);
+    color: var(--primary-blue-dark);
 }
 
 .btn-delete {
-    color: #dc3545;
+    color: var(--error-red);
     font-family: 'Material Symbols Outlined', sans-serif;
     min-height: 30px;
 }
 
 .btn-delete:hover {
-    background: rgba(220, 53, 69, 0.1);
-    color: #c82333;
+    background: var(--accent-red-transparent-1);
+    color: var(--error-red-dark);
 }
 
 .btn-expand {
-    color: #667eea;
+    color: var(--secondary-blue-majorelle);
 }
 
 .btn-expand:hover {
-    background: #e8eaf6;
+    background: var(--gray);
 }
 
 /* Spinners */

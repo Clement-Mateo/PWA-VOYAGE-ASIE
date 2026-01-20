@@ -21,7 +21,7 @@
 }
 
 .choose-address-content {
-    background: white;
+    background: var(--white);
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
@@ -37,12 +37,18 @@
 }
 
 .choose-address-header {
-    padding: 20px;
-    background: var(--secondary-purple-light);
-    color: white;
+    color: var(--white);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 20px;
+    margin: 20px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);  /* Dégradé bleu */
+    box-shadow: var(--shadow);
+    border-radius: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .choose-address-header h3 {
@@ -52,15 +58,21 @@
 }
 
 .close-btn {
-    background: var(--gray);
+    position: absolute;
+    top: 17px;
+    right: 20px;
+    background: var(--glass-bg);
     border: none;
     border-radius: 50%;
     width: 30px;
     height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    color: white;
+    color: var(--white);
     font-size: 18px;
-    transition: background 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .close-btn:hover {
@@ -82,7 +94,7 @@
 .address-search-input {
     flex: 1;
     padding: 12px;
-    border: 1px solid var(--dark-gray);
+    border: 1px solid var(--gray-dark);
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.2s ease;
@@ -119,7 +131,7 @@
 
 .address-result-item {
     padding: 15px;
-    border: 1px solid var(--dark-gray);
+    border: 1px solid var(--gray-dark);
     border-radius: 8px;
     margin-bottom: 10px;
     cursor: pointer;
