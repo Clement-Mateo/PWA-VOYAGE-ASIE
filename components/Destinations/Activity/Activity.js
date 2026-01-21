@@ -1,8 +1,8 @@
 // Composant Activity
 const Activity = {
     // État du composant
-    activities: [],
     currentDestination: null,
+    currentActivity: null,
 
     // Cache pour les taux de change (valide 1 heure)
     exchangeRatesCache: null,
@@ -17,7 +17,7 @@ const Activity = {
 
     // Définir la destination actuelle
     setCurrentDestination(destination) {
-        console.log('Destination actuelle définie:', destination.name);
+        console.log('Destination actuelle définie:', destination);
         this.currentDestination = destination;
     },
 
@@ -248,7 +248,7 @@ const Activity = {
             const typeField = document.getElementById('activityType');
             
             // En mode ajout, réinitialiser tout
-            if (!this.editingActivityId) {
+            if (!this.currentActivity) {
                 if (nameField) nameField.value = '';
                 if (arrivalField) arrivalField.value = '';
                 if (departureField) departureField.value = '';
@@ -258,14 +258,14 @@ const Activity = {
             }
             // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
             
-            // Réinitialiser l'ID d'édition si on n'est pas en mode édition
-            if (!this.editingActivityId) {
-                this.editingActivityId = null;
+            // Réinitialiser l'activité actuelle si on n'est pas en mode édition
+            if (!this.currentActivity) {
+                this.currentActivity = null;
             }
             
-            // Mettre à jour le titre si on n'est pas en mode édition
+            // Mettre à jour le titre
             const title = popup.querySelector('.activity-popup-title');
-            if (title && !this.editingActivityId) {
+            if (title && !this.currentActivity) {
                 title.textContent = 'Ajouter une activité';
             } else {
                 title.textContent = 'Modifier une activité';
@@ -343,7 +343,7 @@ const Activity = {
         popup.innerHTML = `
             <div class="activity-popup-content">
                 <div class="activity-popup-header">
-                    <h3 class="activity-popup-title">${this.editingActivityId ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
+                    <h3 class="activity-popup-title">${this.currentActivity ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
                     <button class="btn-close-activity" onclick="Activity.hideActivityPopup()">×</button>
                 </div>
                 <div class="activity-form">
@@ -438,8 +438,8 @@ const Activity = {
             popup.classList.remove('active');
         }
         
-        // Réinitialiser l'ID d'édition
-        this.editingActivityId = null;
+        // Réinitialiser l'activité actuelle
+        this.currentActivity = null;
         
         // Réinitialiser le formulaire
         const form = document.getElementById('activityForm');
@@ -455,8 +455,12 @@ const Activity = {
             return;
         }
 
-        // S'assurer que les taux de change sont chargés
-        await this.loadExchangeRates();
+        // Afficher le spinner sur le bouton save
+        this.showSaveButtonLoading();
+
+        try {
+            // S'assurer que les taux de change sont chargés
+            await this.loadExchangeRates();
 
         const name = document.getElementById('activityName').value;
         const arrivalTime = document.getElementById('arrivalTime').value;
@@ -478,60 +482,78 @@ const Activity = {
 
         const localCurrencyInfo = await this.getLocalCurrency();
         const activity = {
-            id: Date.now().toString(), // ID unique pour l'activité
+            id: this.currentActivity?.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: name.trim(),
             arrivalTime: arrivalTime,
             departureTime: departureTime,
-            price: {
-                amount: parseFloat(priceAmount) || 0,
-                currency: 'EUR'
-            },
-            localCurrency: parseFloat(localCurrency) || 0,
-            localCurrencyCode: localCurrencyInfo.code,
-            type: activityType,
-            destinationId: this.currentDestination.firestoreId
-        };
-
-        // Créer l'objet activity avec le format demandé pour Firebase
-        console.log('🔍 currentDestination:', this.currentDestination);
-        console.log('🔍 currentDestination.userId:', this.currentDestination.userId);
-        console.log('🔍 window.firebaseService.user.uid:', window.firebaseService.user.uid);
-        
-        const activityForFirebase = {
-            name: activity.name,
-            arrivalTime: activity.arrivalTime || '',
-            departureTime: activity.departureTime || '',
-            price: activity.price.amount || activity.price,  // Utiliser le montant du prix
-            localPrice: activity.localCurrency || 0,
-            localCurrencyCode: activity.localCurrencyCode || '',  // Ajouter le code de la monnaie
-            activityType: activity.type || ''
+            price: parseFloat(priceAmount) || 0, // TOUJOURS une simple valeur
+            type: activityType
         };
         
-        console.log('🔍 activityForFirebase.price:', activityForFirebase.price);
-        console.log('🔍 activityForFirebase complet:', activityForFirebase);
-
-        // Sauvegarder l'activité dans Firebase
-        if (this.editingActivityId) {
-            // Mode modification : mettre à jour l'activité existante
-            await this.updateActivityInFirebase(this.editingActivityId, activityForFirebase);
+        // Ajouter les champs de devise locale seulement si ce n'est pas EUR
+        if (localCurrencyInfo.code !== 'EUR') {
+            activity.localCurrency = parseFloat(localCurrency) || 0;
+            activity.localCurrencyCode = localCurrencyInfo.code;
+            console.log('🔍 Activité (devise étrangère) - structure complète:', activity);
         } else {
-            // Mode création : ajouter une nouvelle activité
-            await this.saveActivityToFirebase(activityForFirebase);
+            console.log('🔍 Activité (EUR) - structure simplifiée:', activity);
+        }
+
+        console.log('🔍 activity à sauvegarder:', activity);
+
+        // Récupérer l'itinéraire actuel
+        const itineraries = window.firebaseService.itineraries;
+        if (itineraries.length === 0) {
+            console.error('❌ Aucun itinéraire trouvé pour sauvegarder l\'activité');
+            return;
         }
         
-        this.hideActivityPopup();
+        const currentItinerary = itineraries[0];
+        const destination = currentItinerary.destinations.find(dest => dest.id === this.currentDestination.id);
+        
+        if (!destination) {
+            console.error('❌ Destination non trouvée dans l\'itinéraire');
+            return;
+        }
 
-        console.log('Activité ajoutée:', activity);
+        // Initialiser les activités si nécessaire
+        if (!destination.activities) {
+            destination.activities = [];
+        }
+
+        if (this.currentActivity) {
+            // Mode modification : mettre à jour l'activité existante
+            const activityIndex = destination.activities.findIndex(act => act.id === this.currentActivity.id);
+            if (activityIndex !== -1) {
+                destination.activities[activityIndex] = activity;
+                console.log('✅ Activité mise à jour:', activity);
+            }
+        } else {
+            // Mode création : ajouter une nouvelle activité
+            destination.activities.push(activity);
+            console.log('✅ Activité ajoutée:', activity);
+        }
+
+        // Sauvegarder l'itinéraire complet
+        await window.firebaseService.updateItinerary(currentItinerary);
+        
+        this.hideActivityPopup();
         
         // Recharger les activités pour la destination actuelle
-        if (this.currentDestination && window.Destinations) {
-            const destinationIndex = window.Destinations.destinations.findIndex(
-                dest => dest.firestoreId === this.currentDestination.firestoreId
-            );
-            if (destinationIndex !== -1) {
-                console.log('🔄 Rechargement des activités pour la destination:', destinationIndex);
-                await window.Destinations.loadActivitiesForDestination(destinationIndex);
-            }
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destinationIndex = destinations.findIndex(dest => dest.id === this.currentDestination.id);
+        
+        if (destinationIndex !== -1) {
+            console.log('🔄 Rechargement des activités pour la destination:', destinationIndex);
+            await window.Destinations.displayActivitiesOfDestination(destinationIndex);
+        }
+        
+        } catch (error) {
+            console.error('❌ Erreur lors de la sauvegarde de l\'activité:', error);
+            showErrorSnackBar('Erreur lors de la sauvegarde de l\'activité');
+        } finally {
+            // Restaurer le bouton save
+            this.restoreSaveButton();
         }
     },
 
@@ -555,42 +577,23 @@ const Activity = {
 
     // Modifier une activité existante
     async editActivity(activityId, destinationIndex) {
-        const destination = window.Destinations.destinations[destinationIndex];
-        if (!destination || !destination.firestoreId) return;
+        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[destinationIndex];
+        if (!destination || !destination.id) return;
 
-        try {
-            // Obtenir l'itinéraire actuel
-            const currentItinerary = await window.firebaseService.getCurrentItinerary();
-            if (!currentItinerary) {
-                console.error('❌ Aucun itinéraire trouvé pour modifier l\'activité');
-                return;
-            }
-            
-            // Charger l'activité depuis Firebase avec la nouvelle syntaxe
-            const activityRef = window.firebase.doc(
-                window.firebaseService.db,
-                'itineraries',
-                currentItinerary.id,
-                'destinations',
-                destination.firestoreId,
-                'activities',
-                activityId
-            );
-            
-            const activityDoc = await window.firebase.getDoc(activityRef);
-            if (!activityDoc.exists()) {
-                console.error('❌ Activité non trouvée:', activityId);
-                return;
-            }
-
-            const activityData = activityDoc.data();
-            console.log('🔍 Données activité à modifier:', activityData);
-
+        try {        
             // Définir la destination actuelle AVANT d'afficher le popup
             this.setCurrentDestination(destination);
+
+            // Trouver l'activité dans les activités de la destination
+            const activity = destination.activities?.find(act => act.id === activityId);
+            if (!activity) {
+                console.error('❌ Activité non trouvée dans la destination:', activityId);
+                return;
+            }
             
-            // Stocker l'ID de l'activité en cours de modification
-            this.editingActivityId = activityId;
+            // Stocker l'activité actuelle
+            this.currentActivity = activity;
+            console.log('Activité actuelle en cours d\'edition:', this.currentActivity);
             
             // Afficher le popup
             await this.showActivityPopup();
@@ -604,12 +607,23 @@ const Activity = {
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
-                if (nameField) nameField.value = activityData.name || '';
-                if (arrivalField) arrivalField.value = activityData.arrivalTime || '';
-                if (departureField) departureField.value = activityData.departureTime || '';
-                if (priceField) priceField.value = activityData.price || 0;
-                if (localCurrencyField) localCurrencyField.value = activityData.localPrice || 0;
-                if (typeField) typeField.value = activityData.activityType || '';
+                if (nameField) nameField.value = this.currentActivity.name || '';
+                if (arrivalField) arrivalField.value = this.currentActivity.arrivalTime || '';
+                if (departureField) departureField.value = this.currentActivity.departureTime || '';
+                
+                // Gérer le prix (TOUJOURS simple valeur) et devise locale
+                if (this.currentActivity.price) {
+                    if (priceField) priceField.value = this.currentActivity.price || 0;
+                    
+                    // Si devise locale présente, l'afficher, sinon vide
+                    if (this.currentActivity.localCurrency !== undefined) {
+                        if (localCurrencyField) localCurrencyField.value = this.currentActivity.localCurrency || 0;
+                    } else {
+                        if (localCurrencyField) localCurrencyField.value = ''; // Pas de devise locale pour EUR
+                    }
+                }
+                
+                if (typeField) typeField.value = this.currentActivity.type || '';
                 
                 console.log('✅ Formulaire pré-rempli avec les données de l\'activité');
             }, 100);
@@ -617,107 +631,6 @@ const Activity = {
         } catch (error) {
             console.error('❌ Erreur chargement activité pour modification:', error);
             showErrorSnackBar('Erreur lors du chargement de l\'activité');
-        }
-    },
-
-    // Mettre à jour une activité existante via firebaseService
-    async updateActivityInFirebase(activityId, activityData) {
-        if (!this.currentDestination || !this.currentDestination.firestoreId) {
-            console.error('❌ Aucune destination définie ou pas de firestoreId');
-            return;
-        }
-
-        // Afficher le spinner sur le bouton save
-        this.showSaveButtonLoading();
-
-        try {
-            // Obtenir l'itinéraire actuel
-            const currentItinerary = await window.firebaseService.getCurrentItinerary();
-            if (!currentItinerary) {
-                console.error('❌ Aucun itinéraire trouvé pour mettre à jour l\'activité');
-                return;
-            }
-            
-            // Utiliser firebaseService pour mettre à jour l'activité
-            const success = await window.firebaseService.updateActivity(
-                currentItinerary.id,
-                this.currentDestination.firestoreId,
-                activityId,
-                activityData
-            );
-            
-            if (success) {
-                console.log('✅ Activité mise à jour dans Firebase:', activityId);
-                
-                // Recharger les activités pour cette destination
-                if (window.Destinations && window.Destinations.loadActivitiesForDestination) {
-                    const destinationIndex = window.Destinations.destinations.findIndex(
-                        dest => dest.firestoreId === this.currentDestination.firestoreId
-                    );
-                    if (destinationIndex !== -1) {
-                        await window.Destinations.loadActivitiesForDestination(destinationIndex);
-                    }
-                }
-            } else {
-                console.error('❌ Échec de la mise à jour de l\'activité');
-            }
-
-        } catch (error) {
-            console.error('❌ Erreur lors de la mise à jour de l\'activité dans Firebase:', error);
-            throw error;
-        } finally {
-            // Restaurer le bouton save
-            this.restoreSaveButton();
-        }
-    },
-
-    // Sauvegarder l'activité dans Firebase via firebaseService
-    async saveActivityToFirebase(activity) {
-        if (!this.currentDestination || !this.currentDestination.firestoreId) {
-            console.error('❌ Aucune destination définie ou pas de firestoreId');
-            return;
-        }
-
-        // Afficher le spinner sur le bouton save
-        this.showSaveButtonLoading();
-
-        try {
-            // Obtenir l'itinéraire actuel
-            const currentItinerary = await window.firebaseService.getCurrentItinerary();
-            if (!currentItinerary) {
-                console.error('❌ Aucun itinéraire trouvé pour sauvegarder l\'activité');
-                return;
-            }
-            
-            // Utiliser firebaseService pour ajouter l'activité
-            const newActivity = await window.firebaseService.addActivity(
-                currentItinerary.id,
-                this.currentDestination.firestoreId,
-                activity
-            );
-            
-            if (newActivity) {
-                console.log('✅ Activité sauvegardée dans Firebase avec ID:', newActivity.firestoreId);
-                
-                // Recharger les activités pour cette destination
-                if (window.Destinations && window.Destinations.loadActivitiesForDestination) {
-                    const destinationIndex = window.Destinations.destinations.findIndex(
-                        dest => dest.firestoreId === this.currentDestination.firestoreId
-                    );
-                    if (destinationIndex !== -1) {
-                        await window.Destinations.loadActivitiesForDestination(destinationIndex);
-                    }
-                }
-            } else {
-                console.error('❌ Échec de la sauvegarde de l\'activité');
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur lors de la sauvegarde de l\'activité dans Firebase:', error);
-            showErrorSnackBar('Erreur lors de la sauvegarde de l\'activité');
-        } finally {
-            // Restaurer le bouton save
-            this.restoreSaveButton();
         }
     },
 

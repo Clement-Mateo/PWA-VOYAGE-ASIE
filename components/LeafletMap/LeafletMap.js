@@ -239,7 +239,7 @@ class LeafletMap {
     }
 
     /**
-     * Nettoyer tous les 
+     * Nettoyer la carte
      */
     cleanMap() {
         console.log('🧹 Nettoyage complet de la carte');
@@ -271,10 +271,17 @@ class LeafletMap {
     /**
      * Afficher les destinations sur la carte
      */
-    async displayDestinations(destinations) {
+    async displayDestinations() {
         console.log('🗺️ Affichage des destinations sur la carte');
         
+        
         this.cleanMap();
+
+        // Attendre un peu pour s'assurer que les données sont synchronisées
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        let destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        console.log('🔍 Destinations récupérées:', destinations.length, destinations);
         
         if (destinations.length > 0) {
             const sortedDestinations = destinations.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -286,6 +293,8 @@ class LeafletMap {
                 destination.address.location.lat && 
                 destination.address.location.lng
             );
+            
+            console.log('🔍 Destinations valides avec coordonnées:', validDestinations.length, validDestinations);
             
             // Créer les traits directionnels
             for (let i = 0; i < validDestinations.length - 1; i++) {
@@ -377,12 +386,6 @@ class LeafletMap {
         window.map = this.leafletMap;
         window.destinationMarkers = this.destinationMarkers;
         window.arrowDecorators = this.arrowDecorators;
-        window.displayDestinationsOnMap = async () => {
-            if (window.firebaseService && window.firebaseService.isAuthenticated()) {
-                const destinations = await window.firebaseService.getDestinations();
-                this.displayDestinations(destinations);
-            }
-        };
         window.cleanMap = () => this.cleanMap();
         window.changeMapStyle = (style) => this.changeMapStyle(style);
     }

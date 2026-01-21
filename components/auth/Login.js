@@ -184,11 +184,6 @@ const Login = {
                     // Masquer la page de connexion
                     this.hide();
                     
-                    // Mettre à jour l'interface utilisateur
-                    if (window.updateUserPanel) {
-                        window.updateUserPanel();
-                    }
-                    
                     // Afficher un message de succès avec snackbar
                     showSuccessSnackBar('Connexion réussie !');
                 } else {
