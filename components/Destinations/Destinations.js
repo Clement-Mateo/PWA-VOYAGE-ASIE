@@ -61,7 +61,7 @@ const Destinations = {
         panel.innerHTML = `
             <div class="destinations-header">    
                 <h2 class="destinations-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3" style="transform: translateY(2px); margin-right: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="var(--font-color-white)" style="transform: translateY(2px); margin-right: 8px;">
                         <path d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120Zm40 214q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
                     </svg>
                     Destinations
@@ -572,7 +572,7 @@ const Destinations = {
         const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
         if (deleteButton) {
             deleteButton.disabled = true;
-            deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
+            deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
         
         // Annuler d'abord toute création en cours
@@ -835,7 +835,7 @@ const Destinations = {
         // Désactiver le bouton et afficher le loading
         if (saveButton) {
             saveButton.disabled = true;
-            saveButton.innerHTML = '<svg class="loading-spinner" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="8" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-dasharray="25.133 25.133" stroke-dashoffset="25.133"><animate attributeName="stroke-dashoffset" from="25.133" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrement...';
+            saveButton.innerHTML = '<svg class="loading-spinner" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="8" fill="none" stroke="var(--white)" stroke-width="2" stroke-linecap="round" stroke-dasharray="25.133 25.133" stroke-dashoffset="25.133"><animate attributeName="stroke-dashoffset" from="25.133" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrement...';
         }
         
         try {
@@ -1108,7 +1108,7 @@ const Destinations = {
         // Désactiver le bouton et afficher le loading
         if (buttonElement) {
             buttonElement.disabled = true;
-            buttonElement.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
+            buttonElement.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
 
         try {
