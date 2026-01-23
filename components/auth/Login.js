@@ -94,12 +94,6 @@ const Login = {
             mapElement.style.display = 'none';
         }
         
-        // Masquer les boutons flottants
-        const authBtn = document.querySelector('.auth-btn');
-        const destinationsBtn = document.querySelector('.destinations-toggle-btn');
-        if (authBtn) authBtn.style.display = 'none';
-        if (destinationsBtn) destinationsBtn.style.display = 'none';
-        
         this.resetForm();
     },
 
@@ -116,14 +110,6 @@ const Login = {
         const mapElement = document.getElementById('map');
         if (mapElement) {
             mapElement.style.display = 'block';
-        }
-        
-        // Afficher les boutons flottants si l'utilisateur est connecté
-        if (window.firebaseService && window.firebaseService.isAuthenticated()) {
-            const authBtn = document.querySelector('.auth-btn');
-            const destinationsBtn = document.querySelector('.destinations-toggle-btn');
-            if (authBtn) authBtn.style.display = 'flex';
-            if (destinationsBtn) destinationsBtn.style.display = 'block';
         }
     },
 

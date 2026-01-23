@@ -45,20 +45,6 @@
         <img src="favicon.svg" alt="Loading" class="loading-favicon">
     </div>
     
-    <!-- Bouton de déconnexion (masqué par défaut) -->
-    <button class="auth-btn" id="logoutBtn" style="display: none;" onclick="handleLogout()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="var(--font-color-white)" style="transform: translateY(0px);">
-            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/>
-        </svg>
-    </button>
-    
-    <!-- Bouton pour afficher les destinations (masqué par défaut) -->
-    <button class="destinations-toggle-btn" id="destinationsBtn" style="display: none;" onclick="window.Destinations.toggle()">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="var(--font-color-white)" style="transform: translateY(2px);">
-            <path d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120Zm40 214q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
-        </svg>
-    </button>
-    
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
@@ -150,6 +136,14 @@
     <!-- Services Utilitaires -->
     <script src="serviceUtil.js"></script>
     
+    <!-- Composant Sidebar (contient désormais Settings) -->
+    <link rel="stylesheet" href="components/Sidebar/sidebar.css">
+    <script src="components/Sidebar/sidebar.js"></script>
+    
+    <!-- Composant Synthèse -->
+    <link rel="stylesheet" href="components/Synthese/synthese.css">
+    <script src="components/Synthese/synthese.js"></script>
+    
     <!-- Composants -->
     <script src="components/auth/Login.js"></script>
     <script src="components/auth/Register.js"></script>
@@ -209,9 +203,14 @@
                 console.error('❌ ChooseAddress non trouvé');
             }
             
-            // Initialiser Destinations
-            if (window.Destinations) {
-                window.Destinations.init();
+            // Initialiser Sidebar (contient désormais Settings)
+            if (window.Sidebar) {
+                window.Sidebar.init();
+            }
+            
+            // Initialiser Synthèse
+            if (window.Synthese) {
+                window.Synthese.init();
             }
             
             // Initialiser LeafletMap
@@ -260,9 +259,6 @@
         
         // Mettre à jour l'affichage des destinations après connexion
         async function updateUserPanel() {
-            const logoutBtn = document.getElementById('logoutBtn');
-            const destinationsBtn = document.getElementById('destinationsBtn');
-            
             if (window.firebaseService.isAuthenticated()) {
                 // Utilisateur connecté
                 console.log('✅ Utilisateur connecté - Mise à jour de l\'interface');
@@ -287,20 +283,9 @@
                         await window.firebaseService.createItinerary('Mon itinéraire');
                     }
                     
-                    // Afficher le panneau d'abord
-                    window.Destinations.show();
-                    // Puis charger les destinations (attendre que tout soit terminé)
+                    // Le panneau destinations est maintenant toujours visible
+                    // Charger les destinations (attendre que tout soit terminé)
                     await window.Destinations.loadDestinations();
-                }
-                
-                // Afficher le bouton de déconnexion
-                if (logoutBtn) {
-                    logoutBtn.style.display = 'flex';
-                }
-                
-                // Afficher le bouton destinations
-                if (destinationsBtn && window.Destinations) {
-                    destinationsBtn.style.display = 'block';
                 }
             } else {
                 // Utilisateur déconnecté
@@ -311,18 +296,15 @@
                     window.Login.show();
                 }
                 
-                // Masquer les boutons
-                if (logoutBtn) {
-                    logoutBtn.style.display = 'none';
-                }
-                
-                if (destinationsBtn) {
-                    destinationsBtn.style.display = 'none';
-                }
-                
                 // Effacer les marqueurs lors de la déconnexion
                 if (window.MapInstance && window.MapInstance.cleanMap) {
                     window.MapInstance.cleanMap();
+                }
+                
+                // Le panneau destinations est maintenant toujours visible
+                // Masquer la carte
+                if (window.MapInstance) {
+                    window.MapInstance.hide();
                 }
             }
         }

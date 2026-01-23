@@ -201,114 +201,6 @@ body {
     transform: rotate(var(--rotation, 0deg));
 }
 
-/* Boutons flottants */
-.auth-btn, .destinations-toggle-btn {
-    position: fixed;
-    z-index: 1000;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--font-color-white);
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    right: 10px;
-}
-
-.auth-btn {
-    top: 10px;
-}
-
-.destinations-toggle-btn {
-    top: 70px;
-}
-
-.auth-btn:hover, .destinations-toggle-btn:hover {
-    transform: translateY(-2px);
-}
-
-.add-btn {
-    top: 70px;
-    right: 10px;
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--white);
-    background: var(--primary-dark);
-}
-
-.add-btn:hover {
-    transform: scale(1.1);
-    background: var(--primary-darker);
-    box-shadow: 0 4px 15px var(--shadow-primary);
-}
-
-/* Masquer les boutons quand un popup est ouvert */
-body.has-popup .auth-btn,
-body.has-popup .add-btn,
-body.has-popup .logout-btn {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transform: scale(0.8) !important;
-    transition: all 0.3s ease !important;
-}
-
-/* Conteneurs de composants */
-#addPanelContainer {
-    position: relative;
-    z-index: 999;
-}
-
-/* Panneau utilisateur */
-.user-panel {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: transparent;
-    padding: 0;
-    border-radius: 8px;
-    box-shadow: none;
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    gap: 10px;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logout-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--accent-red);
-    color: var(--white);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: bold;
-    box-shadow: 0 2px 10px var(--gray-dark);
-    transition: all 0.3s;
-}
-
-.logout-btn:hover {
-    transform: scale(1.1);
-    background: var(--accent-red-dark);
-    box-shadow: 0 4px 15px var(--shadow-accent);
-}
-
 /* Contrôles de carte */
 .controls {
     position: fixed;
@@ -328,17 +220,45 @@ body.has-popup .logout-btn {
     font-size: 14px;
 }
 
+/* ========================================
+   UTILITAIRES COMMUNS
+   ======================================== */
+
+/* Boutons interactifs */
+.btn-interactive {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-interactive:hover {
+    transform: translateY(-1px);
+}
+
+/* Flexbox centré */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-    .auth-btn, .add-btn {
+    .add-btn {
         width: 45px;
         height: 45px;
         top: 5px;
         right: 5px;
-    }
-    
-    .add-btn {
-        top: 55px;
     }
     
     .controls {
@@ -349,15 +269,11 @@ body.has-popup .logout-btn {
 }
 
 @media (max-width: 480px) {
-    .auth-btn, .add-btn {
+    .add-btn {
         top: 5px;
         right: 5px;
         width: 40px;
         height: 40px;
-    }
-    
-    .add-btn {
-        top: 50px;
     }
     
     .controls {
