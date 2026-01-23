@@ -12,7 +12,7 @@
 .destination-card {
     background: var(--background-light);
     border-radius: 20px;
-    padding: 18px;
+    padding: 12px 18px;
     box-shadow: var(--box-shadow-1);
     transition: all 0.3s ease;
     position: relative;
@@ -61,7 +61,6 @@
 
 .destination-actions {
     display: flex;
-    gap: 8px;
     align-items: center;
 }
 
@@ -74,7 +73,6 @@
 .destination-duration {
     color: var(--gray-darker);
     font-size: 14px;
-    margin-bottom: 15px;
 }
 
 .destination-form {
@@ -109,30 +107,14 @@
     font-weight: 600;
 }
 
-.add-activity-btn {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    box-shadow: var(--box-shadow-1);
-    color: var(--font-color-white);
-    border: none;
-    padding: 10px 15px;
-    border-radius: 20px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.add-activity-btn:hover {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    box-shadow: var(--box-shadow-2);
-    transform: translateY(-1px);
-}
-
 .activities-list {
     max-height: 200px;
     overflow-y: auto;
+}
+
+/* Bouton ajouter activité - force la largeur complète */
+.destination-activities .btn-add {
+    width: 100%;
 }
 
 .activity-item {
@@ -153,6 +135,7 @@
     color: var(--font-color-black);
     font-size: 14px;
     font-weight: 600;
+    margin-right: 3px;
 }
 
 .activity-header {
@@ -216,26 +199,6 @@
 
 .address-search-btn:hover {
     color: var(--font-color-gray-dark);
-}
-
-/* Add Destination Button */
-.add-destination-btn {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    color: var(--font-color-white);
-    border: none;
-    border-radius: 20px;
-    padding: 15px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin: 0;
-    box-shadow: var(--box-shadow-1);
-}
-
-.add-destination-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--box-shadow-2);
 }
 
 /* Close Panel Button */
