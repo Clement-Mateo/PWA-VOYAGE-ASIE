@@ -395,6 +395,17 @@ const Destinations = {
         
         const card = document.getElementById(`destination-${index}`);
         const form = document.getElementById(`form-${index}`);
+        const activitiesSection = document.getElementById(`activities-${index}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        // Replier la destination avant l'édition
+        if (activitiesSection && activitiesSection.style.display !== 'none') {
+            activitiesSection.style.display = 'none';
+            if (expandBtn) {
+                expandBtn.textContent = 'expand_more';
+            }
+            card.classList.remove('expanded');
+        }
         
         // Fermer les autres formulaires
         document.querySelectorAll('.destination-form.show').forEach(f => {
