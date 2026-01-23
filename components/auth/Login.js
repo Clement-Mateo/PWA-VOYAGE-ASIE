@@ -246,44 +246,6 @@ const Login = {
         }
     },
 
-    // Afficher un message d'erreur
-    showError(message) {
-        this.clearMessages();
-        
-        const form = document.getElementById('loginForm');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'login-error';
-        errorDiv.textContent = message;
-        
-        form.insertBefore(errorDiv, form.firstChild);
-        
-        // Auto-suppression après 5 secondes
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
-            }
-        }, 5000);
-    },
-
-    // Afficher un message de succès
-    showSuccess(message) {
-        this.clearMessages();
-        
-        const container = document.querySelector('.auth-card');
-        const successDiv = document.createElement('div');
-        successDiv.className = 'auth-success';
-        successDiv.textContent = message;
-        
-        container.insertBefore(successDiv, container.firstChild);
-        
-        // Auto-suppression après 3 secondes
-        setTimeout(() => {
-            if (successDiv.parentNode) {
-                successDiv.parentNode.removeChild(successDiv);
-            }
-        }, 3000);
-    },
-
     // Effacer tous les messages
     clearMessages() {
         const errors = document.querySelectorAll('.auth-error');

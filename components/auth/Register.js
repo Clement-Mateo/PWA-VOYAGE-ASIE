@@ -144,22 +144,22 @@ const Register = {
         console.log('Tentative d\'inscription avec:', email);
         
         if (!name || !email || !password || !confirmPassword) {
-            this.showError('Veuillez remplir tous les champs');
+            showErrorSnackBar('Veuillez remplir tous les champs');
             return;
         }
         
         if (password !== confirmPassword) {
-            this.showError('Les mots de passe ne correspondent pas');
+            showErrorSnackBar('Les mots de passe ne correspondent pas');
             return;
         }
         
         if (password.length < 6) {
-            this.showError('Le mot de passe doit contenir au moins 6 caractères');
+            showErrorSnackBar('Le mot de passe doit contenir au moins 6 caractères');
             return;
         }
         
         if (!this.validateEmail(email)) {
-            this.showError('Veuillez entrer une adresse email valide');
+            showErrorSnackBar('Veuillez entrer une adresse email valide');
             return;
         }
         
@@ -182,11 +182,11 @@ const Register = {
                     showSuccessSnackBar('Inscription réussie ! Bienvenue');
                 } else {
                     console.error('Échec de l\'inscription');
-                    this.showError('Échec de l\'inscription');
+                    showErrorSnackBar('Échec de l\'inscription');
                 }
             } else {
                 console.error('FirebaseService non disponible pour l\'inscription');
-                this.showError('Service Firebase non disponible');
+                showErrorSnackBar('Service Firebase non disponible');
             }
             
         } catch (error) {
@@ -259,44 +259,6 @@ const Register = {
             button.disabled = false;
             button.textContent = 'S\'inscrire';
         }
-    },
-
-    // Afficher un message d'erreur
-    showError(message) {
-        this.clearMessages();
-        
-        const form = document.getElementById('registerForm');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'register-error';
-        errorDiv.textContent = message;
-        
-        form.insertBefore(errorDiv, form.firstChild);
-        
-        // Auto-suppression après 5 secondes
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
-            }
-        }, 5000);
-    },
-
-    // Afficher un message de succès
-    showSuccess(message) {
-        this.clearMessages();
-        
-        const container = document.querySelector('.auth-card');
-        const successDiv = document.createElement('div');
-        successDiv.className = 'auth-success';
-        successDiv.textContent = message;
-        
-        container.insertBefore(successDiv, container.firstChild);
-        
-        // Auto-suppression après 3 secondes
-        setTimeout(() => {
-            if (successDiv.parentNode) {
-                successDiv.parentNode.removeChild(successDiv);
-            }
-        }, 3000);
     },
 
     // Effacer tous les messages

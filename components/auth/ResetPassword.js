@@ -123,12 +123,12 @@ const ResetPassword = {
         console.log('Tentative de réinitialisation pour:', email);
         
         if (!email) {
-            this.showError('Veuillez entrer votre adresse email');
+            showErrorSnackBar('Veuillez entrer votre adresse email');
             return;
         }
         
         if (!this.validateEmail(email)) {
-            this.showError('Veuillez entrer une adresse email valide');
+            showErrorSnackBar('Veuillez entrer une adresse email valide');
             return;
         }
         
@@ -156,11 +156,11 @@ const ResetPassword = {
                     }, 3000);
                 } else {
                     console.error('Échec de l\'envoi de l\'email de réinitialisation');
-                    this.showError('Échec de l\'envoi de l\'email. Vérifiez l\'adresse email.');
+                    showErrorSnackBar('Échec de l\'envoi de l\'email. Vérifiez l\'adresse email.');
                 }
             } else {
                 console.error('FirebaseService non disponible pour la réinitialisation');
-                this.showError('Service Firebase non disponible');
+                showErrorSnackBar('Service Firebase non disponible');
             }
             
         } catch (error) {
@@ -178,7 +178,7 @@ const ResetPassword = {
                 errorMessage = error.message;
             }
             
-            this.showError(errorMessage);
+            showErrorSnackBar(errorMessage);
         } finally {
             // Réactiver le bouton
             this.setLoadingState(false);
@@ -223,44 +223,6 @@ const ResetPassword = {
             button.disabled = false;
             button.textContent = 'Envoyer le lien';
         }
-    },
-
-    // Afficher un message d'erreur
-    showError(message) {
-        this.clearMessages();
-        
-        const form = document.getElementById('resetPasswordForm');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'reset-password-error';
-        errorDiv.textContent = message;
-        
-        form.insertBefore(errorDiv, form.firstChild);
-        
-        // Auto-suppression après 5 secondes
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
-            }
-        }, 5000);
-    },
-
-    // Afficher un message de succès
-    showSuccess(message) {
-        this.clearMessages();
-        
-        const container = document.querySelector('.auth-card');
-        const successDiv = document.createElement('div');
-        successDiv.className = 'auth-success';
-        successDiv.textContent = message;
-        
-        container.insertBefore(successDiv, container.firstChild);
-        
-        // Auto-suppression après 3 secondes
-        setTimeout(() => {
-            if (successDiv.parentNode) {
-                successDiv.parentNode.removeChild(successDiv);
-            }
-        }, 3000);
     },
 
     // Effacer tous les messages
