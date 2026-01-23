@@ -153,7 +153,7 @@ const Destinations = {
                 <div class="activities-list" id="activities-list-${index}">
                     <!-- Les activités seront chargées ici -->
                 </div>
-                <button class="add-activity-btn" onclick="Destinations.addActivity(${index})" title="Ajouter une activité">
+                <button class="btn-add" onclick="Destinations.addActivity(${index})" title="Ajouter une activité">
                     <span class="material-icons">add_circle</span>
                     Ajouter une activité
                 </button>
@@ -747,14 +747,15 @@ const Destinations = {
         }
         
         container.innerHTML = '';
+
+        const addButton = document.createElement('button');
+        addButton.className = 'btn-add';
+        addButton.id = 'add-destination-btn';
+        addButton.onclick = () => this.showAddForm();
+        addButton.textContent = 'Ajouter une destination';
         
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
         if (destinations.length === 0) {
-            // Ajouter le bouton "Ajouter une destination" même s'il n'y a pas de destinations
-            const addButton = document.createElement('button');
-            addButton.className = 'add-destination-btn';
-            addButton.onclick = () => this.showAddForm();
-            addButton.textContent = 'Ajouter une destination';
             container.appendChild(addButton);
         } else {
             // Trier les destinations par order
@@ -775,11 +776,6 @@ const Destinations = {
                 }
             });
             
-            // Ajouter le bouton "Ajouter une destination" à la fin
-            const addButton = document.createElement('button');
-            addButton.className = 'add-destination-btn';
-            addButton.onclick = () => this.showAddForm();
-            addButton.textContent = 'Ajouter une destination';
             container.appendChild(addButton);
         }
         
@@ -788,10 +784,41 @@ const Destinations = {
     },
     
     /**
+     * Basculer l'affichage des activités d'une destination
+     */
+    toggleDestinationCard(index) {
+        const card = document.getElementById(`destination-${index}`);
+        const activitiesSection = document.getElementById(`activities-${index}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        const isExpanded = activitiesSection.style.display !== 'none';
+        
+        if (isExpanded) {
+            // Replier
+            activitiesSection.style.display = 'none';
+            expandBtn.textContent = 'expand_more';
+            card.classList.remove('expanded');
+        } else {
+            // Déplier
+            activitiesSection.style.display = 'block';
+            expandBtn.textContent = 'expand_less';
+            card.classList.add('expanded');
+            
+            // Charger les activités pour cette destination
+            this.displayActivitiesOfDestination(index);
+            
+            // Scroll vers la destination
+            this.scrollToDestination(index);
+        }
+    },
+
+    /**
      * Mettre à jour la visibilité du bouton "Ajouter une destination"
      */
     updateAddDestinationButtonVisibility() {
-        const addButton = document.querySelector('.add-destination-btn');
+        const addButton = document.getElementById('add-destination-btn');
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
         const lastDestination = destinations[destinations.length - 1];
         
@@ -1071,7 +1098,35 @@ const Destinations = {
                     let activityHTML = `
                         <div class="activity-info">
                             <div class="activity-header flex-between">
-                                <strong>${activity.name}</strong>
+                            <div class="activity-name-and-price">
+                                <strong>${activity.name}</strong>`;
+                                
+                                // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
+                                if (activity.price) {
+                                    const displayPrice = activity.price || 0;
+                                    
+                                    if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
+                                        // Devise étrangère : afficher conversion
+                                        const displayCurrency = activity.localCurrency || 0;
+                                        const displayCurrencyCode = activity.localCurrencyCode || '';
+                                        
+                                        if (displayPrice > 0 || displayCurrency > 0) {
+                                            activityHTML += `
+                                                <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
+                                            `;
+                                        }
+                                    } else {
+                                        // EUR : afficher seulement le prix en euros
+                                        if (displayPrice > 0) {
+                                            activityHTML += `
+                                                <span class="activity-price">${displayPrice}€</span>
+                                            `;
+                                        }
+                                    }
+                                }
+                            
+                            activityHTML += `
+                                </div> <!-- Fin activity-name-and-price -->
                                 <div class="activity-actions">
                                     <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${index})" title="Modifier l'activité">
                                         <span class="material-icons">edit</span>
@@ -1085,30 +1140,6 @@ const Destinations = {
                     
                     if (activity.arrivalTime && activity.departureTime) {
                         activityHTML += `<span class="activity-time">${activity.arrivalTime} - ${activity.departureTime}</span>`;
-                    }
-                    
-                    // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
-                    if (activity.price) {
-                        const displayPrice = activity.price || 0;
-                        
-                        if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
-                            // Devise étrangère : afficher conversion
-                            const displayCurrency = activity.localCurrency || 0;
-                            const displayCurrencyCode = activity.localCurrencyCode || '';
-                            
-                            if (displayPrice > 0 || displayCurrency > 0) {
-                                activityHTML += `
-                                    <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
-                                `;
-                            }
-                        } else {
-                            // EUR : afficher seulement le prix en euros
-                            if (displayPrice > 0) {
-                                activityHTML += `
-                                    <span class="activity-price">${displayPrice}€</span>
-                                `;
-                            }
-                        }
                     }
                     
                     // Afficher le type d'activité si présent
