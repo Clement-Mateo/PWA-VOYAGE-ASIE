@@ -46,7 +46,7 @@
 }
 
 /* Boutons d'action (edit, delete, expand) */
-.btn-edit, .btn-delete, .btn-expand {
+.btn-edit, .btn-location, .btn-delete, .btn-expand {
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
     background: none;
