@@ -239,10 +239,10 @@ const Login = {
         
         if (isLoading) {
             button.disabled = true;
-            button.textContent = 'Connexion en cours...';
+            showLoading();
         } else {
             button.disabled = false;
-            button.textContent = 'Se connecter';
+            hideLoading();
         }
     },
 

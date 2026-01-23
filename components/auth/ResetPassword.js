@@ -145,7 +145,7 @@ const ResetPassword = {
                     console.log('Email de réinitialisation envoyé à:', email);
                     
                     // Afficher un message de succès
-                    this.showSuccess('Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.');
+                    showSuccessSnackBar('Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.');
                     
                     // Réinitialiser le champ email
                     document.getElementById('resetEmail').value = '';
@@ -218,10 +218,10 @@ const ResetPassword = {
         
         if (isLoading) {
             button.disabled = true;
-            button.textContent = 'Envoi en cours...';
+            showLoading();
         } else {
             button.disabled = false;
-            button.textContent = 'Envoyer le lien';
+            hideLoading();
         }
     },
 

@@ -26,6 +26,7 @@
           crossorigin=""/>
     
     <!-- Styles globaux -->
+    <link rel="stylesheet" href="styles/loading.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles/drag-drop.css">
     <link rel="stylesheet" href="styles/buttons.css">
@@ -38,6 +39,11 @@
 </head>
 <body>
     <div id="map"></div>
+    
+    <!-- Overlay de loading global -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <img src="favicon.svg" alt="Loading" class="loading-favicon">
+    </div>
     
     <!-- Bouton de déconnexion (masqué par défaut) -->
     <button class="auth-btn" id="logoutBtn" style="display: none;" onclick="handleLogout()">

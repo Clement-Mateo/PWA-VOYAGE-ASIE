@@ -254,10 +254,10 @@ const Register = {
         
         if (isLoading) {
             button.disabled = true;
-            button.textContent = 'Inscription...';
+            showLoading();
         } else {
             button.disabled = false;
-            button.textContent = 'S\'inscrire';
+            hideLoading();
         }
     },
 
