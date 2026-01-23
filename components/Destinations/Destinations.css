@@ -144,7 +144,7 @@
     background: var(--background-light);
 }
 
-.destination-card.editing .expand-btn {
+.destination-card.editing .btn-expand {
     display: none;
 }
 

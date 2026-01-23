@@ -167,6 +167,9 @@ const Destinations = {
                 <h3 class="destination-title">${destination.name || 'Nouvelle destination'}</h3>
                 <div class="destination-actions">
                     ${destination.id ? `
+                        <button class="btn-location" onclick="Destinations.zoomToDestination(${index})" title="Localiser sur la carte">
+                            <span class="material-icons">my_location</span>
+                        </button>
                         <button class="btn-edit" onclick="Destinations.editDestination(${index})">
                             <span class="material-icons">edit</span>
                         </button>
@@ -387,6 +390,68 @@ const Destinations = {
     },
     
     /**
+     * Faire défiler jusqu'à une destination
+     */
+    scrollToDestination(index) {
+        const card = document.getElementById(`destination-${index}`);
+        if (card) {
+            // Attendre un peu que le panneau soit visible
+            setTimeout(() => {
+                card.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 350);
+        }
+    },
+
+    /**
+     * Zoomer sur la destination dans la carte
+     */
+    zoomToDestination(index) {
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destination = destinations[index];
+        
+        if (!destination || !destination.address || !destination.address.location) {
+            console.error('❌ Destination sans coordonnées valides');
+            showErrorSnackBar('Destination sans coordonnées valides');
+            return;
+        }
+        
+        const { lat, lng } = destination.address.location;
+        
+        // Ouvrir la carte si elle est cachée
+        const mapElement = document.getElementById('map');
+        if (mapElement && mapElement.style.display === 'none') {
+            mapElement.style.display = 'block';
+        }
+        
+        // Zoomer sur la destination
+        if (window.MapInstance && window.MapInstance.leafletMap) {
+            // Utiliser flyTo pour un zoom plus fluide et précis
+            window.MapInstance.leafletMap.flyTo([lat, lng], 8, {
+                animate: true,
+                duration: 1.5
+            });
+            
+            // Ouvrir la popup du marqueur après un court délai pour s'assurer que le zoom est terminé
+            setTimeout(() => {
+                const marker = window.MapInstance.destinationMarkers.find(m => 
+                    m.getLatLng && 
+                    Math.abs(m.getLatLng().lat - lat) < 0.0001 && 
+                    Math.abs(m.getLatLng().lng - lng) < 0.0001
+                );
+                if (marker && marker.openPopup) {
+                    marker.openPopup();
+                }
+            }, 1600);
+        } else {
+            console.error('❌ Carte non disponible');
+            showErrorSnackBar('Carte non disponible');
+        }
+    },
+
+    /**
      * Éditer une destination
      */
     async editDestination(index) {
@@ -395,6 +460,17 @@ const Destinations = {
         
         const card = document.getElementById(`destination-${index}`);
         const form = document.getElementById(`form-${index}`);
+        const activitiesSection = document.getElementById(`activities-${index}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        // Replier la destination avant l'édition
+        if (activitiesSection && activitiesSection.style.display !== 'none') {
+            activitiesSection.style.display = 'none';
+            if (expandBtn) {
+                expandBtn.textContent = 'expand_more';
+            }
+            card.classList.remove('expanded');
+        }
         
         // Fermer les autres formulaires
         document.querySelectorAll('.destination-form.show').forEach(f => {
@@ -407,6 +483,9 @@ const Destinations = {
         // Ouvrir ce formulaire
         form.classList.add('show');
         card.classList.add('editing');
+        
+        // Scroll vers la destination
+        this.scrollToDestination(index);
     },
     
     /**
@@ -558,6 +637,9 @@ const Destinations = {
             console.error('❌ Destination non trouvée à l\'index', index);
             return;
         }
+
+        // Scroll vers la destination
+        this.scrollToDestination(index);
         
         // Si déjà en cours de suppression, ignorer
         if (this.isDeleting) {
@@ -968,6 +1050,9 @@ const Destinations = {
                 form.classList.add('show');
             }
             
+            // Scroll vers la nouvelle destination en cours de création
+            this.scrollToDestination(newIndex);
+            
             // Mettre à jour la visibilité du bouton "Ajouter"
             this.updateAddDestinationButtonVisibility();
         }
@@ -996,6 +1081,9 @@ const Destinations = {
             
             // Charger les activités pour cette destination
             this.displayActivitiesOfDestination(index);
+            
+            // Scroll vers la destination
+            this.scrollToDestination(index);
         }
     },
 
