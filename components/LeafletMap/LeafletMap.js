@@ -325,7 +325,13 @@ class LeafletMap {
                 
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
                     .addTo(this.leafletMap)
-                    .bindPopup(popupContent);
+                    .bindPopup(popupContent)
+                    .on('click', () => {
+                        // Scroll vers la destination si le panneau est déjà ouvert
+                        if (window.Destinations && window.Destinations.isVisible) {
+                            window.Destinations.scrollToDestination(index);
+                        }
+                    });
                 
                 this.destinationMarkers.push(marker);
             });

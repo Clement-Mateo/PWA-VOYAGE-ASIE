@@ -387,6 +387,22 @@ const Destinations = {
     },
     
     /**
+     * Faire défiler jusqu'à une destination
+     */
+    scrollToDestination(index) {
+        const card = document.getElementById(`destination-${index}`);
+        if (card) {
+            // Attendre un peu que le panneau soit visible
+            setTimeout(() => {
+                card.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 350);
+        }
+    },
+
+    /**
      * Éditer une destination
      */
     async editDestination(index) {
@@ -418,6 +434,9 @@ const Destinations = {
         // Ouvrir ce formulaire
         form.classList.add('show');
         card.classList.add('editing');
+        
+        // Scroll vers la destination
+        this.scrollToDestination(index);
     },
     
     /**
@@ -569,6 +588,9 @@ const Destinations = {
             console.error('❌ Destination non trouvée à l\'index', index);
             return;
         }
+
+        // Scroll vers la destination
+        this.scrollToDestination(index);
         
         // Si déjà en cours de suppression, ignorer
         if (this.isDeleting) {
@@ -1007,6 +1029,9 @@ const Destinations = {
             
             // Charger les activités pour cette destination
             this.displayActivitiesOfDestination(index);
+            
+            // Scroll vers la destination
+            this.scrollToDestination(index);
         }
     },
 
