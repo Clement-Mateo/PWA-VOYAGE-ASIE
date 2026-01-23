@@ -337,6 +337,8 @@ class LeafletMap {
             this.leafletMap.fitBounds(group.getBounds().pad(0.1));
         } else {
             console.log('❌ Aucune destination à afficher');
+            // Revenir à la vue initiale de la carte
+            this.leafletMap.setView([20, 0], 2, { animate: true });
         }
     }
 
