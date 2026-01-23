@@ -429,7 +429,7 @@ const Destinations = {
         // Zoomer sur la destination
         if (window.MapInstance && window.MapInstance.leafletMap) {
             // Utiliser flyTo pour un zoom plus fluide et précis
-            window.MapInstance.leafletMap.flyTo([lat, lng], 16, {
+            window.MapInstance.leafletMap.flyTo([lat, lng], 8, {
                 animate: true,
                 duration: 1.5
             });
@@ -1049,6 +1049,9 @@ const Destinations = {
             if (form) {
                 form.classList.add('show');
             }
+            
+            // Scroll vers la nouvelle destination en cours de création
+            this.scrollToDestination(newIndex);
             
             // Mettre à jour la visibilité du bouton "Ajouter"
             this.updateAddDestinationButtonVisibility();
