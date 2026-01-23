@@ -1,0 +1,20 @@
+/* ========================================
+   SYNTHESE COMPONENT
+   ======================================== */
+
+.synthèse-content {
+    padding: 20px;
+    color: var(--font-color);
+}
+
+.synthèse-content h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    color: var(--font-color);
+}
+
+.synthèse-content p {
+    margin: 10px 0;
+    line-height: 1.5;
+    color: var(--font-color-gray);
+}

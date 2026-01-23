@@ -112,3 +112,28 @@
     height: 100%;
     display: block;
 }
+
+/* Boutons avec icônes */
+.btn-icon {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-small {
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.btn-icon-large {
+    padding: 8px;
+    border-radius: 6px;
+    min-width: 32px;
+    height: 32px;
+}

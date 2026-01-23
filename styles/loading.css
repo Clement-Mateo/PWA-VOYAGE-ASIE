@@ -1,0 +1,53 @@
+/* Animation de loading avec favicon */
+.loading-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 99999 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.loading-overlay.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.loading-favicon {
+    width: 100px !important;
+    height: 100px !important;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Style de test pour débogage */
+.loading-overlay:not(.active) {
+    border: 5px solid red !important;
+    background: rgba(255, 0, 0, 0.1) !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+}
+
+/* Empêcher le scroll pendant le loading */
+body.loading-active {
+    overflow: hidden !important;
+}

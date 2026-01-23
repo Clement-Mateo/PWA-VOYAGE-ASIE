@@ -83,12 +83,6 @@ const ResetPassword = {
             mapElement.style.display = 'none';
         }
         
-        // Masquer les boutons flottants
-        const authBtn = document.querySelector('.auth-btn');
-        const destinationsBtn = document.querySelector('.destinations-toggle-btn');
-        if (authBtn) authBtn.style.display = 'none';
-        if (destinationsBtn) destinationsBtn.style.display = 'none';
-        
         this.resetForm();
     },
 
@@ -105,14 +99,6 @@ const ResetPassword = {
         const mapElement = document.getElementById('map');
         if (mapElement) {
             mapElement.style.display = 'block';
-        }
-        
-        // Afficher les boutons flottants si l'utilisateur est connecté
-        if (window.firebaseService && window.firebaseService.isAuthenticated()) {
-            const authBtn = document.querySelector('.auth-btn');
-            const destinationsBtn = document.querySelector('.destinations-toggle-btn');
-            if (authBtn) authBtn.style.display = 'flex';
-            if (destinationsBtn) destinationsBtn.style.display = 'block';
         }
     },
 
@@ -145,7 +131,7 @@ const ResetPassword = {
                     console.log('Email de réinitialisation envoyé à:', email);
                     
                     // Afficher un message de succès
-                    this.showSuccess('Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.');
+                    showSuccessSnackBar('Email de réinitialisation envoyé ! Vérifiez votre boîte de réception.');
                     
                     // Réinitialiser le champ email
                     document.getElementById('resetEmail').value = '';
@@ -218,10 +204,10 @@ const ResetPassword = {
         
         if (isLoading) {
             button.disabled = true;
-            button.textContent = 'Envoi en cours...';
+            showLoading();
         } else {
             button.disabled = false;
-            button.textContent = 'Envoyer le lien';
+            hideLoading();
         }
     },
 

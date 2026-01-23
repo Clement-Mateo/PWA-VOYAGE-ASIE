@@ -33,7 +33,9 @@ function showErrorSnackBar(errorMessage) {
     
     // Mettre à jour le message
     const messageElement = snackbar.querySelector('.snackbar-message');
-    messageElement.textContent = errorMessage;
+    if (messageElement) {
+        messageElement.textContent = errorMessage;
+    }
     
     // Afficher le snackbar
     snackbar.classList.add('show');
@@ -75,7 +77,9 @@ function showSuccessSnackBar(successMessage) {
     
     // Mettre à jour le message
     const messageElement = snackbar.querySelector('.snackbar-message');
-    messageElement.textContent = successMessage;
+    if (messageElement) {
+        messageElement.textContent = successMessage;
+    }
     
     // Afficher le snackbar
     snackbar.classList.add('show');
@@ -132,3 +136,41 @@ function showInfoSnackBar(infoMessage) {
 window.showErrorSnackBar = showErrorSnackBar;
 window.showSuccessSnackBar = showSuccessSnackBar;
 window.showInfoSnackBar = showInfoSnackBar;
+
+/**
+ * Affiche l'overlay de loading global
+ */
+function showLoading() {
+    console.log('🔄 showLoading() appelé');
+    const overlay = document.getElementById('loadingOverlay');
+    const body = document.body;
+    
+    console.log('🔍 Overlay trouvé:', !!overlay);
+    
+    if (overlay) {
+        overlay.classList.add('active');
+        body.classList.add('loading-active');
+        console.log('✅ Overlay activé avec classe "active"');
+    } else {
+        console.error('❌ Overlay de loading non trouvé dans le DOM');
+    }
+}
+
+/**
+ * Masque l'overlay de loading global
+ */
+function hideLoading() {
+    console.log('🔄 hideLoading() appelé');
+    const overlay = document.getElementById('loadingOverlay');
+    const body = document.body;
+    
+    if (overlay) {
+        overlay.classList.remove('active');
+        body.classList.remove('loading-active');
+        console.log('✅ Overlay désactivé');
+    }
+}
+
+// Exporter les fonctions de loading
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;

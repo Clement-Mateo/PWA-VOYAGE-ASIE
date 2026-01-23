@@ -6,7 +6,6 @@
 console.log('🔍 Destinations.js: Début du chargement');
 
 const Destinations = {
-    isVisible: false,
     isSaving: false, // État de sauvegarde pour éviter les clics multiples
     isDeleting: false, // État de suppression pour éviter les clics multiples
     isReordering: false, // État de réorganisation pour éviter les doubles appels
@@ -16,26 +15,7 @@ const Destinations = {
      */
     init() {
         console.log('Destinations: Initialisation...');
-    },
-    
-    /**
-     * Afficher/Masquer le panneau
-     */
-    toggle() {
-        this.isVisible = !this.isVisible;
-        this.updatePanelVisibility();
-    },
-    
-    /**
-     * Mettre à jour la visibilité du panneau
-     */
-    updatePanelVisibility() {
-        const panel = this.getPanel();
-        if (this.isVisible) {
-            panel.classList.add('show');
-        } else {
-            panel.classList.remove('show');
-        }
+        // Plus de render() ici - la sidebar gère l'affichage
     },
     
     /**
@@ -51,25 +31,20 @@ const Destinations = {
     },
     
     /**
-     * Créer le panneau HTML
+     * Créer le panneau HTML (sans header)
      */
     createPanel() {
         const panel = document.createElement('div');
         panel.id = 'destinationsPanel';
         panel.className = 'destinations-panel';
         
-        panel.innerHTML = `
-            <div class="destinations-header">    
-                <h2 class="destinations-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="var(--font-color-white)" style="transform: translateY(2px); margin-right: 8px;">
-                        <path d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120Zm40 214q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Zm0-480Z"/>
-                    </svg>
-                    Destinations
-                </h2>
-                <button class="close-panel-btn" onclick="Destinations.hide()">×</button>
-            </div>
-            <div class="destinations-list" id="destinationsList"></div>
-`;
+        // Plus de header - géré par la sidebar
+        
+        // Créer la liste des destinations
+        const list = document.createElement('div');
+        list.className = 'destinations-list';
+        panel.appendChild(list);
+        
         return panel;
     },
     
@@ -128,21 +103,6 @@ const Destinations = {
      */
     createDestinationCard(destination, index) {
         console.log('🔍 Destinations: Création card pour', destination.name);
-        
-        // Vérifier si la police est disponible maintenant
-        const testElement = document.createElement('span');
-        testElement.className = 'material-symbols-outlined';
-        testElement.textContent = 'edit';
-        testElement.style.fontFamily = "'Material Symbols Outlined', sans-serif";
-        document.body.appendChild(testElement);
-        
-        const computedStyle = window.getComputedStyle(testElement);
-        const fontLoaded = computedStyle.fontFamily.includes('Material Symbols');
-        document.body.removeChild(testElement);
-        
-        if (!fontLoaded) {
-            console.warn('⚠️ Destinations: Police Material Symbols pas encore chargée, utilisation du fallback');
-        }
         
         const card = document.createElement('div');
         card.className = 'destination-card';
@@ -231,7 +191,7 @@ const Destinations = {
             </div>
         `;
         
-        console.log('🔍 Destinations: Card HTML créé, icône utilisé:', fontLoaded ? 'Material Symbols' : 'Emoji fallback');
+        console.log('🔍 Destinations: Card HTML créé');
         
         // Ajouter les événements drag and drop
         this.addDragAndDropEvents(card, index);
@@ -771,31 +731,32 @@ const Destinations = {
      * Afficher les destinations
      */
     render() {
-        const container = document.getElementById('destinationsList');
-        if (!container) {
-            console.error('❌ Conteneur destinationsList non trouvé');
+        // Obtenir ou créer le panneau destinations
+        const panel = this.getPanel();
+        if (!panel) {
+            console.error('❌ Panneau destinations non trouvé');
             return;
+        }
+        
+        // Trouver le conteneur de liste dans le panneau
+        let container = panel.querySelector('.destinations-list');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'destinations-list';
+            panel.appendChild(container);
         }
         
         container.innerHTML = '';
         
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
         if (destinations.length === 0) {
-            const list = document.createElement('div');
-            list.className = 'destinations-list';
-            
             // Ajouter le bouton "Ajouter une destination" même s'il n'y a pas de destinations
             const addButton = document.createElement('button');
             addButton.className = 'add-destination-btn';
             addButton.onclick = () => this.showAddForm();
-            addButton.textContent = '+ Ajouter une destination';
-            list.appendChild(addButton);
-            
-            container.appendChild(list);
+            addButton.textContent = 'Ajouter une destination';
+            container.appendChild(addButton);
         } else {
-            const list = document.createElement('div');
-            list.className = 'destinations-list';
-            
             // Trier les destinations par order
             const sortedDestinations = [...destinations].sort((a, b) => {
                 const orderA = a.order || 0;
@@ -805,7 +766,7 @@ const Destinations = {
             
             sortedDestinations.forEach((destination, sortedIndex) => {
                 const card = this.createDestinationCard(destination, sortedIndex);
-                list.appendChild(card);
+                container.appendChild(card);
                 
                 // Réactiver le drag & drop sur les cartes existantes (si la dernière destination a un ID)
                 const lastDestination = destinations[destinations.length - 1];
@@ -818,10 +779,8 @@ const Destinations = {
             const addButton = document.createElement('button');
             addButton.className = 'add-destination-btn';
             addButton.onclick = () => this.showAddForm();
-            addButton.textContent = '+ Ajouter une destination';
-            list.appendChild(addButton);
-            
-            container.appendChild(list);
+            addButton.textContent = 'Ajouter une destination';
+            container.appendChild(addButton);
         }
         
         // Mettre à jour la visibilité du bouton "Ajouter"
@@ -837,13 +796,17 @@ const Destinations = {
         const lastDestination = destinations[destinations.length - 1];
         
         if (addButton) {
-            if(destinations.length == 0 || (lastDestination && lastDestination.id)) {
+            // Le bouton doit être visible si :
+            // - Il n'y a aucune destination
+            // - OU la dernière destination a un ID (elle est complètement sauvegardée)
+            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id);
+            if (shouldShow) {
                 addButton.style.display = 'block';
             } else {
                 addButton.style.display = 'none';
             }
         } else {
-            console.log('  -> addButton non trouvé');
+            console.log('erreur updateAddDestinationButtonVisibility -> addButton non trouvé');
         }
     },
     
@@ -1028,21 +991,31 @@ const Destinations = {
             currentItinerary.destinations.push(newDestination);
         }
         
-        // Créer une card pour la nouvelle destination
-        const container = document.getElementById('destinationsList');
+        // Créer une card pour la nouvelle destination dans la sidebar
+        const container = document.getElementById('sidebar-destinations-content');
         if (container) {
-            const list = container.querySelector('.destinations-list') || document.createElement('div');
-            list.className = 'destinations-list';
+            // Trouver le panneau destinations dans la sidebar
+            const destinationsPanel = container.querySelector('.destinations-panel');
+            if (!destinationsPanel) {
+                console.error('❌ Panneau destinations non trouvé dans la sidebar');
+                return;
+            }
+            
+            const list = destinationsPanel.querySelector('.destinations-list');
+            if (!list) {
+                console.error('❌ Liste destinations non trouvée dans la sidebar');
+                return;
+            }
+            
+            // Trouver le bouton "Ajouter une destination"
+            const addButton = list.querySelector('.add-destination-btn');
             
             // L'index de la nouvelle destination est le dernier
-            const newIndex = destinations.length - 1; // Maintenant c'est destinations.length - 1
+            const newIndex = destinations.length - 1;
             const card = this.createDestinationCard(newDestination, newIndex);
             card.classList.add('editing');
-            list.appendChild(card); // Ajouter à la fin
             
-            if (!container.querySelector('.destinations-list')) {
-                container.appendChild(list);
-            }
+            list.insertBefore(card, addButton);
             
             // Ouvrir automatiquement le formulaire
             const form = document.getElementById(`form-${newIndex}`);
@@ -1050,40 +1023,15 @@ const Destinations = {
                 form.classList.add('show');
             }
             
-            // Scroll vers la nouvelle destination en cours de création
-            this.scrollToDestination(newIndex);
-            
             // Mettre à jour la visibilité du bouton "Ajouter"
             this.updateAddDestinationButtonVisibility();
-        }
-    },
-
-    // Déplier/Replier une carte destination
-    toggleDestinationCard(index) {
-        const card = document.getElementById(`destination-${index}`);
-        const activitiesSection = document.getElementById(`activities-${index}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        if (!card || !activitiesSection || !expandBtn) return;
-        
-        const isExpanded = activitiesSection.style.display !== 'none';
-        
-        if (isExpanded) {
-            // Replier
-            activitiesSection.style.display = 'none';
-            expandBtn.textContent = 'expand_more';
-            card.classList.remove('expanded');
+            
+            // Scroller vers la nouvelle destination
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         } else {
-            // Déplier
-            activitiesSection.style.display = 'block';
-            expandBtn.textContent = 'expand_less';
-            card.classList.add('expanded');
-            
-            // Charger les activités pour cette destination
-            this.displayActivitiesOfDestination(index);
-            
-            // Scroll vers la destination
-            this.scrollToDestination(index);
+            console.error('❌ Conteneur sidebar-destinations-content non trouvé');
         }
     },
 
