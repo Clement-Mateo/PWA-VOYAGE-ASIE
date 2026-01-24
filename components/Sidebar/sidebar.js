@@ -190,9 +190,14 @@ const Sidebar = {
     },
     
     openSettings() {
-        // TODO: Implémenter l'ouverture des paramètres
+        // Ouvrir la modal Settings
         console.log('Sidebar: openSettings appelé');
-        showInfoSnackBar('Paramètres bientôt disponibles');
+        if (window.Settings) {
+            window.Settings.open();
+        } else {
+            console.error('Settings component non disponible');
+            showInfoSnackBar('Paramètres en cours de chargement...');
+        }
     },
     
     /**

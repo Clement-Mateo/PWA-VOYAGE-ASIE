@@ -8,11 +8,17 @@ class LeafletMap {
         this.destinationMarkers = [];
         this.arrowDecorators = [];
         this.mapStyles = {
+            maptiler: L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YSAwtO41576Mnmte3DQN', {
+                attribution: '© MapTiler © OpenStreetMap contributors'
+            }),
             osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }),
-            maptiler: L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YSAwtO41576Mnmte3DQN', {
-                attribution: '© MapTiler © OpenStreetMap contributors'
+            humanitarian: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team'
+            }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© CartoDB'
             }),
             satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '© Esri'
@@ -20,8 +26,11 @@ class LeafletMap {
             terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenTopoMap'
             }),
-            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '© CartoDB'
+            relief: L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png', {
+                attribution: '© Stamen Design, © Stadia Maps, © OpenStreetMap contributors'
+            }),
+            watercolor: L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
+                attribution: '© Stamen Design, © Stadia Maps, © OpenStreetMap contributors'
             })
         };
     }
@@ -53,7 +62,7 @@ class LeafletMap {
 
         // Ajouter les contrôles de zoom
         L.control.zoom({
-            position: 'bottomright'
+            position: 'bottomleft'
         }).addTo(this.leafletMap);
 
         // Ajouter les écouteurs d'événements
@@ -353,11 +362,78 @@ class LeafletMap {
      */
     changeMapStyle(style) {
         if (this.mapStyles[style]) {
+            // Écouter les erreurs de chargement de tiles
+            const errorHandler = (error) => {
+                console.error(`❌ Erreur de chargement pour le style ${style}:`, error);
+                
+                // Afficher un message d'erreur
+                if (window.showErrorSnackBar) {
+                    showErrorSnackBar(`Erreur de chargement pour ${this.getStyleDisplayName(style)}. Retour au style par défaut.`);
+                }
+                
+                // Revenir au style par défaut (MapTiler)
+                this.fallbackToDefaultStyle();
+            };
+            
+            // Ajouter l'écouteur d'erreurs sur le nouveau layer
+            this.mapStyles[style].on('tileerror', errorHandler);
+            
+            // Changer le layer
             this.leafletMap.removeLayer(this.currentLayer);
             this.currentLayer = this.mapStyles[style];
             this.currentLayer.addTo(this.leafletMap);
+            
+            // Afficher le message de succès
+            if (window.showSuccessSnackBar) {
+                showSuccessSnackBar(`Style de carte changé vers ${this.getStyleDisplayName(style)}`);
+            }
+            
             console.log(`🎨 Style de carte changé vers: ${style}`);
+            
+            // Nettoyer l'écouteur après un certain temps pour éviter les fuites mémoire
+            setTimeout(() => {
+                this.mapStyles[style].off('tileerror', errorHandler);
+            }, 10000); // 10 secondes
         }
+    }
+    
+    /**
+     * Revenir au style par défaut en cas d'erreur
+     */
+    fallbackToDefaultStyle() {
+        if (this.currentLayer) {
+            this.leafletMap.removeLayer(this.currentLayer);
+        }
+        
+        this.currentLayer = this.mapStyles.maptiler;
+        this.currentLayer.addTo(this.leafletMap);
+        
+        console.log('🔄 Retour au style par défaut (MapTiler)');
+        
+        // Mettre à jour les settings si la modal est ouverte
+        if (window.Settings && window.Settings.isOpen) {
+            const defaultRadio = document.querySelector('input[name="mapStyle"][value="maptiler"]');
+            if (defaultRadio) {
+                defaultRadio.checked = true;
+            }
+        }
+    }
+    
+    /**
+     * Obtenir le nom d'affichage du style (utilisé pour les messages)
+     */
+    getStyleDisplayName(styleName) {
+        const names = {
+            'maptiler': 'MapTiler Streets',
+            'osm': 'OpenStreetMap',
+            'humanitarian': 'Humanitarian',
+            'dark': 'Dark',
+            'satellite': 'Satellite',
+            'terrain': 'Topo',
+            'relief': 'Relief',
+            'watercolor': 'Aquarelle'
+        };
+        return names[styleName] || styleName;
     }
 
     /**
