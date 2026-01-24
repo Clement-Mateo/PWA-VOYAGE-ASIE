@@ -153,6 +153,10 @@
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
     <script src="components/LeafletMap/LeafletMap.js"></script>
     
+    <!-- Composant Settings -->
+    <link rel="stylesheet" href="components/Settings/Settings.css">
+    <script src="components/Settings/Settings.js"></script>
+    
     <!-- Component Manager -->
     <script type="module">
         // Les composants sont déjà disponibles globalement
@@ -211,6 +215,11 @@
             // Initialiser Synthèse
             if (window.Synthese) {
                 window.Synthese.init();
+            }
+            
+            // Initialiser Settings
+            if (window.Settings) {
+                window.Settings.init();
             }
             
             // Initialiser LeafletMap
