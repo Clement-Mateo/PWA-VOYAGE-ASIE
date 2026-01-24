@@ -22,11 +22,15 @@ const Destinations = {
      * Obtenir ou créer le panneau
      */
     getPanel() {
-        let panel = document.getElementById('destinationsPanel');
+        // Chercher d'abord dans la sidebar
+        let panel = document.querySelector('#sidebar-destinations-content #destinationsPanel');
+        
+        // Si toujours pas trouvé, en créer un nouveau
         if (!panel) {
             panel = this.createPanel();
             document.body.appendChild(panel);
         }
+        
         return panel;
     },
     
@@ -272,7 +276,7 @@ const Destinations = {
                 console.error('Impossible de réorganiser: aucun itinéraire trouvé');
                 return;
             }
-            const currentItinerary = itineraries[0];
+            const currentItinerary = window.firebaseService.getCurrentItinerary();
             
             // Trier les destinations par ordre actuel
             const sortedDestinations = [...currentItinerary.destinations].sort((a, b) => {
@@ -706,7 +710,7 @@ const Destinations = {
                 return;
             }
             
-            const currentItinerary = itineraries[0];
+            const currentItinerary = window.firebaseService.getCurrentItinerary();;
             const destinations = currentItinerary.destinations || [];
             
             // Mettre à jour les ordres : toutes les destinations après la supprimée voient leur order diminué de 1
@@ -747,6 +751,26 @@ const Destinations = {
         }
         
         container.innerHTML = '';
+        
+        // Observer les changements sur le conteneur pour détecter qui le vide
+        if (!this.containerObserver) {
+            this.containerObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
+                        console.log('🚨 CONTENEUR VIDÉ PAR AUTRE CHOSE !');
+                        console.log('🚨 Noeuds supprimés:', mutation.removedNodes.length);
+                        console.log('🚨 Timestamp:', Date.now());
+                        console.trace('🚨 Stack trace du vidage');
+                    }
+                });
+            });
+            
+            // Observer le conteneur
+            this.containerObserver.observe(container, {
+                childList: true,
+                subtree: false
+            });
+        }
 
         const addButton = document.createElement('button');
         addButton.className = 'btn-add';
@@ -1075,7 +1099,7 @@ const Destinations = {
                 return;
             }
             
-            const currentItinerary = itineraries[0];
+            const currentItinerary = window.firebaseService.getCurrentItinerary();;
             
             // Utiliser le nouveau service pour charger les activités
             const activities = window.firebaseService.getActivities(destination, currentItinerary);
@@ -1186,7 +1210,7 @@ const Destinations = {
                 return;
             }
             
-            const currentItinerary = itineraries[0];
+            const currentItinerary = window.firebaseService.getCurrentItinerary();;
             
             // Créer l'objet activité à supprimer
             const activityToDelete = { id: activityId };

@@ -148,9 +148,17 @@ function showLoading() {
     console.log('🔍 Overlay trouvé:', !!overlay);
     
     if (overlay) {
-        overlay.classList.add('active');
-        body.classList.add('loading-active');
-        console.log('✅ Overlay activé avec classe "active"');
+        // Ajouter les classes seulement si elles ne sont pas déjà présentes
+        if (!overlay.classList.contains('active')) {
+            overlay.classList.add('active');
+            console.log('✅ Overlay activé avec classe "active"');
+        } else {
+            console.log('ℹ️ Overlay déjà activé');
+        }
+        
+        if (!body.classList.contains('loading-active')) {
+            body.classList.add('loading-active');
+        }
     } else {
         console.error('❌ Overlay de loading non trouvé dans le DOM');
     }
@@ -165,9 +173,17 @@ function hideLoading() {
     const body = document.body;
     
     if (overlay) {
-        overlay.classList.remove('active');
-        body.classList.remove('loading-active');
-        console.log('✅ Overlay désactivé');
+        // Supprimer les classes seulement si elles sont présentes
+        if (overlay.classList.contains('active')) {
+            overlay.classList.remove('active');
+            console.log('✅ Overlay désactivé');
+        } else {
+            console.log('ℹ️ Overlay déjà désactivé');
+        }
+        
+        if (body.classList.contains('loading-active')) {
+            body.classList.remove('loading-active');
+        }
     }
 }
 

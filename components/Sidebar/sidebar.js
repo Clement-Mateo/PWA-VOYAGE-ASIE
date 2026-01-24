@@ -31,13 +31,17 @@ const Sidebar = {
      * Créer le conteneur principal
      */
     createContainer() {
+        const currentItinerary = window.firebaseService?.getCurrentItinerary();
+        const itineraryName = currentItinerary?.name || 'Mon Itinéraire';
+        
         const container = document.createElement('div');
+        container.id = 'sidebarContainer'; // Ajouter l'ID pour la vérification
         container.className = 'sidebar-container';
         container.innerHTML = `
             <!-- En-tête Settings intégré -->
             <div class="sidebar-header">
                 <div class="settings-left">
-                    <h2 class="itinerary-name" id="sidebar-itinerary-name">Mon Itinéraire</h2>
+                    <h2 class="itinerary-name" id="sidebar-itinerary-name">${this.escapeHtml(itineraryName)}</h2>
                     <button class="settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
                         <span class="material-icons">more_vert</span>
                     </button>
@@ -116,14 +120,22 @@ const Sidebar = {
         // Vider le conteneur
         container.innerHTML = '';
         
-        // Intégrer le contenu du composant Destinations (sans le header)
+        // Créer le conteneur pour Destinations
         if (window.Destinations) {
-            // Créer le panneau destinations sans le header
-            const destinationsPanel = this.createDestinationsPanel();
-            container.appendChild(destinationsPanel);
+            const destinationsContainer = document.createElement('div');
+            destinationsContainer.id = 'destinationsPanel';
+            destinationsContainer.className = 'destinations-panel';
             
-            // Charger les destinations
-            window.Destinations.loadDestinations();
+            // Ajouter le conteneur pour les destinations
+            const destinationsList = document.createElement('div');
+            destinationsList.className = 'destinations-list';
+            destinationsContainer.appendChild(destinationsList);
+            
+            container.appendChild(destinationsContainer);
+            
+            // Destinations.js s'initialisera automatiquement quand getPanel() sera appelé
+        } else {
+            container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Chargement des destinations...</p>';
         }
     },
     
@@ -153,29 +165,13 @@ const Sidebar = {
     },
     
     /**
-     * Créer le panneau destinations sans le header
-     */
-    createDestinationsPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'destinations-panel';
-        panel.id = 'destinationsPanel';
-        
-        // Créer la liste des destinations
-        const list = document.createElement('div');
-        list.className = 'destinations-list';
-        panel.appendChild(list);
-        
-        return panel;
-    },
-    
-    /**
      * Mettre à jour le nom de l'itinéraire
      */
     updateItineraryName() {
         const nameElement = document.getElementById('sidebar-itinerary-name');
         if (nameElement && window.firebaseService) {
             const currentItinerary = window.firebaseService.getCurrentItinerary();
-            const itineraryName = currentItinerary?.name || 'Mon Itinéraire';
+            const itineraryName = currentItinerary?.name || 'Nouvel Itinéraire';
             nameElement.textContent = this.escapeHtml(itineraryName);
         }
     },
@@ -183,10 +179,13 @@ const Sidebar = {
     /**
      * Méthodes du header
      */
-    showMoreOptions() {
-        // TODO: Implémenter le menu "plus d'options"
-        console.log('Sidebar: showMoreOptions appelé');
-        showInfoSnackBar('Options supplémentaires bientôt disponibles');
+    showMoreOptions() {       
+        // Ouvrir la modal de gestion des itinéraires
+        if (window.Itineraries && typeof window.Itineraries.open === 'function') {
+            window.Itineraries.open();
+        } else {
+            showInfoSnackBar('Gestion des itinéraires en cours de chargement...');
+        }
     },
     
     openSettings() {

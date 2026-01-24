@@ -207,51 +207,58 @@ class FirebaseService {
     }
 
     /**
-     * Obtenir l'itinéraire actuel (premier de la liste)
+     * Obtenir l'itinéraire actuel (celui avec active=true)
      */
     getCurrentItinerary() {
-        return this.itineraries.length > 0 ? this.itineraries[0] : null;
+        const activeItinerary = this.itineraries.find(item => item.active === true);
+        return activeItinerary || null;
     }
 
     /**
      * Créer un itinéraire en base et l'ajouter dans itineraries
      */
-    async createItinerary(nom) {
+    async createItinerary(name) {
         if (!this.user) {
             console.error('createItinerary: Utilisateur non connecté');
             return null;
         }
         
         try {
-            console.log('Création itinéraire avec nom:', nom);
+            console.log('Création itinéraire avec name:', name);
             
             const itinerary = {
-                nom: nom,
+                name: name,
                 userId: this.user.uid,
                 createdAt: window.firebase.serverTimestamp(),
                 updatedAt: window.firebase.serverTimestamp(),
-                destinations: []
+                destinations: [],
             };
             
-            const docRef = await window.firebase.addDoc(
-                window.firebase.collection(this.db, 'itineraries'),
-                itinerary
-            );
+            // Ajouter à la base de données
+            const docRef = await window.firebase.addDoc(window.firebase.collection(this.db, 'itineraries'), itinerary);
+            const newItinerary = { id: docRef.id, ...itinerary };
             
-            const createdItinerary = { 
-                id: docRef.id, 
-                ...itinerary,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
+            // Mettre à jour la liste en mémoire
+            // Désactiver tous les autres itinéraires
+            this.itineraries.forEach(item => {
+                item.active = false;
+            });
             
-            // Ajouter à la liste en mémoire
-            this.itineraries.push(createdItinerary);
+            // Ajouter le nouvel itinéraire actif
+            this.itineraries.push(newItinerary);
             
-            console.log('✅ Itinéraire créé et ajouté en mémoire:', createdItinerary.id);
-            return createdItinerary;
+            // Mettre à jour les autres itinéraires en base pour les désactiver
+            for (const item of this.itineraries) {
+                if (item.id !== newItinerary.id) {
+                    const itemRef = window.firebase.doc(this.db, 'itineraries', item.id);
+                    await window.firebase.updateDoc(itemRef, { active: false });
+                }
+            }
+            
+            console.log('✅ Itinéraire créé:', newItinerary);
+            return newItinerary;
         } catch (error) {
-            console.error('Erreur création itinéraire:', error);
+            console.error('❌ Erreur création itinéraire:', error);
             return null;
         }
     }
@@ -278,7 +285,7 @@ class FirebaseService {
             
             const itineraryRef = window.firebase.doc(this.db, 'itineraries', itinerary.id);
             await window.firebase.updateDoc(itineraryRef, {
-                nom: itinerary.nom,
+                name: itinerary.name,
                 destinations: itinerary.destinations,
                 updatedAt: window.firebase.serverTimestamp()
             });
@@ -346,6 +353,13 @@ class FirebaseService {
                 destinations: doc.data().destinations || []
             }));
             
+            // S'assurer qu'au moins un itinéraire est actif
+            const hasActiveItinerary = itineraries.some(item => item.active === true);
+            if (!hasActiveItinerary && itineraries.length > 0) {
+                itineraries[0].active = true;
+                console.log('📍 Premier itinéraire défini comme actif par défaut');
+            }
+            
             // Mettre à jour la liste en mémoire
             this.itineraries = itineraries;
             
@@ -387,8 +401,7 @@ class FirebaseService {
                 return [];
             }
             
-            const currentItinerary = itineraries[0];
-            return currentItinerary.destinations || [];
+            return this.getCurrentItinerary().destinations || [];
         } catch (error) {
             console.error('Erreur récupération destinations itinéraire actuel:', error);
             return [];

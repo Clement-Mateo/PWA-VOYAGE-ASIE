@@ -149,8 +149,10 @@ const Register = {
             return;
         }
         
-        // Désactiver le bouton pendant l'inscription
-        this.setLoadingState(true);
+        // Désactiver le bouton et afficher le loading
+        const button = document.querySelector('.auth-btn-primary');
+        if (button) button.disabled = true;
+        window.showLoading();
         
         try {
             // Utiliser firebaseService pour l'inscription
@@ -199,8 +201,10 @@ const Register = {
                 showErrorSnackBar(errorMessage);
             }
         } finally {
-            // Réactiver le bouton
-            this.setLoadingState(false);
+            // Réactiver le bouton et masquer le loading
+            const button = document.querySelector('.auth-btn-primary');
+            if (button) button.disabled = false;
+            window.hideLoading();
         }
     },
 
@@ -232,19 +236,6 @@ const Register = {
         
         // Effacer les messages d'erreur
         this.clearMessages();
-    },
-
-    // Gérer l'état de chargement
-    setLoadingState(isLoading) {
-        const button = document.querySelector('.auth-btn-primary');
-        
-        if (isLoading) {
-            button.disabled = true;
-            showLoading();
-        } else {
-            button.disabled = false;
-            hideLoading();
-        }
     },
 
     // Effacer tous les messages

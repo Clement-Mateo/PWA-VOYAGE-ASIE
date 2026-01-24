@@ -75,29 +75,15 @@
 }
 
 .settings-title .material-icons {
+    margin-right: 8px;
     font-size: 24px;
 }
 
-.settings-close-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 6px;
-    padding: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--font-color-white);
-}
-
-.settings-close-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-}
-
-.settings-close-btn .material-icons {
-    font-size: 20px;
+/* Positionnement du bouton de fermeture */
+.settings-modal .close-btn {
+    position: absolute;
+    top: 17px;
+    right: 20px;
 }
 
 /* ========================================

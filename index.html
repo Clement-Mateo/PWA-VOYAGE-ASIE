@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="components/Destinations/Activity/Activity.css">
     <link rel="stylesheet" href="components/Destinations/ChooseAddress/ChooseAddress.css">
     <link rel="stylesheet" href="components/LeafletMap/LeafletMap.css">
+    <link rel="stylesheet" href="components/Itineraries/itineraries.css">
 </head>
 <body>
     <div id="map"></div>
@@ -157,6 +158,8 @@
     <link rel="stylesheet" href="components/Settings/Settings.css">
     <script src="components/Settings/Settings.js"></script>
     
+    <script src="components/Itineraries/itineraries.js"></script>
+    
     <!-- Component Manager -->
     <script type="module">
         // Les composants sont déjà disponibles globalement
@@ -193,35 +196,12 @@
             if (window.Login) {
                 window.Login.init();
             }
-            
-            // Initialiser Activity
-            if (window.Activity) {
-                window.Activity.init();
-            }
-            
-            // Initialiser ChooseAddress
-            if (window.ChooseAddress) {
-                console.log('✅ ChooseAddress trouvé, initialisation...');
-                window.ChooseAddress.init();
-            } else {
-                console.error('❌ ChooseAddress non trouvé');
-            }
-            
-            // Initialiser Sidebar (contient désormais Settings)
-            if (window.Sidebar) {
-                window.Sidebar.init();
-            }
-            
-            // Initialiser Synthèse
-            if (window.Synthese) {
-                window.Synthese.init();
-            }
-            
+
             // Initialiser Settings
             if (window.Settings) {
                 window.Settings.init();
             }
-            
+
             // Initialiser LeafletMap
             if (window.LeafletMap) {
                 const mapInstance = new window.LeafletMap(); // Utiliser LeafletMap
@@ -276,26 +256,57 @@
                 if (window.Login) {
                     window.Login.hide();
                 }
+
+                // Charger les itinéraires d'abord
+                await window.firebaseService.getItineraries();
+                
+                // Créer un itinéraire si aucun n'existe
+                if (window.firebaseService.itineraries.length === 0) {
+                    const newItinerary = await window.firebaseService.createItinerary('Mon itinéraire');
+                    if (newItinerary && window.Itineraries) {
+                        await window.Itineraries.setActiveItinerary(newItinerary.id);
+                    }
+                }
+
+                // Initialiser le sidebar maintenant que les itinéraires sont chargés
+                if (window.Sidebar) {
+                    window.Sidebar.init();
+                }
+
+                // Initialiser Itineraries maintenant que les itinéraires sont chargés
+                if (window.Itineraries) {
+                    console.log('✅ Itineraries trouvé, initialisation...');
+                    // Le composant Itineraries s'initialise automatiquement dans son constructeur
+                } else {
+                    console.error('❌ Itineraries non trouvé');
+                }
+
+                // Charger les destinations (attendre que tout soit terminé)
+                await window.Destinations.loadDestinations();
+                
+                // Initialiser Synthèse
+                if (window.Synthese) {
+                    window.Synthese.init();
+                }
+                
+                // Initialiser ChooseAddress
+                if (window.ChooseAddress) {
+                    console.log('✅ ChooseAddress trouvé, initialisation...');
+                    window.ChooseAddress.init();
+                } else {
+                    console.error('❌ ChooseAddress non trouvé');
+                }
+
+                // Initialiser Activity
+                if (window.Activity) {
+                    window.Activity.init();
+                }
                 
                 // Afficher la carte
                 if (window.MapInstance) {
                     window.MapInstance.show();
                 }
-                
-                // Charger et afficher les destinations
-                if (window.Destinations) {
-                    // Charger les itinéraires d'abord
-                    await window.firebaseService.getItineraries();
-                    
-                    // Créer un itinéraire si aucun n'existe
-                    if (window.firebaseService.itineraries.length === 0) {
-                        await window.firebaseService.createItinerary('Mon itinéraire');
-                    }
-                    
-                    // Le panneau destinations est maintenant toujours visible
-                    // Charger les destinations (attendre que tout soit terminé)
-                    await window.Destinations.loadDestinations();
-                }
+
             } else {
                 // Utilisateur déconnecté
                 console.log('🔒 Utilisateur déconnecté - Affichage de la page de connexion');
