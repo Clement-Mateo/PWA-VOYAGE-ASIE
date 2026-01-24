@@ -362,11 +362,78 @@ class LeafletMap {
      */
     changeMapStyle(style) {
         if (this.mapStyles[style]) {
+            // Écouter les erreurs de chargement de tiles
+            const errorHandler = (error) => {
+                console.error(`❌ Erreur de chargement pour le style ${style}:`, error);
+                
+                // Afficher un message d'erreur
+                if (window.showErrorSnackBar) {
+                    showErrorSnackBar(`Erreur de chargement pour ${this.getStyleDisplayName(style)}. Retour au style par défaut.`);
+                }
+                
+                // Revenir au style par défaut (MapTiler)
+                this.fallbackToDefaultStyle();
+            };
+            
+            // Ajouter l'écouteur d'erreurs sur le nouveau layer
+            this.mapStyles[style].on('tileerror', errorHandler);
+            
+            // Changer le layer
             this.leafletMap.removeLayer(this.currentLayer);
             this.currentLayer = this.mapStyles[style];
             this.currentLayer.addTo(this.leafletMap);
+            
+            // Afficher le message de succès
+            if (window.showSuccessSnackBar) {
+                showSuccessSnackBar(`Style de carte changé vers ${this.getStyleDisplayName(style)}`);
+            }
+            
             console.log(`🎨 Style de carte changé vers: ${style}`);
+            
+            // Nettoyer l'écouteur après un certain temps pour éviter les fuites mémoire
+            setTimeout(() => {
+                this.mapStyles[style].off('tileerror', errorHandler);
+            }, 10000); // 10 secondes
         }
+    }
+    
+    /**
+     * Revenir au style par défaut en cas d'erreur
+     */
+    fallbackToDefaultStyle() {
+        if (this.currentLayer) {
+            this.leafletMap.removeLayer(this.currentLayer);
+        }
+        
+        this.currentLayer = this.mapStyles.maptiler;
+        this.currentLayer.addTo(this.leafletMap);
+        
+        console.log('🔄 Retour au style par défaut (MapTiler)');
+        
+        // Mettre à jour les settings si la modal est ouverte
+        if (window.Settings && window.Settings.isOpen) {
+            const defaultRadio = document.querySelector('input[name="mapStyle"][value="maptiler"]');
+            if (defaultRadio) {
+                defaultRadio.checked = true;
+            }
+        }
+    }
+    
+    /**
+     * Obtenir le nom d'affichage du style (utilisé pour les messages)
+     */
+    getStyleDisplayName(styleName) {
+        const names = {
+            'maptiler': 'MapTiler Streets',
+            'osm': 'OpenStreetMap',
+            'humanitarian': 'Humanitarian',
+            'dark': 'Dark',
+            'satellite': 'Satellite',
+            'terrain': 'Topo',
+            'relief': 'Relief',
+            'watercolor': 'Aquarelle'
+        };
+        return names[styleName] || styleName;
     }
 
     /**

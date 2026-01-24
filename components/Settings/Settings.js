@@ -240,7 +240,7 @@ const Settings = {
         
         if (window.MapInstance && window.MapInstance.changeMapStyle) {
             window.MapInstance.changeMapStyle(styleName);
-            showSuccessSnackBar(`Style de carte changé vers ${this.getStyleDisplayName(styleName)}`);
+            // Le message de succès est maintenant géré par LeafletMap
         }
     },
     
@@ -248,6 +248,12 @@ const Settings = {
      * Obtenir le nom d'affichage du style
      */
     getStyleDisplayName(styleName) {
+        // Utiliser la méthode de LeafletMap pour éviter la duplication
+        if (window.MapInstance && window.MapInstance.getStyleDisplayName) {
+            return window.MapInstance.getStyleDisplayName(styleName);
+        }
+        
+        // Fallback si LeafletMap n'est pas disponible
         const names = {
             'maptiler': 'MapTiler Streets',
             'osm': 'OpenStreetMap',
