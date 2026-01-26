@@ -1207,10 +1207,11 @@ const Destinations = {
             const itineraries = window.firebaseService.itineraries;
             if (itineraries.length === 0) {
                 console.error('❌ Aucun itinéraire trouvé pour supprimer l\'activité');
+                showErrorSnackBar('Aucun itinéraire trouvé');
                 return;
             }
             
-            const currentItinerary = window.firebaseService.getCurrentItinerary();;
+            const currentItinerary = window.firebaseService.getCurrentItinerary();
             
             // Créer l'objet activité à supprimer
             const activityToDelete = { id: activityId };
@@ -1220,16 +1221,24 @@ const Destinations = {
             
             if (success) {
                 console.log('✅ Activité supprimée:', activityId);
+                showSuccessSnackBar('Activité supprimée avec succès');
                 
                 // Recharger la liste des activités
                 await this.displayActivitiesOfDestination(destinationIndex);
             } else {
                 console.error('❌ Échec de la suppression de l\'activité');
+                showErrorSnackBar('Échec de la suppression de l\'activité');
             }
             
         } catch (error) {
             console.error('❌ Erreur suppression activité:', error);
-            showErrorSnackBar('Erreur lors de la suppression de l\'activité');
+            
+            // Gérer les erreurs réseau/offline
+            if (error.message && error.message.includes('network')) {
+                showErrorSnackBar('Erreur réseau. Vérifiez votre connexion.');
+            } else {
+                showErrorSnackBar('Erreur lors de la suppression de l\'activité');
+            }
         } finally {
             // Réactiver le bouton et restaurer l'icône
             if (buttonElement) {

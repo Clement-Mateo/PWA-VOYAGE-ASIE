@@ -662,8 +662,13 @@ class FirebaseService {
             
             foundDestination.activities.splice(index, 1);
             
-            // Mettre à jour l'itinéraire
-            this.updateItinerary(foundItinerary);
+            // Mettre à jour l'itinéraire et vérifier le succès
+            const updateSuccess = await this.updateItinerary(foundItinerary);
+            if (!updateSuccess) {
+                console.error('deleteActivity: Échec de la mise à jour de l\'itinéraire');
+                return false;
+            }
+            
             return true;
         } catch (error) {
             console.error('Erreur suppression activité:', error);

@@ -26,6 +26,7 @@ class Itineraries {
         
         this.createModal();
         this.loadItineraries();
+        // Attacher les événements à chaque ouverture pour s'assurer qu'ils fonctionnent
         this.bindEvents();
     }
 
@@ -40,24 +41,24 @@ class Itineraries {
 
         const modal = document.createElement('div');
         modal.id = 'itinerariesModal';
-        modal.className = 'itineraries-modal';
+        modal.className = 'modal';
         modal.innerHTML = `
-            <div class="itineraries-backdrop"></div>
-            <div class="itineraries-content">
-                <div class="itineraries-header">
-                    <h2 class="itineraries-title">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">
                         <span class="material-icons">route</span>
                         Gestion des itinéraires
                     </h2>
-                    <button class="close-btn" onclick="window.Itineraries.close()">
+                    <button class="btn-close" onclick="window.Itineraries.close()">
                         <span class="material-icons">close</span>
                     </button>
                 </div>
                 
-                <div class="itineraries-body">
+                <div class="modal-body">
                     <!-- Section Liste des itinéraires -->
-                    <div class="itineraries-section">
-                        <h3 class="itineraries-section-title">
+                    <div class="modal-section">
+                        <h3 class="modal-section-title">
                             <span class="material-icons">list</span>
                             Mes itinéraires
                         </h3>
@@ -562,34 +563,20 @@ class Itineraries {
         // Créer la popup de confirmation
         const confirmationModal = document.createElement('div');
         confirmationModal.id = 'deleteConfirmationModal';
-        confirmationModal.className = 'itineraries-modal';
-        confirmationModal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 3000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        `;
+        confirmationModal.className = 'modal';
 
         confirmationModal.innerHTML = `
-            <div class="itineraries-backdrop" onclick="window.Itineraries.cancelDelete()"></div>
-            <div class="itineraries-content" style="max-width: 400px;">
-                <div class="itineraries-header">
-                    <h2 class="itineraries-title">
+            <div class="modal-backdrop" onclick="window.Itineraries.cancelDelete()"></div>
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">
                         <span class="material-icons" style="color: var(--error-red);">warning</span>
                         Confirmation de suppression
                     </h2>
                 </div>
                 
-                <div class="itineraries-body">
-                    <div class="itineraries-section">
+                <div class="modal-body">
+                    <div class="modal-section">
                         <p style="margin-bottom: 20px; line-height: 1.5;">
                             Êtes-vous sûr de vouloir supprimer l'itinéraire <strong>"${this.escapeHtml(itineraryName)}"</strong> ?
                         </p>
@@ -628,8 +615,7 @@ class Itineraries {
     cancelDelete() {
         const modal = document.getElementById('deleteConfirmationModal');
         if (modal) {
-            modal.style.opacity = '0';
-            modal.style.visibility = 'hidden';
+            modal.classList.remove('open');
             setTimeout(() => {
                 modal.remove();
             }, 300);
@@ -694,19 +680,35 @@ class Itineraries {
      * Lier les événements
      */
     bindEvents() {
-        // Écouteur pour la touche Échap
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.close();
-            }
-        });
+        // Écouteur pour la touche Échap (un seul listener global)
+        if (!this.escapeHandler) {
+            this.escapeHandler = (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    this.close();
+                }
+            };
+            document.addEventListener('keydown', this.escapeHandler);
+        }
 
-        // Écouteur pour le clic sur le backdrop
-        const backdrop = document.querySelector('.itineraries-backdrop');
-        if (backdrop) {
-            backdrop.addEventListener('click', () => {
-                this.close();
-            });
+        // Écouteur pour le clic sur le backdrop (spécifique à ce modal)
+        const modal = document.getElementById('itinerariesModal');
+        if (modal) {
+            // Retirer l'ancien listener s'il existe
+            if (this.backdropHandler) {
+                const backdrop = modal.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.removeEventListener('click', this.backdropHandler);
+                }
+            }
+            
+            // Ajouter le nouveau listener
+            const backdrop = modal.querySelector('.modal-backdrop');
+            if (backdrop) {
+                this.backdropHandler = () => {
+                    this.close();
+                };
+                backdrop.addEventListener('click', this.backdropHandler);
+            }
         }
     }
 
@@ -722,6 +724,15 @@ class Itineraries {
         const modal = document.getElementById('itinerariesModal');
         if (modal) {
             modal.classList.remove('open');
+            
+            // Nettoyer les événements du backdrop
+            if (this.backdropHandler) {
+                const backdrop = modal.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.removeEventListener('click', this.backdropHandler);
+                }
+                this.backdropHandler = null;
+            }
             
             // Supprimer la modal après l'animation
             setTimeout(() => {

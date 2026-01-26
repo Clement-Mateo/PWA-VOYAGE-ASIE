@@ -231,7 +231,7 @@ const Activity = {
 
             }
 
-            popup.classList.add('active');
+            popup.classList.add('open');
 
             // Réinitialiser le formulaire pour une nouvelle activité
             const form = document.getElementById('activityForm');
@@ -264,7 +264,7 @@ const Activity = {
             }
             
             // Mettre à jour le titre
-            const title = popup.querySelector('.activity-popup-title');
+            const title = popup.querySelector('.modal-title');
             if (title && !this.currentActivity) {
                 title.textContent = 'Ajouter une activité';
             } else {
@@ -338,15 +338,18 @@ const Activity = {
         
         const popup = document.createElement('div');
         popup.id = 'activityPopup';
-        popup.className = 'activity-popup';
+        popup.className = 'modal';
         
         popup.innerHTML = `
-            <div class="activity-popup-content">
-                <div class="activity-popup-header">
-                    <h3 class="activity-popup-title">${this.currentActivity ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
-                    <button class="btn-close-activity" onclick="Activity.hideActivityPopup()">×</button>
+            <div class="modal-backdrop" onclick="Activity.hideActivityPopup()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">${this.currentActivity ? 'Modifier une activité' :  'Ajouter une activité'}</h3>
+                    <button class="btn-close" onclick="Activity.hideActivityPopup()">
+                        <span class="material-icons">close</span>
+                    </button>
                 </div>
-                <div class="activity-form">
+                <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label" for="activityName">Nom de l'activité</label>
                         <input type="text" class="form-input" id="activityName" placeholder="Ex: Visite du temple, dégustation..." />
@@ -386,7 +389,7 @@ const Activity = {
                         </select>
                     </div>
                 </div>
-                <div class="activity-popup-footer">
+                <div class="modal-footer">
                     <button class="btn-cancel" onclick="Activity.hideActivityPopup()">Annuler</button>
                     <button class="btn-save" onclick="Activity.saveActivity()">Enregistrer</button>
                 </div>
@@ -435,7 +438,7 @@ const Activity = {
     hideActivityPopup() {
         const popup = document.getElementById('activityPopup');
         if (popup) {
-            popup.classList.remove('active');
+            popup.classList.remove('open');
         }
         
         // Réinitialiser l'activité actuelle
@@ -559,7 +562,7 @@ const Activity = {
 
     // Ajouter un spinner au bouton save
     showSaveButtonLoading() {
-        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        const saveButton = document.querySelector('.modal-footer .btn-save');
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
@@ -568,7 +571,7 @@ const Activity = {
 
     // Restaurer le bouton save
     restoreSaveButton() {
-        const saveButton = document.querySelector('.activity-popup-footer .btn-save');
+        const saveButton = document.querySelector('.modal-footer .btn-save');
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.innerHTML = '<span class="material-icons">save</span> Enregistrer';

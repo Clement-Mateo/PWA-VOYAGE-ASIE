@@ -1,127 +1,7 @@
 /* ========================================
-   SETTINGS MODAL
+   SETTINGS STYLES
+   Utilise les classes génériques de modals.css
    ======================================== */
-
-.settings-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-modal.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.settings-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-}
-
-.settings-content {
-    position: relative;
-    width: 80%;
-    max-width: 600px;
-    max-height: 80vh;
-    background: var(--white);
-    border: 1px solid var(--gray-dark);
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    transform: scale(0.9) translateY(20px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-modal.open .settings-content {
-    transform: scale(1) translateY(0);
-}
-
-/* ========================================
-   SETTINGS HEADER
-   ======================================== */
-
-.settings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    color: var(--font-color-white);
-    border-bottom: 1px solid var(--glass-border);
-}
-
-.settings-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.settings-title .material-icons {
-    margin-right: 8px;
-    font-size: 24px;
-}
-
-/* Positionnement du bouton de fermeture */
-.settings-modal .close-btn {
-    position: absolute;
-    top: 17px;
-    right: 20px;
-}
-
-/* ========================================
-   SETTINGS BODY
-   ======================================== */
-
-.settings-body {
-    padding: 24px;
-    overflow-y: auto;
-    max-height: calc(80vh - 80px);
-}
-
-/* ========================================
-   SETTINGS SECTIONS
-   ======================================== */
-
-.settings-section {
-    margin-bottom: 32px;
-}
-
-.settings-section:last-child {
-    margin-bottom: 0;
-}
-
-.settings-section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 16px 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--font-color-gray-dark);
-}
-
-.settings-section-title .material-icons {
-    font-size: 20px;
-    color: var(--primary-blue);
-}
 
 /* ========================================
    MAP STYLES SECTION
@@ -147,25 +27,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: var(--gray);
-    border: 2px solid transparent;
-    border-radius: 8px;
     cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
     transition: all 0.2s ease;
-    text-align: center;
+    border: 2px solid transparent;
 }
 
 .map-style-option input[type="radio"]:checked + label {
-    background: rgba(25, 102, 179, 0.1);
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 2px rgba(25, 102, 179, 0.2);
-}
-
-.map-style-option label:hover {
-    background: var(--gray-dark);
-    transform: translateY(-2px);
+    background: var(--shadow-primary);
 }
 
 .map-style-preview {
@@ -175,6 +46,7 @@
     border: 1px solid var(--gray-dark);
     background-size: cover;
     background-position: center;
+    display: block;
 }
 
 .humanitarian-preview {
@@ -182,15 +54,21 @@
 }
 
 .osm-preview {
-    background: linear-gradient(135deg, #f8f8f8 0%, #e0e0e0 100%);
+    background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 100%);
 }
 
 .maptiler-preview {
-    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
 }
 
 .satellite-preview {
     background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+}
+
+.map-style-name {
+    font-size: 12px;
+    color: var(--font-color-gray-dark);
+    font-weight: 500;
 }
 
 .terrain-preview {
@@ -198,7 +76,7 @@
 }
 
 .relief-preview {
-    background: linear-gradient(135deg, #a1887f 0%, #795548 100%);
+    background: linear-gradient(135deg, #bcaaa4 0%, #a1887f 100%);
 }
 
 .watercolor-preview {
@@ -213,47 +91,6 @@
     background: linear-gradient(135deg, #263238 0%, #37474f 100%);
 }
 
-.map-style-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--font-color-gray-dark);
-}
-
-/* ========================================
-   SETTINGS WARNING
-   ======================================== */
-
-.settings-warning {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 16px;
-    padding: 12px;
-    background: rgba(255, 152, 0, 0.1);
-    border: 1px solid rgba(255, 152, 0, 0.3);
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-.warning-icon {
-    color: var(--accent-orange, #ff9800);
-    font-size: 18px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    height: -webkit-fill-available;
-}
-
-.warning-text {
-    color: var(--font-color-gray-dark);
-    line-height: 1.4;
-}
-
-.warning-text strong {
-    color: var(--accent-orange, #ff9800);
-    font-weight: 600;
-}
-
 /* ========================================
    USER INFO SECTION
    ======================================== */
@@ -263,24 +100,20 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    background: var(--gray);
-    border-radius: 8px;
-    margin-bottom: 16px;
+    background: var(--background-light);
+    border-radius: 12px;
+    margin-top: 16px;
 }
 
 .user-avatar {
     width: 48px;
     height: 48px;
-    background: var(--primary-blue);
     border-radius: 50%;
+    background: var(--primary-blue);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--font-color-white);
-    flex-shrink: 0;
-}
-
-.user-avatar .material-icons {
     font-size: 24px;
 }
 
@@ -327,28 +160,41 @@
 }
 
 /* ========================================
+   WARNING MESSAGE
+   ======================================== */
+
+.settings-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.warning-icon {
+    color: var(--warning-color);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.warning-text {
+    font-size: 13px;
+    color: var(--font-color-gray);
+    line-height: 1.4;
+}
+
+.warning-text strong {
+    color: var(--font-color-gray-dark);
+}
+
+/* ========================================
    RESPONSIVE
    ======================================== */
 
 @media (max-width: 768px) {
-    .settings-content {
-        width: 90%;
-        max-height: 85vh;
-    }
-    
-    .settings-header {
-        padding: 16px 20px;
-    }
-    
-    .settings-title {
-        font-size: 18px;
-    }
-    
-    .settings-body {
-        padding: 20px;
-        max-height: calc(85vh - 70px);
-    }
-    
     .settings-map-styles {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 8px;
@@ -378,29 +224,7 @@
 }
 
 @media (max-width: 480px) {
-    .settings-content {
-        width: 95%;
-        max-height: 90vh;
-    }
-    
-    .settings-header {
-        padding: 12px 16px;
-    }
-    
-    .settings-title {
-        font-size: 16px;
-    }
-    
-    .settings-body {
-        padding: 16px;
-        max-height: calc(90vh - 60px);
-    }
-    
     .settings-map-styles {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .settings-section-title {
-        font-size: 14px;
     }
 }

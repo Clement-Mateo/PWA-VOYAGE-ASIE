@@ -51,7 +51,7 @@ const ChooseAddress = {
         
         const popup = this.getPopup();
         
-        popup.classList.add('show');
+        popup.classList.add('open');
         
         // Focus sur le champ de recherche
         setTimeout(() => {
@@ -69,7 +69,7 @@ const ChooseAddress = {
     hide() {
         this.isVisible = false;
         const popup = this.getPopup();
-        popup.classList.remove('show');
+        popup.classList.remove('open');
         
         // Vider le champ de recherche
         const searchInput = document.getElementById('addressSearchInput');
@@ -112,18 +112,19 @@ const ChooseAddress = {
     createPopup() {
         const popup = document.createElement('div');
         popup.id = 'chooseAddressPopup';
-        popup.className = 'choose-address-popup';
+        popup.className = 'modal';
         
         popup.innerHTML = `
-            <div class="choose-address-content">
-                <div class="choose-address-header">
-                    <h3>🔍 Rechercher une adresse</h3>
-                    <button class="close-btn" onclick="ChooseAddress.hide()">×</button>
+            <div class="modal-backdrop" onclick="ChooseAddress.hide()"></div>
+            <div class="modal-content" style="width: 90%; max-width: 500px;" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔍 Rechercher une adresse</h3>
+                    <button class="btn-close" onclick="ChooseAddress.hide()">×</button>
                 </div>
-                <div class="choose-address-body">
+                <div class="modal-body">
                     <div class="search-input-container">
                         <input type="text" id="addressSearchInput" class="address-search-input"
-                            placeholder="Saisissez une adresse..." oninput="ChooseAddress.searchAddress()">
+                            placeholder="Saisissez une adresse..." oninput="ChooseAddress.searchAddress()" onclick="event.stopPropagation()">
                     </div>
                     <div id="addressResults" class="address-results"></div>
                 </div>
@@ -197,7 +198,8 @@ const ChooseAddress = {
                         location: {
                             lat: place.geometry.location.lat,
                             lng: place.geometry.location.lng
-                        }
+                        },
+                        types: place.types || []
                     }));
                 } else {
                     // Si Places API ne retourne aucun résultat, essayer Geocoding
@@ -252,6 +254,188 @@ const ChooseAddress = {
         }
     },
     
+    // Fonction pour obtenir la traduction française du type
+    getFrenchType(type) {
+        const translations = {
+            'restaurant': 'Restaurant',
+            'food': 'Restaurant',
+            'cafe': 'Café',
+            'bakery': 'Boulangerie',
+            'bar': 'Bar',
+            'night_club': 'Boîte de nuit',
+            'store': 'Magasin',
+            'shopping_mall': 'Centre commercial',
+            'supermarket': 'Supermarché',
+            'pharmacy': 'Pharmacie',
+            'hospital': 'Hôpital',
+            'doctor': 'Médecin',
+            'school': 'École',
+            'university': 'Université',
+            'library': 'Bibliothèque',
+            'bank': 'Banque',
+            'atm': 'DAB',
+            'gas_station': 'Station-service',
+            'parking': 'Parking',
+            'airport': 'Aéroport',
+            'train_station': 'Gare',
+            'bus_station': 'Gare routière',
+            'subway_station': 'Station de métro',
+            'hotel': 'Hôtel',
+            'lodging': 'Hébergement',
+            'museum': 'Musée',
+            'art_gallery': 'Galerie d\'art',
+            'movie_theater': 'Cinéma',
+            'gym': 'Salle de sport',
+            'spa': 'Spa',
+            'park': 'Parc',
+            'stadium': 'Stade',
+            'church': 'Église',
+            'mosque': 'Mosquée',
+            'hindu_temple': 'Temple hindou',
+            'synagogue': 'Synagogue',
+            'government': 'Gouvernement',
+            'post_office': 'Bureau de poste',
+            'police': 'Police',
+            'fire_station': 'Pompier',
+            'embassy': 'Ambassade',
+            'tourist_attraction': 'Attraction touristique',
+            'point_of_interest': 'Lieu d\'intérêt',
+            'establishment': 'Établissement',
+            'generic_business': 'Entreprise',
+            'finance': 'Finance',
+            'insurance': 'Assurance',
+            'lawyer': 'Avocat',
+            'real_estate': 'Immobilier',
+            'travel_agency': 'Agence de voyages',
+            'car_rental': 'Location de voiture',
+            'taxi_stand': 'Station de taxi',
+            'car_repair': 'Garage',
+            'beauty_salon': 'Salon de beauté',
+            'hair_care': 'Coiffeur',
+            'electronics_store': 'Magasin d\'électronique',
+            'clothing_store': 'Magasin de vêtements',
+            'furniture_store': 'Magasin de meubles',
+            'hardware_store': 'Quincaillerie',
+            'pet_store': 'Animalerie',
+            'florist': 'Fleuriste',
+            'book_store': 'Librairie',
+            'music_store': 'Magasin de musique',
+            'toy_store': 'Magasin de jouets',
+            'jewelry_store': 'Bijouterie',
+            'liquor_store': 'Cave',
+            'convenience_store': 'Supérette',
+            'grocery_or_supermarket': 'Épicerie',
+            'health': 'Santé',
+            'medical': 'Médical',
+            'fitness': 'Fitness',
+            'sports': 'Sports',
+            'recreation': 'Loisirs'
+        };
+        
+        return translations[type] || type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+    },
+
+    // Fonction pour obtenir l'icône Google Font en fonction du type
+    getIconForType(type) {
+        const iconMap = {
+            'restaurant': 'restaurant',
+            'food': 'restaurant',
+            'cafe': 'local_cafe',
+            'bakery': 'bakery_dining',
+            'bar': 'bar',
+            'night_club': 'nightlife',
+            'store': 'store',
+            'shopping_mall': 'shopping_mall',
+            'supermarket': 'local_grocery_store',
+            'pharmacy': 'local_pharmacy',
+            'hospital': 'local_hospital',
+            'doctor': 'local_hospital',
+            'school': 'school',
+            'university': 'school',
+            'library': 'local_library',
+            'bank': 'account_balance',
+            'atm': 'atm',
+            'gas_station': 'local_gas_station',
+            'parking': 'local_parking',
+            'airport': 'flight',
+            'train_station': 'train',
+            'bus_station': 'directions_bus',
+            'subway_station': 'subway',
+            'hotel': 'hotel',
+            'lodging': 'hotel',
+            'museum': 'museum',
+            'art_gallery': 'museum',
+            'movie_theater': 'theater_comedy',
+            'gym': 'fitness_center',
+            'spa': 'spa',
+            'park': 'park',
+            'stadium': 'stadium',
+            'church': 'church',
+            'mosque': 'mosque',
+            'hindu_temple': 'temple_hindu',
+            'synagogue': 'synagogue',
+            'government': 'account_balance',
+            'post_office': 'local_post_office',
+            'police': 'local_police',
+            'fire_station': 'local_fire_department',
+            'embassy': 'account_balance',
+            'tourist_attraction': 'photo_camera',
+            'point_of_interest': 'place',
+            'establishment': 'business',
+            'generic_business': 'business',
+            'finance': 'account_balance',
+            'insurance': 'policy',
+            'lawyer': 'gavel',
+            'real_estate': 'home',
+            'travel_agency': 'luggage',
+            'car_rental': 'directions_car',
+            'taxi_stand': 'local_taxi',
+            'car_repair': 'car_repair',
+            'gas_station': 'local_gas_station',
+            'parking': 'local_parking',
+            'beauty_salon': 'content_cut',
+            'hair_care': 'content_cut',
+            'electronics_store': 'devices',
+            'clothing_store': 'checkroom',
+            'furniture_store': 'chair',
+            'hardware_store': 'hardware',
+            'pet_store': 'pets',
+            'florist': 'local_florist',
+            'book_store': 'menu_book',
+            'music_store': 'music_note',
+            'toy_store': 'toys',
+            'jewelry_store': 'diamond',
+            'bakery': 'bakery_dining',
+            'liquor_store': 'local_bar',
+            'convenience_store': 'store',
+            'grocery_or_supermarket': 'local_grocery_store',
+            'health': 'local_hospital',
+            'medical': 'local_hospital',
+            'gym': 'fitness_center',
+            'fitness': 'fitness_center',
+            'sports': 'fitness_center',
+            'recreation': 'sports_soccer'
+        };
+        
+        // Normaliser le type (enlever les underscores et mettre en minuscule)
+        const normalizedType = type ? type.toLowerCase().replace(/_/g, ' ') : '';
+        
+        // Chercher une correspondance exacte
+        if (iconMap[normalizedType]) {
+            return iconMap[normalizedType];
+        }
+        
+        // Chercher une correspondance partielle
+        for (const [key, value] of Object.entries(iconMap)) {
+            if (normalizedType.includes(key) || key.includes(normalizedType)) {
+                return value;
+            }
+        }
+        
+        // Par défaut, retourner l'icône de localisation
+        return 'place';
+    },
+
     /**
      * Afficher les résultats de recherche
      */
@@ -267,12 +451,30 @@ const ChooseAddress = {
             return;
         }
         
-        resultsContainer.innerHTML = results.map((result, index) => `
+        resultsContainer.innerHTML = results.map((result, index) => {
+            const icon = result.types && result.types.length > 0 ? 
+                this.getIconForType(result.types[0]) : 'place';
+            
+            const iconHtml = `<div class="address-result-icon" style="background: var(--primary-blue);">
+                <span class="material-icons" style="color: white; font-size: 20px;">${icon}</span>
+            </div>`;
+            
+            const typeText = result.types && result.types.length > 0 ? 
+                this.getFrenchType(result.types[0]) : '';
+            
+            return `
             <div class="address-result-item" onclick="ChooseAddress.selectAddress(${index})">
-                <div class="address-name">${result.name}</div>
+                <div class="address-result-header">
+                    ${iconHtml}
+                    <div class="address-result-info">
+                        <div class="address-name">${result.name}</div>
+                        ${typeText ? `<div class="address-type">${typeText}</div>` : ''}
+                    </div>
+                </div>
                 <div class="address-details">${result.address}</div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     },
     
     /**
