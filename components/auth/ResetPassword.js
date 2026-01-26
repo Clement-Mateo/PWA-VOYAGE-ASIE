@@ -118,8 +118,10 @@ const ResetPassword = {
             return;
         }
         
-        // Désactiver le bouton pendant l'envoi
-        this.setLoadingState(true);
+        // Désactiver le bouton et afficher le loading
+        const button = document.querySelector('.auth-btn-primary');
+        if (button) button.disabled = true;
+        window.showLoading();
         
         try {
             // Utiliser firebaseService pour la réinitialisation
@@ -166,8 +168,10 @@ const ResetPassword = {
             
             showErrorSnackBar(errorMessage);
         } finally {
-            // Réactiver le bouton
-            this.setLoadingState(false);
+            // Réactiver le bouton et masquer le loading
+            const button = document.querySelector('.auth-btn-primary');
+            if (button) button.disabled = false;
+            window.hideLoading();
         }
     },
 
@@ -196,19 +200,6 @@ const ResetPassword = {
         
         // Effacer les messages d'erreur
         this.clearMessages();
-    },
-
-    // Gérer l'état de chargement
-    setLoadingState(isLoading) {
-        const button = document.querySelector('.auth-btn-primary');
-        
-        if (isLoading) {
-            button.disabled = true;
-            showLoading();
-        } else {
-            button.disabled = false;
-            hideLoading();
-        }
     },
 
     // Effacer tous les messages

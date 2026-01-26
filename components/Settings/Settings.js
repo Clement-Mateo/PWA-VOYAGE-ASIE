@@ -29,7 +29,7 @@ const Settings = {
                         <span class="material-icons">settings</span>
                         Paramètres
                     </h2>
-                    <button class="settings-close-btn" onclick="Settings.close()" title="Fermer">
+                    <button class="close-btn" onclick="Settings.close()" title="Fermer">
                         <span class="material-icons">close</span>
                     </button>
                 </div>

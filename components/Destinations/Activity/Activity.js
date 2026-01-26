@@ -508,7 +508,7 @@ const Activity = {
             return;
         }
         
-        const currentItinerary = itineraries[0];
+        const currentItinerary = window.firebaseService.getCurrentItinerary();;
         const destination = currentItinerary.destinations.find(dest => dest.id === this.currentDestination.id);
         
         if (!destination) {

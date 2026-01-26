@@ -57,26 +57,11 @@
     font-weight: 600;
 }
 
-.close-btn {
+/* Positionnement du bouton de fermeture */
+.choose-address-popup .close-btn {
     position: absolute;
     top: 17px;
     right: 20px;
-    background: var(--glass-bg);
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--white);
-    font-size: 18px;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background: var(--gray);
 }
 
 .choose-address-body {

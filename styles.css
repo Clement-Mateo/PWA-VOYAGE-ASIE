@@ -254,12 +254,6 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .add-btn {
-        width: 45px;
-        height: 45px;
-        top: 5px;
-        right: 5px;
-    }
     
     .controls {
         top: auto;
@@ -269,12 +263,6 @@ body {
 }
 
 @media (max-width: 480px) {
-    .add-btn {
-        top: 5px;
-        right: 5px;
-        width: 40px;
-        height: 40px;
-    }
     
     .controls {
         bottom: 10px;
