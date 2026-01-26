@@ -23,6 +23,10 @@ const Sidebar = {
         // Mettre à jour le nom de l'itinéraire
         this.updateItineraryName();
         
+        // Charger le contenu de tous les onglets une seule fois
+        this.loadDestinationsContent();
+        this.loadSyntheseContent();
+        
         // Initialiser le premier onglet
         this.switchTab('destinations');
     },
@@ -100,14 +104,8 @@ const Sidebar = {
             activePanel.classList.add('active');
         }
         
-        // Gérer le contenu spécifique à chaque onglet
+        // Mettre à jour l'onglet courant
         this.currentTab = tabName;
-        
-        if (tabName === 'destinations') {
-            this.loadDestinationsContent();
-        } else if (tabName === 'synthese') {
-            this.loadSyntheseContent();
-        }
     },
     
     /**
