@@ -52,9 +52,42 @@
     transform: translateY(-1px);
 }
 
+.address-result-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.address-result-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.address-result-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .address-name {
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    color: var(--font-color-gray-dark);
+}
+
+.address-type {
+    font-size: 12px;
+    color: var(--font-color-gray);
+    background: var(--background-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
 }
 
 .address-details {
