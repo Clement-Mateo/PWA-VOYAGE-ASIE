@@ -1,74 +1,11 @@
-/* Popup ChooseAddress */
-.choose-address-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--shadow-dark);
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
+/* ========================================
+   CHOOSE ADDRESS STYLES
+   Utilise les classes génériques de modals.css
+   ======================================== */
 
-.choose-address-popup.show {
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-.choose-address-content {
-    background: var(--white);
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    box-shadow: 0 10px 30px var(--shadow-medium);
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-}
-
-.choose-address-popup.show .choose-address-content {
-    transform: scale(1);
-}
-
-.choose-address-header {
-    color: var(--white);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    margin: 20px;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);  /* Dégradé bleu */
-    box-shadow: var(--shadow);
-    border-radius: 20px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.choose-address-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-/* Positionnement du bouton de fermeture */
-.choose-address-popup .close-btn {
-    position: absolute;
-    top: 17px;
-    right: 20px;
-}
-
-.choose-address-body {
-    padding: 20px;
-    max-height: calc(80vh - 80px);
-    overflow-y: auto;
-}
+/* ========================================
+   SEARCH INPUT
+   ======================================== */
 
 .search-input-container {
     display: flex;
@@ -81,7 +18,7 @@
     padding: 12px;
     border: 1px solid var(--gray-dark);
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 14px;
     transition: border-color 0.2s ease;
 }
 
@@ -91,23 +28,9 @@
     box-shadow: 0 0 0 3px var(--shadow-primary);
 }
 
-.search-btn {
-    background: var(--secondary-purple-light);
-    border: none;
-    border-radius: 8px;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    color: var(--font-color-white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
-}
-
-.search-btn:hover {
-    transform: translateY(-2px);
-}
+/* ========================================
+   SEARCH RESULTS
+   ======================================== */
 
 .address-results {
     max-height: 400px;
@@ -136,43 +59,23 @@
 
 .address-details {
     font-size: 14px;
+    color: var(--font-color-gray);
 }
 
 .no-results {
     text-align: center;
     padding: 20px;
     font-style: italic;
+    color: var(--font-color-gray);
 }
 
-/* Debug : Forcer l'affichage */
-.choose-address-popup.show {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 
-/* Responsive */
 @media (max-width: 768px) {
-    .choose-address-content {
-        width: 95%;
-        max-height: 90vh;
-    }
-    
-    .choose-address-header {
-        padding: 15px;
-    }
-    
-    .choose-address-body {
-        padding: 15px;
-    }
-    
     .search-input-container {
         flex-direction: column;
         gap: 10px;
-    }
-    
-    .search-btn {
-        width: 100%;
-        height: 50px;
     }
 }

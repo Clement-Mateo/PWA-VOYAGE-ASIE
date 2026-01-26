@@ -20,24 +20,24 @@ const Settings = {
         
         const modal = document.createElement('div');
         modal.id = 'settingsModal';
-        modal.className = 'settings-modal';
+        modal.className = 'modal';
         modal.innerHTML = `
-            <div class="settings-overlay" onclick="Settings.close()"></div>
-            <div class="settings-content">
-                <div class="settings-header">
-                    <h2 class="settings-title">
+            <div class="modal-backdrop" onclick="Settings.close()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">
                         <span class="material-icons">settings</span>
                         Paramètres
                     </h2>
-                    <button class="close-btn" onclick="Settings.close()" title="Fermer">
+                    <button class="btn-close" onclick="Settings.close()" title="Fermer">
                         <span class="material-icons">close</span>
                     </button>
                 </div>
                 
-                <div class="settings-body">
+                <div class="modal-body">
                     <!-- Section Style de carte -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">
+                    <div class="modal-section">
+                        <h3 class="modal-section-title">
                             <span class="material-icons">map</span>
                             Style de carte
                         </h3>
@@ -110,8 +110,8 @@ const Settings = {
                     </div>
                     
                     <!-- Section Utilisateur -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">
+                    <div class="modal-section">
+                        <h3 class="modal-section-title">
                             <span class="material-icons">account_circle</span>
                             Informations utilisateur
                         </h3>

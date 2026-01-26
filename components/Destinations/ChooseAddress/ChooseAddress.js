@@ -51,7 +51,7 @@ const ChooseAddress = {
         
         const popup = this.getPopup();
         
-        popup.classList.add('show');
+        popup.classList.add('open');
         
         // Focus sur le champ de recherche
         setTimeout(() => {
@@ -69,7 +69,7 @@ const ChooseAddress = {
     hide() {
         this.isVisible = false;
         const popup = this.getPopup();
-        popup.classList.remove('show');
+        popup.classList.remove('open');
         
         // Vider le champ de recherche
         const searchInput = document.getElementById('addressSearchInput');
@@ -112,15 +112,16 @@ const ChooseAddress = {
     createPopup() {
         const popup = document.createElement('div');
         popup.id = 'chooseAddressPopup';
-        popup.className = 'choose-address-popup';
+        popup.className = 'modal';
         
         popup.innerHTML = `
-            <div class="choose-address-content">
-                <div class="choose-address-header">
-                    <h3>🔍 Rechercher une adresse</h3>
-                    <button class="close-btn" onclick="ChooseAddress.hide()">×</button>
+            <div class="modal-backdrop" onclick="ChooseAddress.hide()"></div>
+            <div class="modal-content" style="width: 90%; max-width: 500px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">🔍 Rechercher une adresse</h3>
+                    <button class="btn-close" onclick="ChooseAddress.hide()">×</button>
                 </div>
-                <div class="choose-address-body">
+                <div class="modal-body">
                     <div class="search-input-container">
                         <input type="text" id="addressSearchInput" class="address-search-input"
                             placeholder="Saisissez une adresse..." oninput="ChooseAddress.searchAddress()">

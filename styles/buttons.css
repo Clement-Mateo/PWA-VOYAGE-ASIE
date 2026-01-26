@@ -118,27 +118,14 @@
     background: none;
     border: none;
     border-radius: 6px;
-    padding: 6px 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.btn-icon-small {
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.btn-icon-large {
-    padding: 8px;
-    border-radius: 6px;
-    min-width: 32px;
-}
-
 /* Boutons de fermeture */
-.close-btn {
+.btn-close {
     background: var(--glass-bg);
     border: none;
     border-radius: 50%;
@@ -148,13 +135,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--white);
+    color: var(--font-color-white);
     font-size: 18px;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background: var(--gray);
 }
 
 /* ========================================
