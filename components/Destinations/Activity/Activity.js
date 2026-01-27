@@ -193,8 +193,8 @@ const Activity = {
             
             // Réinitialiser tous les champs manuellement pour être sûr
             const nameField = document.getElementById('activityName');
-            const arrivalField = document.getElementById('arrivalTime');
-            const departureField = document.getElementById('departureTime');
+            const startTime = document.getElementById('startTime');
+            const endTime = document.getElementById('endTime');
             const priceAmount = document.getElementById('priceAmount');
             const localCurrencyField = document.getElementById('localCurrency');
             const typeField = document.getElementById('activityType');
@@ -202,8 +202,8 @@ const Activity = {
             // En mode ajout, réinitialiser tout
             if (!this.currentActivity) {
                 if (nameField) nameField.value = '';
-                if (arrivalField) arrivalField.value = '';
-                if (departureField) departureField.value = '';
+                if (startTime) startTime.value = '';
+                if (endTime) endTime.value = '';
                 if (priceAmount) priceAmount.value = '';
                 if (localCurrencyField) localCurrencyField.value = '';
                 if (typeField) typeField.value = '';
@@ -307,12 +307,12 @@ const Activity = {
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="arrivalTime">Heure d'arrivée</label>
-                            <input type="time" class="form-input" id="arrivalTime" />
+                            <label class="form-label" for="startTime">Début</label>
+                            <input type="time" class="form-input" id="startTime" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="departureTime">Heure de départ</label>
-                            <input type="time" class="form-input" id="departureTime" />
+                            <label class="form-label" for="endTime">Fin</label>
+                            <input type="time" class="form-input" id="endTime" />
                         </div>
                     </div>
                     <div class="form-row" id="currencyRow">
@@ -417,8 +417,8 @@ const Activity = {
             await this.loadExchangeRates();
 
         const name = document.getElementById('activityName').value;
-        const arrivalTime = document.getElementById('arrivalTime').value;
-        const departureTime = document.getElementById('departureTime').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
         const priceAmount = document.getElementById('priceAmount').value;
         let localCurrency = document.getElementById('localCurrency').value;
         const activityType = document.getElementById('activityType').value;
@@ -438,8 +438,8 @@ const Activity = {
         const activity = {
             id: this.currentActivity?.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: name.trim(),
-            arrivalTime: arrivalTime,
-            departureTime: departureTime,
+            startTime: startTime,
+            endTime: endTime,
             price: parseFloat(priceAmount) || 0, // TOUJOURS une simple valeur
             type: activityType
         };
@@ -550,15 +550,15 @@ const Activity = {
             // Pré-remplir le formulaire avec les données de l'activité (après que le popup soit créé)
             setTimeout(() => {
                 const nameField = document.getElementById('activityName');
-                const arrivalField = document.getElementById('arrivalTime');
-                const departureField = document.getElementById('departureTime');
+                const startTime = document.getElementById('startTime');
+                const endTime = document.getElementById('endTime');
                 const priceField = document.getElementById('priceAmount');
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
                 if (nameField) nameField.value = this.currentActivity.name || '';
-                if (arrivalField) arrivalField.value = this.currentActivity.arrivalTime || '';
-                if (departureField) departureField.value = this.currentActivity.departureTime || '';
+                if (startTime) startTime.value = this.currentActivity.startTime || '';
+                if (endTime) endTime.value = this.currentActivity.endTime || '';
                 
                 // Gérer le prix (TOUJOURS simple valeur) et devise locale
                 if (this.currentActivity.price) {
@@ -586,8 +586,8 @@ const Activity = {
     // Vider le formulaire d'activité
     clearActivityForm() {
         document.getElementById('activityName').value = '';
-        document.getElementById('arrivalTime').value = '';
-        document.getElementById('departureTime').value = '';
+        document.getElementById('startTime').value = '';
+        document.getElementById('endTime').value = '';
         document.getElementById('priceAmount').value = '';
         document.getElementById('localCurrency').value = '';
         document.getElementById('activityType').value = '';

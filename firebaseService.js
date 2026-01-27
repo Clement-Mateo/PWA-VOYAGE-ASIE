@@ -275,6 +275,12 @@ class FirebaseService {
             });
             
             console.log('✅ Itinéraire mis à jour');
+            
+            // Rafraîchir la synthèse après toute modification d'itinéraire
+            if (window.Synthèse) {
+                window.Synthèse.refresh();
+            }
+            
             return true;
         } catch (error) {
             console.error('Erreur mise à jour itinéraire:', error);
@@ -286,7 +292,7 @@ class FirebaseService {
      * Mettre à jour un itinéraire dans itineraries et en BDD
      */
     async updateCurrentItinerary() {
-        return updateItinerary(this.getCurrentItinerary());
+        return this.updateItinerary(this.getCurrentItinerary());
     }
 
     /**

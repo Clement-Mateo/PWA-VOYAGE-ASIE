@@ -1112,8 +1112,8 @@ const Destinations = {
                             </div>
                     `;
                     
-                    if (activity.arrivalTime && activity.departureTime) {
-                        activityHTML += `<span class="activity-time">${activity.arrivalTime} - ${activity.departureTime}</span>`;
+                    if (activity.startTime && activity.endTime) {
+                        activityHTML += `<span class="activity-time">${activity.startTime} - ${activity.endTime}</span>`;
                     }
                     
                     // Afficher le type d'activité si présent
