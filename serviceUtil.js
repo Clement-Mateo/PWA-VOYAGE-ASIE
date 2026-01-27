@@ -141,6 +141,8 @@ window.showInfoSnackBar = showInfoSnackBar;
  * Affiche l'overlay de loading global
  */
 function showLoading() {
+    console.log('GLOBAL LOADING : ON');
+
     const overlay = document.getElementById('loadingOverlay');
     const body = document.body;
     
@@ -162,6 +164,8 @@ function showLoading() {
  * Masque l'overlay de loading global
  */
 function hideLoading() {
+    console.log('GLOBAL LOADING : OFF');
+
     const overlay = document.getElementById('loadingOverlay');
     const body = document.body;
     

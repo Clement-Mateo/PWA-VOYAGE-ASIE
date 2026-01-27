@@ -190,10 +190,10 @@ const Login = {
             
             showErrorSnackBar(errorMessage);
         } finally {
-            // Réactiver le bouton et masquer le loading
+            // Réactiver le bouton mais ne pas masquer le loading global
             const button = document.querySelector('.auth-btn-primary');
             if (button) button.disabled = false;
-            window.hideLoading();
+            // Le loading global sera géré par updateUserPanel
         }
     },
 

@@ -60,13 +60,15 @@ class FirebaseService {
             // Configurer l'observateur d'authentification pour détecter la session existante
             this.auth.onAuthStateChanged((user) => {
                 this.user = user;
-                if (user) {
-                    console.log('✅ Utilisateur connecté:', user.email);
-                    window.updateUserPanel();
-                } else {
-                    console.log('🔒 Utilisateur déconnecté');
-                    window.updateUserPanel();
-                }
+                console.log(user ? `✅ Utilisateur connecté: ${user.email}` : '🔒 Utilisateur déconnecté');
+                
+                // Déclencher un événement personnalisé pour notifier que l'auth est prête
+                window.dispatchEvent(new CustomEvent('firebaseAuthReady', { 
+                    detail: { 
+                        user: user,
+                        isAuthenticated: !!user 
+                    } 
+                }));
             });
             
             this.isInitialized = true;
@@ -88,9 +90,12 @@ class FirebaseService {
         try {
             const result = await window.firebase.signInWithEmailAndPassword(this.auth, email, password);
             this.user = result.user;
+            console.log('✅ Utilisateur connecté:', this.user.email);
+            
             return this.user;
         } catch (error) {
             console.error('Erreur connexion:', error.message);
+            hideLoading(); // Cacher le loading en cas d'échec
             return null;
         }
     }
@@ -125,8 +130,12 @@ class FirebaseService {
             await window.firebase.signOut(this.auth);
             this.user = null;
             console.log('Déconnecté');
+            
+            // Appeler updateUserPanel après déconnexion
+            await window.updateUserPanel();
         } catch (error) {
             console.error('Erreur déconnexion:', error);
+            hideLoading(); // Cacher le loading en cas d'échec
         }
     }
 
@@ -197,10 +206,14 @@ class FirebaseService {
     /**
      * Créer un itinéraire en base et l'ajouter dans itineraries
      */
-    async createItinerary(name) {
+    async createItinerary(name, manageLoading = true) {
         if (!this.user) {
             console.error('createItinerary: Utilisateur non connecté');
             return null;
+        }
+        
+        if (manageLoading) {
+            showLoading();
         }
         
         try {
@@ -237,6 +250,9 @@ class FirebaseService {
             return newItinerary;
         } catch (error) {
             console.error('❌ Erreur création itinéraire:', error);
+            if (manageLoading) {
+                hideLoading();
+            }
             return null;
         }
     }
@@ -376,7 +392,12 @@ class FirebaseService {
                 return [];
             }
             
-            return this.getCurrentItinerary().destinations || [];
+            const currentItinerary = this.getCurrentItinerary();
+            if (!currentItinerary) {
+                return [];
+            }
+            
+            return currentItinerary.destinations || [];
         } catch (error) {
             console.error('Erreur récupération destinations itinéraire actuel:', error);
             return [];
