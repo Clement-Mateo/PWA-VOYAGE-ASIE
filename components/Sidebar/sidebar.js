@@ -58,10 +58,10 @@ const Sidebar = {
             <!-- Menu à onglets -->
             <div class="sidebar-tabs">
                 <button class="tab-btn active" data-tab="destinations" onclick="Sidebar.switchTab('destinations')">
-                    Destinations
+                    <span>Destinations</span>
                 </button>
                 <button class="tab-btn" data-tab="synthese" onclick="Sidebar.switchTab('synthese')">
-                    Synthèse
+                    <span>Synthèse</span>
                 </button>
             </div>
             
@@ -79,18 +79,25 @@ const Sidebar = {
     },
     
     /**
-     * Changer d'onglet
+     * Changer d'onglet avec animation one tap directe
      */
     switchTab(tabName) {
         console.log('Sidebar: Changement d\'onglet vers', tabName);
         
-        // Mettre à jour les classes des onglets
-        document.querySelectorAll('.tab-btn').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.dataset.tab === tabName) {
-                tab.classList.add('active');
-            }
-        });
+        // Récupérer tous les boutons
+        const allTabs = document.querySelectorAll('.tab-btn');
+        const previousActiveTab = document.querySelector('.tab-btn.active');
+        const newActiveTab = document.querySelector(`[data-tab="${tabName}"]`);
+        
+        if (!newActiveTab || newActiveTab.classList.contains('active')) {
+            return; // Pas de changement nécessaire
+        }
+        
+        // Désactiver le bouton précédent et activer le nouveau immédiatement
+        if (previousActiveTab) {
+            previousActiveTab.classList.remove('active');
+        }
+        newActiveTab.classList.add('active');
         
         // Mettre à jour les panels
         document.querySelectorAll('.tab-panel').forEach(panel => {

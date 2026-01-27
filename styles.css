@@ -11,11 +11,14 @@
 
     /* Couleurs primaires */
     --primary-blue: #1966B3;
-    --primary-dark: #14518c;
+    --primary-dark: #134C86;
     --primary-darker: #0D3359;
     
     /* Couleurs secondaires */
+    --secondary-blue-dark: #4C99E6;
     --secondary-purple-light: #9936FC;
+    --secondary-purple-dark: #662d91;
+    --secondary-purple-darker: #331a66;
     --secondary-blue-majorelle: #7874F1;
     --accent-red: #dc3545;
     --accent-red-dark: #c82333;
