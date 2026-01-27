@@ -114,16 +114,6 @@
             window.firebaseService.initialize();
         }
         
-        // Test de configuration Firebase
-        setTimeout(() => {
-            console.log('=== TEST CONFIGURATION FIREBASE ===');
-            console.log('Firebase disponible:', typeof window.firebase !== 'undefined');
-            console.log('Service initialisé:', window.firebaseService.isInitialized);
-            console.log('Auth disponible:', typeof window.firebase.auth !== 'undefined');
-            console.log('getDoc disponible:', typeof window.firebase.getDoc !== 'undefined');
-            console.log('User connecté:', window.firebaseService.isAuthenticated());
-            console.log('=====================================');
-        }, 2000);
     </script>
     
     <!-- Service Worker Registration -->
@@ -131,7 +121,7 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => console.log('Service Worker enregistré'))
-                .catch(error => console.log('Service Worker erreur:', error));
+                .catch(error => console.error('Service Worker erreur:', error));
         }
     </script>
     
@@ -194,7 +184,7 @@
         
         // Initialiser les composants quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOM prêt, initialisation des composants...');
+            console.log('🚀 Démarrage de l\'application...');
             
             // Initialiser Login
             if (window.Login) {
@@ -212,7 +202,7 @@
                 mapInstance.init();
                 mapInstance.exportForLegacy();
                 window.MapInstance = mapInstance;
-                console.log('✅ LeafletMap initialisée et exportée pour compatibilité');
+                console.log('✅ LeafletMap initialisée');
             }
             
             await ComponentManager.initAll();
@@ -254,7 +244,7 @@
         async function updateUserPanel() {
             if (window.firebaseService.isAuthenticated()) {
                 // Utilisateur connecté
-                console.log('✅ Utilisateur connecté - Mise à jour de l\'interface');
+                console.log('✅ Utilisateur connecté');
                 
                 // Masquer la page de connexion
                 if (window.Login) {
@@ -279,7 +269,7 @@
 
                 // Initialiser Itineraries maintenant que les itinéraires sont chargés
                 if (window.Itineraries) {
-                    console.log('✅ Itineraries trouvé, initialisation...');
+                    console.log('✅ Itineraries initialisé');
                     // Le composant Itineraries s'initialise automatiquement dans son constructeur
                 } else {
                     console.error('❌ Itineraries non trouvé');
@@ -295,7 +285,7 @@
                 
                 // Initialiser ChooseAddress
                 if (window.ChooseAddress) {
-                    console.log('✅ ChooseAddress trouvé, initialisation...');
+                    console.log('✅ ChooseAddress initialisé');
                     window.ChooseAddress.init();
                 } else {
                     console.error('❌ ChooseAddress non trouvé');
@@ -313,7 +303,7 @@
 
             } else {
                 // Utilisateur déconnecté
-                console.log('🔒 Utilisateur déconnecté - Affichage de la page de connexion');
+                console.log('🔒 Utilisateur déconnecté');
                 
                 // Afficher la page de connexion
                 if (window.Login) {

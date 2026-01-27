@@ -3,7 +3,6 @@
  * Gère le bandeau des destinations avec édition
  */
 
-console.log('🔍 Destinations.js: Début du chargement');
 
 const Destinations = {
     isSaving: false, // État de sauvegarde pour éviter les clics multiples
@@ -14,8 +13,7 @@ const Destinations = {
      * Initialiser le composant
      */
     init() {
-        console.log('Destinations: Initialisation...');
-        // Plus de render() ici - la sidebar gère l'affichage
+        // Initialisation silencieuse
     },
     
     /**
@@ -106,7 +104,6 @@ const Destinations = {
      * Créer une card de destination
      */
     createDestinationCard(destination, index) {
-        console.log('🔍 Destinations: Création card pour', destination.name);
         
         const card = document.createElement('div');
         card.className = 'destination-card';
@@ -195,8 +192,6 @@ const Destinations = {
             </div>
         `;
         
-        console.log('🔍 Destinations: Card HTML créé');
-        
         // Ajouter les événements drag and drop
         this.addDragAndDropEvents(card, index);
         
@@ -215,7 +210,6 @@ const Destinations = {
         if (!destination || !destination.id || (lastDestination && !lastDestination.id)) return;
         
         card.addEventListener('dragstart', (e) => {
-            console.log('🔧 Drag start:', destination.name);
             card.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', card.innerHTML);
@@ -223,7 +217,6 @@ const Destinations = {
         });
         
         card.addEventListener('dragend', (e) => {
-            console.log('🔧 Drag end:', destination.name);
             card.classList.remove('dragging');
         });
         
@@ -245,8 +238,7 @@ const Destinations = {
             card.classList.remove('drag-over');
             
             if (this.draggedIndex !== undefined && this.draggedIndex !== index && !this.isReordering) {
-                this.isReordering = true; // Éviter les doubles appels
-                console.log('🔧 Drop:', window.firebaseService.getDestinationsOfCurrentItinerary()[this.draggedIndex].name, '->', destination.name);
+                this.isReordering = true;
                 this.reorderDestinations(this.draggedIndex, index).finally(() => {
                     this.isReordering = false;
                 });
@@ -263,11 +255,8 @@ const Destinations = {
         const targetDestination = destinations[toIndex];
         
         if (!draggedDestination.id || !targetDestination.id) {
-            console.warn('⚠️ Impossible de réorganiser : destination sans id');
             return;
         }
-        
-        console.log('🔧 Réorganisation:', draggedDestination.name, '-> position', toIndex);
         
         try {
             // Récupérer l'itinéraire actuel
@@ -307,13 +296,10 @@ const Destinations = {
                 dest.order = index;
             });
             
-            console.log('🔧 Nouveaux ordres:', sortedDestinations.map(d => ({name: d.name, order: d.order})));
-            
-            // Mettre à jour l'itinéraire complet en une seule fois
             await window.firebaseService.updateItinerary(currentItinerary);
             await this.loadDestinations();
             
-            console.log('✅ Réorganisation sauvegardée avec succès');            
+            console.log('✅ Destinations réorganisées');            
         } catch (error) {
             console.error('❌ Erreur réorganisation destinations:', error);
             showErrorSnackBar('Erreur lors de la réorganisation.');
@@ -462,8 +448,6 @@ const Destinations = {
             return;
         }
         
-        console.log('🔧 Ajout d\'activité pour la destination:', destination.name);
-        
         // Définir la destination actuelle pour l'activité
         if (window.Activity) {
             window.Activity.setCurrentDestination(destination);
@@ -477,28 +461,21 @@ const Destinations = {
      * Annuler la création d'une destination
      */
     async cancelCreation() {
-        console.log('🔧 cancelCreation() appelée');
         
         // Trouver l'index de la destination en cours de création (sans ID)
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
         const creatingIndex = destinations.findIndex(dest => !dest.id);
-        
-        console.log('🔍 creatingIndex:', creatingIndex, 'destinations.length:', destinations.length);
-        console.log('🔍 destinations avant suppression:', destinations.map(d => ({id: d.id, name: d.name})));
         
         if (creatingIndex !== -1) {
             const card = document.getElementById(`destination-${creatingIndex}`);
             
             // Supprimer la destination de la liste Firebase
             destinations.splice(creatingIndex, 1);
-            console.log('🔍 destinations après splice:', destinations.map(d => ({id: d.id, name: d.name})));
             
             // Supprimer la card du DOM
             if (card) {
                 card.remove();
             }
-            
-            console.log('🗑️ Destination en cours de création supprimée');
         }
         
         // Attendre un peu pour s'assurer que le DOM est bien nettoyé
@@ -549,16 +526,13 @@ const Destinations = {
      * Ouvrir la recherche d'adresse
      */
     openAddressSearch(index, event) {
-        console.log('🔍 Destinations: openAddressSearch appelé pour index', index);
         this.currentEditIndex = index;
         
-        // Empêcher la propagation du clic
         if (event) {
             event.stopPropagation();
         }
         
         if (window.ChooseAddress) {
-            console.log('✅ ChooseAddress disponible, ouverture de la popup');
             window.ChooseAddress.show((selectedAddress) => {
                 this.selectAddress(selectedAddress, index);
             });
@@ -591,9 +565,6 @@ const Destinations = {
      * Supprimer une destination
      */
     async deleteDestination(index) {
-        console.log('🔧 deleteDestination() appelée avec index:', index);
-        
-        // Récupérer la destination AVANT cancelCreation pour l'ID
         const destinationsBefore = window.firebaseService.getDestinationsOfCurrentItinerary();
         const destination = destinationsBefore[index];
         
@@ -602,35 +573,24 @@ const Destinations = {
             return;
         }
 
-        // Scroll vers la destination
         this.scrollToDestination(index);
         
-        // Si déjà en cours de suppression, ignorer
         if (this.isDeleting) {
-            console.log('🚫 Suppression déjà en cours, ignore le clic');
             return;
         }
                 
-        // Marquer comme en cours de suppression
         this.isDeleting = true;
         
-        // Trouver le bouton de suppression et le mettre en loading (AVANT cancelCreation)
         const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
         if (deleteButton) {
             deleteButton.disabled = true;
             deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
         
-        // Annuler d'abord toute création en cours
         await this.cancelCreation();
         
-        console.log('🔍 Après cancelCreation, récupération des destinations...');
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        console.log('🔍 destinations après cancelCreation:', destinations.length, destinations.map(d => ({id: d.id, name: d.name})));
-        
-        // Récupérer à nouveau la destination (l'index a peut-être changé)
         const updatedDestination = destinations.find(d => d.id === destination.id);
-        console.log('🔍 destination trouvée par ID:', updatedDestination);
         
         if (!updatedDestination) {
             console.error('❌ Destination non trouvée après cancelCreation');
@@ -639,13 +599,10 @@ const Destinations = {
         }
         
         if (!updatedDestination.id) {
-            console.log('ℹ️ Destination sans ID (création en cours), suppression simple');
-            // Supprimer la card du DOM sans passer par Firebase
             const card = document.getElementById(`destination-${index}`);
             if (card) {
                 card.remove();
             }
-            // Mettre à jour la visibilité du bouton "Ajouter"
             this.updateAddDestinationButtonVisibility();
             this.isDeleting = false;
             return;
@@ -665,12 +622,10 @@ const Destinations = {
             );
             
             if (success) {
-                console.log('✅ Destination supprimée:', destination);
+                console.log('✅ Destination supprimée');
                 
-                // Recharger les destinations
                 await this.loadDestinations();
                 
-                // Nettoyer la carte
                 if (window.MapInstance && window.MapInstance.cleanMap) {
                     window.MapInstance.cleanMap();
                 }
@@ -700,8 +655,6 @@ const Destinations = {
      * Mettre à jour les ordres après suppression d'une destination
      */
     async updateOrdersAfterDeletion(deletedOrder) {
-        console.log('🔧 Mise à jour des ordres après suppression de order:', deletedOrder);
-        
         try {
             // Récupérer l'itinéraire actuel
             const itineraries = window.firebaseService.itineraries;
@@ -720,10 +673,9 @@ const Destinations = {
                 }
             });
             
-            // Mettre à jour l'itinéraire complet en une seule fois
             await window.firebaseService.updateItinerary(currentItinerary);
             
-            console.log('✅ Ordres mis à jour avec succès');
+            console.log('✅ Ordres mis à jour');
             
         } catch (error) {
             console.error('❌ Erreur lors de la mise à jour des ordres:', error);

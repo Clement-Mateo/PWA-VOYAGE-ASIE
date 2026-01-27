@@ -38,10 +38,7 @@ const Login = {
 
     // Initialisation du composant
     init() {
-        console.log('Login.init() appelé');
-        
         if (this.isInitialized) {
-            console.log('Login déjà initialisé');
             return;
         }
         
@@ -56,7 +53,6 @@ const Login = {
         container.innerHTML = this.template;
         this.setupEventListeners();
         this.isInitialized = true;
-        console.log('Login initialisé avec succès');
     },
 
     // Configuration des écouteurs d'événements
@@ -71,14 +67,10 @@ const Login = {
         if (loginPassword) loginPassword.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.login();
         });
-
-        console.log('Écouteurs d\'événements Login configurés');
     },
 
     // Afficher la page de connexion
     show() {
-        console.log('Login.show() appelé');
-        
         if (!this.isInitialized) {
             this.init();
         }
@@ -99,7 +91,6 @@ const Login = {
 
     // Masquer la page de connexion
     hide() {
-        console.log('Login.hide() appelé');
         
         const container = document.getElementById('loginContainerWrapper');
         if (container) {
@@ -115,7 +106,6 @@ const Login = {
 
     // Aller à la page d'inscription
     goToRegister() {
-        console.log('Aller à la page d\'inscription');
         
         // Masquer la page de connexion
         this.hide();
@@ -130,7 +120,6 @@ const Login = {
 
     // Aller à la page de réinitialisation
     goToResetPassword() {
-        console.log('Aller à la page de réinitialisation');
         
         // Masquer la page de connexion
         this.hide();
@@ -148,8 +137,6 @@ const Login = {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
-        console.log('Tentative de connexion avec:', email);
-        
         if (!email || !password) {
             showErrorSnackBar('Veuillez remplir tous les champs');
             return;
@@ -163,11 +150,10 @@ const Login = {
         try {
             // Utiliser firebaseService pour la connexion
             if (window.firebaseService) {
-                console.log('Appel de firebaseService.signIn...');
                 const user = await window.firebaseService.signIn(email, password);
                 
                 if (user) {
-                    console.log('Connexion réussie:', user.email);
+                    console.log('✅ Connexion réussie');
                     
                     // Masquer la page de connexion
                     this.hide();

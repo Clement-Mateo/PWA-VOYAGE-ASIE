@@ -5,7 +5,6 @@ const Settings = {
      * Initialiser le composant Settings
      */
     init() {
-        console.log('Settings: Initialisation...');
         this.createModal();
     },
     
@@ -162,7 +161,6 @@ const Settings = {
      * Ouvrir la modal Settings
      */
     open() {
-        console.log('Settings: Ouverture de la modal');
         this.isOpen = true;
         const modal = document.getElementById('settingsModal');
         if (modal) {
@@ -176,7 +174,6 @@ const Settings = {
      * Fermer la modal Settings
      */
     close() {
-        console.log('Settings: Fermeture de la modal');
         this.isOpen = false;
         const modal = document.getElementById('settingsModal');
         if (modal) {
@@ -236,8 +233,6 @@ const Settings = {
      * Changer le style de carte
      */
     changeMapStyle(styleName) {
-        console.log('Settings: Changement de style vers', styleName);
-        
         if (window.MapInstance && window.MapInstance.changeMapStyle) {
             window.MapInstance.changeMapStyle(styleName);
             // Le message de succès est maintenant géré par LeafletMap
