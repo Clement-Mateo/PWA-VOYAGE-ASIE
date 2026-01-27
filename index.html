@@ -26,7 +26,7 @@
           crossorigin=""/>
     
     <!-- Styles globaux -->
-    <link rel="stylesheet" href="styles/loading.css">
+    <link rel="stylesheet" href="components/LoadingAnimation/LoadingAnimation.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles/buttons.css">
     <link rel="stylesheet" href="styles/form.css">
@@ -46,9 +46,12 @@
     <div id="map"></div>
     
     <!-- Overlay de loading global -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <img src="favicon.svg" alt="Loading" class="loading-favicon">
+<div class="loading-overlay" id="loadingOverlay">
+    <img src="" alt="Loading" class="loading-animation" id="loadingAnimation">
+    <div class="loading-content">
+        <!-- Contenu futur (texte, boutons, etc.) apparaîtra ici -->
     </div>
+</div>
     
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -140,6 +143,9 @@
     
     <!-- Services Utilitaires -->
     <script src="serviceUtil.js"></script>
+    
+    <!-- Loading Animation -->
+    <script src="components/LoadingAnimation/LoadingAnimation.js"></script>
     
     <!-- Composant Sidebar (contient désormais Settings) -->
     <link rel="stylesheet" href="components/Sidebar/sidebar.css">
