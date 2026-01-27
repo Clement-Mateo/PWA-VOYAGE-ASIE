@@ -3,7 +3,7 @@ const Synthèse = {
      * Initialiser le composant Synthèse
      */
     init() {
-        console.log('Synthèse: Initialisation...');
+        // Initialisation silencieuse
     },
     
     /**

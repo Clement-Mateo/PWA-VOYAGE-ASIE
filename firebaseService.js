@@ -20,12 +20,6 @@ class FirebaseService {
             throw new Error('Firebase non disponible');
         }
         
-        console.log('🔍 Disponibilité des fonctions Firebase:');
-        console.log('- deleteDoc:', typeof window.firebase.deleteDoc);
-        console.log('- doc:', typeof window.firebase.doc);
-        console.log('- getDoc:', typeof window.firebase.getDoc);
-        console.log('- updateDoc:', typeof window.firebase.updateDoc);
-        
         return {
             doc: window.firebase.doc,
             getDoc: window.firebase.getDoc,
@@ -63,24 +57,22 @@ class FirebaseService {
             this.db = window.firebase.getFirestore(app);
             this.auth = window.firebase.getAuth(app);
             
-            // Activer la persistance de session (Firebase Auth est persistant par défaut)
-            // Firebase Auth v12 maintient automatiquement la session
-            console.log('✅ Persistance de session Firebase activée (par défaut)');
-            
             // Configurer l'observateur d'authentification pour détecter la session existante
             this.auth.onAuthStateChanged((user) => {
                 this.user = user;
-                if (user) {
-                    console.log('✅ Utilisateur connecté automatiquement:', user.email);
-                    window.updateUserPanel();
-                } else {
-                    console.log('🔒 Utilisateur déconnecté');
-                    window.updateUserPanel();
-                }
+                console.log(user ? `✅ Utilisateur connecté: ${user.email}` : '🔒 Utilisateur déconnecté');
+                
+                // Déclencher un événement personnalisé pour notifier que l'auth est prête
+                window.dispatchEvent(new CustomEvent('firebaseAuthReady', { 
+                    detail: { 
+                        user: user,
+                        isAuthenticated: !!user 
+                    } 
+                }));
             });
             
             this.isInitialized = true;
-            console.log('Firebase v12 initialisé avec succès');
+            console.log('✅ Firebase initialisé');
         } catch (error) {
             console.error('Erreur initialisation Firebase:', error);
         }
@@ -96,15 +88,14 @@ class FirebaseService {
         }
         
         try {
-            console.log('Tentative de connexion avec:', email);
             const result = await window.firebase.signInWithEmailAndPassword(this.auth, email, password);
             this.user = result.user;
-            console.log('Utilisateur connecté:', this.user.email);
+            console.log('✅ Utilisateur connecté:', this.user.email);
+            
             return this.user;
         } catch (error) {
-            console.error('Erreur connexion:', error);
-            console.error('Error code:', error.code);
-            console.error('Error message:', error.message);
+            console.error('Erreur connexion:', error.message);
+            hideLoading(); // Cacher le loading en cas d'échec
             return null;
         }
     }
@@ -119,16 +110,13 @@ class FirebaseService {
         }
         
         try {
-            console.log('Tentative d\'inscription avec:', email);
             const result = await window.firebase.createUserWithEmailAndPassword(this.auth, email, password);
             this.user = result.user;
-            console.log('Compte créé:', this.user.email);
+            console.log('✅ Compte créé');
             return this.user;
         } catch (error) {
-            console.error('Erreur création compte:', error);
-            console.error('Error code:', error.code);
-            console.error('Error message:', error.message);
-            throw error; // Propager l'erreur pour que Register.js puisse la traiter
+            console.error('Erreur inscription:', error.message);
+            return null;
         }
     }
 
@@ -142,8 +130,12 @@ class FirebaseService {
             await window.firebase.signOut(this.auth);
             this.user = null;
             console.log('Déconnecté');
+            
+            // Appeler updateUserPanel après déconnexion
+            await window.updateUserPanel();
         } catch (error) {
             console.error('Erreur déconnexion:', error);
+            hideLoading(); // Cacher le loading en cas d'échec
         }
     }
 
@@ -157,14 +149,11 @@ class FirebaseService {
         }
         
         try {
-            console.log('Envoi de l\'email de réinitialisation à:', email);
             await window.firebase.sendPasswordResetEmail(this.auth, email);
-            console.log('Email de réinitialisation envoyé avec succès');
+            console.log('✅ Email de réinitialisation envoyé');
             return true;
         } catch (error) {
-            console.error('Erreur envoi email réinitialisation:', error);
-            console.error('Error code:', error.code);
-            console.error('Error message:', error.message);
+            console.error('Erreur envoi email réinitialisation:', error.message);
             return false;
         }
     }
@@ -217,15 +206,17 @@ class FirebaseService {
     /**
      * Créer un itinéraire en base et l'ajouter dans itineraries
      */
-    async createItinerary(name) {
+    async createItinerary(name, manageLoading = true) {
         if (!this.user) {
             console.error('createItinerary: Utilisateur non connecté');
             return null;
         }
         
+        if (manageLoading) {
+            showLoading();
+        }
+        
         try {
-            console.log('Création itinéraire avec name:', name);
-            
             const itinerary = {
                 name: name,
                 userId: this.user.uid,
@@ -255,10 +246,13 @@ class FirebaseService {
                 }
             }
             
-            console.log('✅ Itinéraire créé:', newItinerary);
+            console.log('✅ Itinéraire créé:', name);
             return newItinerary;
         } catch (error) {
             console.error('❌ Erreur création itinéraire:', error);
+            if (manageLoading) {
+                hideLoading();
+            }
             return null;
         }
     }
@@ -280,9 +274,6 @@ class FirebaseService {
             this.itineraries.push(itinerary);
             
             // Mettre à jour en base de données
-            console.log('🔥 updateItinerary: Sauvegarde en BDD de', itinerary.destinations.length, 'destinations');
-            console.log('🔥 updateItinerary: destinations:', itinerary.destinations);
-            
             const itineraryRef = window.firebase.doc(this.db, 'itineraries', itinerary.id);
             await window.firebase.updateDoc(itineraryRef, {
                 name: itinerary.name,
@@ -290,7 +281,7 @@ class FirebaseService {
                 updatedAt: window.firebase.serverTimestamp()
             });
             
-            console.log('✅ Itinéraire mis à jour en mémoire et en BDD:', itinerary.id);
+            console.log('✅ Itinéraire mis à jour');
             return true;
         } catch (error) {
             console.error('Erreur mise à jour itinéraire:', error);
@@ -322,7 +313,7 @@ class FirebaseService {
             const itineraryRef = window.firebase.doc(this.db, 'itineraries', itinerary.id);
             await window.firebase.deleteDoc(itineraryRef);
             
-            console.log('✅ Itinéraire supprimé de la mémoire et de la base:', itinerary.id);
+            console.log('✅ Itinéraire supprimé');
             return true;
         } catch (error) {
             console.error('Erreur suppression itinéraire:', error);
@@ -401,7 +392,12 @@ class FirebaseService {
                 return [];
             }
             
-            return this.getCurrentItinerary().destinations || [];
+            const currentItinerary = this.getCurrentItinerary();
+            if (!currentItinerary) {
+                return [];
+            }
+            
+            return currentItinerary.destinations || [];
         } catch (error) {
             console.error('Erreur récupération destinations itinéraire actuel:', error);
             return [];
@@ -413,29 +409,21 @@ class FirebaseService {
      */
     async addDestination(destination, itinerary) {
         try {
-            console.log('🔥 addDestination appelé pour:', destination.name || 'Nouvelle destination');
-            console.log('🔥 Destination ID:', destination.id);
-            console.log('🔥 Timestamp appel addDestination:', Date.now());
-            
             const foundItinerary = this.getItinerary(itinerary);
             
             if (!foundItinerary) {
-                console.error('addDestination: Itinéraire non trouvé:', itinerary.id);
+                console.error('addDestination: Itinéraire non trouvé');
                 return false;
             }
             
-            // Ajouter la destination à la liste
             if (!foundItinerary.destinations) {
                 foundItinerary.destinations = [];
             }
-            console.log('🔥 Destinations avant ajout:', foundItinerary.destinations.length);
             foundItinerary.destinations.push(destination);
-            console.log('🔥 Destinations après ajout:', foundItinerary.destinations.length);
-            console.log('🔥 Destination ajoutée au tableau local, ID:', destination.id);
             
             // Mettre à jour l'itinéraire avec la nouvelle liste de destinations
-            console.log('🔥 Appel à updateItinerary depuis addDestination');
             this.updateItinerary(foundItinerary);
+            console.log('✅ Destination ajoutée:', destination.name || 'Nouvelle destination');
             return true;
         } catch (error) {
             console.error('Erreur ajout destination:', error);
@@ -575,6 +563,7 @@ class FirebaseService {
             
             // Mettre à jour l'itinéraire avec la nouvelle liste d'activités
             this.updateItinerary(foundItinerary);
+            console.log('✅ Activité ajoutée:', activity.name || 'Nouvelle activité');
             return true;
         } catch (error) {
             console.error('Erreur ajout activité:', error);
@@ -621,6 +610,7 @@ class FirebaseService {
             
             // Mettre à jour l'itinéraire
             this.updateItinerary(foundItinerary);
+            console.log('✅ Activité mise à jour');
             return true;
         } catch (error) {
             console.error('Erreur mise à jour activité:', error);
@@ -662,13 +652,14 @@ class FirebaseService {
             
             foundDestination.activities.splice(index, 1);
             
-            // Mettre à jour l'itinéraire et vérifier le succès
+            // Mettre à jour l'itinéraire
             const updateSuccess = await this.updateItinerary(foundItinerary);
             if (!updateSuccess) {
                 console.error('deleteActivity: Échec de la mise à jour de l\'itinéraire');
                 return false;
             }
             
+            console.log('✅ Activité supprimée');
             return true;
         } catch (error) {
             console.error('Erreur suppression activité:', error);

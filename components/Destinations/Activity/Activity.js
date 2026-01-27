@@ -10,14 +10,11 @@ const Activity = {
 
     // Initialiser le composant
     init() {
-        console.log('Activity initialisé');
-        // Précharger les taux de change
         this.loadExchangeRates();
     },
 
     // Définir la destination actuelle
     setCurrentDestination(destination) {
-        console.log('Destination actuelle définie:', destination);
         this.currentDestination = destination;
     },
 
@@ -27,32 +24,23 @@ const Activity = {
         const now = Date.now();
         
         try {
-            console.log('Chargement des taux de change depuis l\'API...');
-            // Utiliser l'API gratuite exchangerate-api.com (pas de clé API requise)
             const response = await fetch('https://api.exchangerate-api.com/v4/latest/eur');
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Erreur API taux de change');
             }
             
             const data = await response.json();
-            console.log('Réponse brute de l\'API:', data); // Debug pour voir la structure
             
             if (data.rates) {
                 this.exchangeRatesCache = data.rates;
                 this.exchangeRatesCacheTime = now;
-                console.log('Taux de change chargés:', this.exchangeRatesCache);
             } else if (data.conversion_rates) {
-                // Alternative : certains API utilisent conversion_rates
                 this.exchangeRatesCache = data.conversion_rates;
                 this.exchangeRatesCacheTime = now;
-                console.log('Taux de change chargés (conversion_rates):', this.exchangeRatesCache);
             } else {
-                // Si aucun format connu, essayer d'extraire les taux directement
-                console.log('Structure de la réponse:', Object.keys(data));
                 this.exchangeRatesCache = data;
                 this.exchangeRatesCacheTime = now;
-                console.log('Taux de change chargés (fallback):', this.exchangeRatesCache);
             }
         } catch (error) {
             console.error('Erreur lors du chargement des taux de change:', error);
@@ -70,26 +58,16 @@ const Activity = {
 
     // Obtenir la devise locale en fonction du pays de la destination
     async getLocalCurrency() {
-
-        console.log('this.currentDestination.address:', this.currentDestination.address);
-        console.log('this.currentDestination.address.country:', this.currentDestination.address.country);
-
-        // Utiliser le pays stocké dans address.country
         if (this.currentDestination.address && this.currentDestination.address.country) {
             const country = this.currentDestination.address.country;
-            console.log('✅ Utilisation du pays stocké dans address.country:', country);
             return this.getCountryCurrency(country);
         }
-
-        console.log('❌ Impossible de détecter le pays, utilisation de EUR par défaut');
+        
         return { code: 'EUR', name: 'EUR' };
     },
 
     // Obtenir la devise pour un pays donné (via API REST Countries)
     async getCountryCurrency(country) {
-        console.log('🔍 Recherche de devise pour le pays:', country);
-        
-        // Mapping de secours pour les pays non disponibles dans REST Countries
         const fallbackMapping = {
             'North Korea': 'KPW',
             'South Korea': 'KRW',
@@ -109,64 +87,41 @@ const Activity = {
             }
             
             const data = await response.json();
-            console.log('🔍 Réponse brute de REST Countries:', data);
             
             if (data && data.length > 0 && data[0].currencies) {
                 const currencies = data[0].currencies;
                 
-                // Structure: {KPW: {name: "North Korean won"}}
                 const currencyCodes = Object.keys(currencies);
                 if (currencyCodes.length > 0) {
                     const firstCode = currencyCodes[0];
-                    const currency = {
+                    return { 
                         code: firstCode,
                         name: currencies[firstCode].name || firstCode
-                    };
-                    
-                    console.log(`✅ Devise trouvée via API: ${country} -> ${currency.code} (${currency.name})`);
-                    return { 
-                        code: currency.code, 
-                        name: currency.name 
                     };
                 }
             }
             
-            // Si l'API ne trouve pas le pays, essayer le mapping de secours
             if (fallbackMapping[country]) {
                 const currencyCode = fallbackMapping[country];
-                console.log(`✅ Devise trouvée via fallback: ${country} -> ${currencyCode}`);
                 return { 
                     code: currencyCode, 
                     name: currencyCode 
                 };
             }
-            
-            console.log(`❌ Aucune devise trouvée pour: ${country}, utilisation de EUR`);
-            console.log('Structure de la réponse:', data ? {
-                hasData: !!data,
-                isArray: Array.isArray(data),
-                length: data?.length,
-                firstItem: data?.[0],
-                hasCurrencies: !!data?.[0]?.currencies,
-                currenciesLength: data?.[0]?.currencies?.length
-            } : 'null');
             
             return { code: 'EUR', name: 'EUR' };
             
         } catch (error) {
             console.error('❌ Erreur lors de la recherche de devise:', error);
             
-            // En cas d'erreur API, essayer le mapping de secours
             if (fallbackMapping[country]) {
                 const currencyCode = fallbackMapping[country];
-                console.log(`✅ Devise trouvée via fallback (erreur API): ${country} -> ${currencyCode}`);
                 return { 
                     code: currencyCode, 
                     name: currencyCode 
                 };
             }
             
-            console.log(`🔄 Utilisation de EUR par défaut pour: ${country}`);
             return { code: 'EUR', name: 'EUR' };
         }
     },
@@ -186,9 +141,7 @@ const Activity = {
             const data = await response.json();
             
             if (data && data.address && data.address.country) {
-                const countryName = data.address.country;
-                console.log(`🌍 Pays retourné par l'API (anglais forcé): ${countryName}`);
-                return countryName;
+                return data.address.country;
             }
             
             return null;
@@ -201,7 +154,6 @@ const Activity = {
     // Mettre à jour le tableau de mapping avec un nouveau pays
     updateCountryMapping(countryName) {
         // Cette méthode n'est plus nécessaire avec l'API anglaise
-        console.log(`🌍 Mapping existant pour: ${countryName}`);
     },
 
     // Convertir les euros en devise locale
@@ -293,7 +245,6 @@ const Activity = {
             const label = popup.querySelector('label[for="localCurrency"]');
             if (label) {
                 label.textContent = `Prix (${localCurrency.name})`;
-                console.log(`🏷️ Label mis à jour: Prix (${localCurrency.name})`);
             }
             
             // Masquer uniquement le champ de devise locale, garder le champ €
@@ -497,12 +448,7 @@ const Activity = {
         if (localCurrencyInfo.code !== 'EUR') {
             activity.localCurrency = parseFloat(localCurrency) || 0;
             activity.localCurrencyCode = localCurrencyInfo.code;
-            console.log('🔍 Activité (devise étrangère) - structure complète:', activity);
-        } else {
-            console.log('🔍 Activité (EUR) - structure simplifiée:', activity);
         }
-
-        console.log('🔍 activity à sauvegarder:', activity);
 
         // Récupérer l'itinéraire actuel
         const itineraries = window.firebaseService.itineraries;

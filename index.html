@@ -114,19 +114,22 @@
         // Initialiser notre service Firebase
         console.log('Modules Firebase chargés, initialisation du service...');
         if (window.firebaseService) {
+            // Afficher le loading global au démarrage
+            showLoading();
+            
             window.firebaseService.initialize();
+            
+            // Écouter l'événement d'authentification prête
+            window.addEventListener('firebaseAuthReady', async (event) => {
+                console.log('🔥 Événement firebaseAuthReady reçu');
+                
+                // Appeler updateUserPanel quand l'auth est prête
+                if (window.updateUserPanel) {
+                    await window.updateUserPanel();
+                }
+            });
         }
         
-        // Test de configuration Firebase
-        setTimeout(() => {
-            console.log('=== TEST CONFIGURATION FIREBASE ===');
-            console.log('Firebase disponible:', typeof window.firebase !== 'undefined');
-            console.log('Service initialisé:', window.firebaseService.isInitialized);
-            console.log('Auth disponible:', typeof window.firebase.auth !== 'undefined');
-            console.log('getDoc disponible:', typeof window.firebase.getDoc !== 'undefined');
-            console.log('User connecté:', window.firebaseService.isAuthenticated());
-            console.log('=====================================');
-        }, 2000);
     </script>
     
     <!-- Service Worker Registration -->
@@ -134,7 +137,7 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => console.log('Service Worker enregistré'))
-                .catch(error => console.log('Service Worker erreur:', error));
+                .catch(error => console.error('Service Worker erreur:', error));
         }
     </script>
     
@@ -200,16 +203,20 @@
         
         // Initialiser les composants quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOM prêt, initialisation des composants...');
+            console.log('🚀 Démarrage de l\'application...');
             
             // Initialiser Login
             if (window.Login) {
                 window.Login.init();
+            } else {
+                console.error('❌ Login non trouvé');
             }
 
             // Initialiser Settings
             if (window.Settings) {
                 window.Settings.init();
+            } else {
+                console.error('❌ Settings non trouvé');
             }
 
             // Initialiser LeafletMap
@@ -218,7 +225,9 @@
                 mapInstance.init();
                 mapInstance.exportForLegacy();
                 window.MapInstance = mapInstance;
-                console.log('✅ LeafletMap initialisée et exportée pour compatibilité');
+                console.log('✅ LeafletMap initialisée');
+            } else {
+                console.error('❌ LeafletMap non trouvé');
             }
             
             await ComponentManager.initAll();
@@ -244,9 +253,7 @@
                 window.firebaseService.signOut()
                     .then(() => {
                         console.log('Déconnexion réussie');
-                        if (window.updateUserPanel) {
-                            window.updateUserPanel();
-                        }
+                        // updateUserPanel est déjà appelé dans signOut()
                     })
                     .catch((error) => {
                         console.error('Erreur de déconnexion:', error);
@@ -260,35 +267,34 @@
         async function updateUserPanel() {
             if (window.firebaseService.isAuthenticated()) {
                 // Utilisateur connecté
-                console.log('✅ Utilisateur connecté - Mise à jour de l\'interface');
+                console.log('✅ Utilisateur connecté');
                 
                 // Masquer la page de connexion
                 if (window.Login) {
                     window.Login.hide();
+                } else {
+                    console.error('❌ Login non trouvé');
                 }
 
                 // Charger les itinéraires d'abord
                 await window.firebaseService.getItineraries();
                 
                 // Créer un itinéraire si aucun n'existe
+                let newItinerary = null;
                 if (window.firebaseService.itineraries.length === 0) {
-                    const newItinerary = await window.firebaseService.createItinerary('Mon itinéraire');
-                    if (newItinerary && window.Itineraries) {
-                        await window.Itineraries.setActiveItinerary(newItinerary.id);
-                    }
+                    newItinerary = await window.firebaseService.createItinerary('Mon itinéraire', false);
                 }
 
                 // Initialiser le sidebar maintenant que les itinéraires sont chargés
                 if (window.Sidebar) {
                     window.Sidebar.init();
+                } else {
+                    console.error('❌ Sidebar non trouvé');
                 }
 
-                // Initialiser Itineraries maintenant que les itinéraires sont chargés
-                if (window.Itineraries) {
-                    console.log('✅ Itineraries trouvé, initialisation...');
-                    // Le composant Itineraries s'initialise automatiquement dans son constructeur
-                } else {
-                    console.error('❌ Itineraries non trouvé');
+                // Activer le premier itinéraire créé si nécessaire
+                if (newItinerary && window.Itineraries) {
+                    await window.Itineraries.setActiveItinerary(newItinerary.id, false);
                 }
 
                 // Charger les destinations (attendre que tout soit terminé)
@@ -301,10 +307,7 @@
                 
                 // Initialiser ChooseAddress
                 if (window.ChooseAddress) {
-                    console.log('✅ ChooseAddress trouvé, initialisation...');
                     window.ChooseAddress.init();
-                } else {
-                    console.error('❌ ChooseAddress non trouvé');
                 }
 
                 // Initialiser Activity
@@ -316,14 +319,15 @@
                 if (window.MapInstance) {
                     window.MapInstance.show();
                 }
-
             } else {
                 // Utilisateur déconnecté
-                console.log('🔒 Utilisateur déconnecté - Affichage de la page de connexion');
+                console.log('🔒 Utilisateur déconnecté');
                 
                 // Afficher la page de connexion
                 if (window.Login) {
                     window.Login.show();
+                } else {
+                    console.error('❌ Login non trouvé');
                 }
                 
                 // Effacer les marqueurs lors de la déconnexion
@@ -335,8 +339,13 @@
                 // Masquer la carte
                 if (window.MapInstance) {
                     window.MapInstance.hide();
+                } else {
+                    console.error('❌ MapInstance non trouvé');
                 }
             }
+
+            // Cacher le loading global pour la déconnexion
+            hideLoading();
         }
         
         // Écouter les changements de connexion

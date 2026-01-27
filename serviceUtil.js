@@ -141,19 +141,15 @@ window.showInfoSnackBar = showInfoSnackBar;
  * Affiche l'overlay de loading global
  */
 function showLoading() {
-    console.log('🔄 showLoading() appelé');
+    console.log('GLOBAL LOADING : ON');
+
     const overlay = document.getElementById('loadingOverlay');
     const body = document.body;
-    
-    console.log('🔍 Overlay trouvé:', !!overlay);
     
     if (overlay) {
         // Ajouter les classes seulement si elles ne sont pas déjà présentes
         if (!overlay.classList.contains('active')) {
             overlay.classList.add('active');
-            console.log('✅ Overlay activé avec classe "active"');
-        } else {
-            console.log('ℹ️ Overlay déjà activé');
         }
         
         if (!body.classList.contains('loading-active')) {
@@ -168,7 +164,8 @@ function showLoading() {
  * Masque l'overlay de loading global
  */
 function hideLoading() {
-    console.log('🔄 hideLoading() appelé');
+    console.log('GLOBAL LOADING : OFF');
+
     const overlay = document.getElementById('loadingOverlay');
     const body = document.body;
     
@@ -176,9 +173,6 @@ function hideLoading() {
         // Supprimer les classes seulement si elles sont présentes
         if (overlay.classList.contains('active')) {
             overlay.classList.remove('active');
-            console.log('✅ Overlay désactivé');
-        } else {
-            console.log('ℹ️ Overlay déjà désactivé');
         }
         
         if (body.classList.contains('loading-active')) {

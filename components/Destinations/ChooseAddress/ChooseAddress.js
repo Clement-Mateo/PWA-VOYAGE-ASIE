@@ -13,7 +13,6 @@ const ChooseAddress = {
      * Initialiser le composant
      */
     init() {
-        console.log('ChooseAddress: Initialisation...');
         this.setupEventListeners();
     },
     
@@ -45,7 +44,6 @@ const ChooseAddress = {
      * Afficher la popup
      */
     show(callback) {
-        console.log('🔍 ChooseAddress.show appelé avec callback:', callback);
         this.currentCallback = callback;
         this.isVisible = true;
         
@@ -58,7 +56,6 @@ const ChooseAddress = {
             const searchInput = document.getElementById('addressSearchInput');
             if (searchInput) {
                 searchInput.focus();
-                console.log('🔍 Focus sur le champ de recherche');
             }
         }, 100);
     },
@@ -85,7 +82,6 @@ const ChooseAddress = {
         
         // Réinitialiser (après la sélection potentielle)
         setTimeout(() => {
-            console.log('🔍 Réinitialisation de searchResults et currentCallback');
             this.searchResults = [];
             this.currentCallback = null;
         }, 100);
@@ -98,10 +94,8 @@ const ChooseAddress = {
         let popup = document.getElementById('chooseAddressPopup');
         
         if (!popup) {
-            console.log('🔍 Création de la popup...');
             popup = this.createPopup();
             document.body.appendChild(popup);
-            console.log('🔍 Popup créée et ajoutée au body');
         }
         return popup;
     },
@@ -149,9 +143,7 @@ const ChooseAddress = {
         
         this.searchTimeout = setTimeout(async () => {
             try {
-                console.log('🔍 Recherche de:', query);
                 const results = await this.performSearch(query);
-                console.log('✅ Résultats trouvés:', results);
                 this.showResults(results);
             } catch (error) {
                 console.error('❌ Erreur de recherche:', error);
@@ -177,13 +169,9 @@ const ChooseAddress = {
             const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             
             if (isProduction) {
-                // En production : utiliser une URL relative (fonctionne avec le domaine actuel)
                 url = `/api/places-search?query=${encodeURIComponent(query)}`;
-                console.log('🌐 Mode production - URL relative:', url);
             } else {
-                // En local : tester l'URL absolue de production
                 url = `https://pwa-voyage-asie.vercel.app/api/places-search?query=${encodeURIComponent(query)}`;
-                console.log('🏠 Mode local - URL absolue:', url);
             }
             
             try {
@@ -440,9 +428,7 @@ const ChooseAddress = {
      * Afficher les résultats de recherche
      */
     showResults(results) {
-        console.log('🔍 showResults appelé avec', results.length, 'résultats');
         this.searchResults = results;
-        console.log('🔍 searchResults mis à jour:', this.searchResults.length);
         
         const resultsContainer = document.getElementById('addressResults');
         
@@ -481,25 +467,18 @@ const ChooseAddress = {
      * Sélectionner une adresse
      */
     async selectAddress(index) {
-        console.log('🔍 ChooseAddress.selectAddress appelé avec index:', index);
-        console.log('🔍 searchResults disponibles:', this.searchResults.length);
-        
         const result = this.searchResults[index];
         
         if (!result) {
-            console.error('❌ Aucun résultat trouvé pour l\'index', index);
+            console.error('❌ Résultat non trouvé à l\'index:', index);
             return;
         }
-        
-        console.log('🔍 Résultat sélectionné:', result);
         
         // Si nous n'avons pas les coordonnées, les récupérer
         if (!result.location) {
             try {
-                console.log('🔍 Récupération des coordonnées pour placeId:', result.placeId);
                 const detailedResult = await this.getPlaceDetails(result.placeId);
                 result.location = detailedResult.location;
-                console.log('✅ Coordonnées récupérées:', result.location);
             } catch (error) {
                 console.error('❌ Erreur récupération détails:', error);
             }
@@ -507,7 +486,6 @@ const ChooseAddress = {
         
         // Appeler le callback avec l'adresse sélectionnée
         if (this.currentCallback) {
-            console.log('🔍 Appel du callback avec:', result);
             this.currentCallback(result);
         } else {
             console.error('❌ Aucun callback défini');

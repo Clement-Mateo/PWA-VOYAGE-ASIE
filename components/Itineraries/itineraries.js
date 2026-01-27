@@ -107,6 +107,11 @@ class Itineraries {
      */
     renderItineraries() {
         const listContainer = document.getElementById('itinerariesList');
+        
+        if (!listContainer) {
+            return;
+        }
+        
         const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
         
         if (!itineraries || itineraries.length === 0) {
@@ -129,6 +134,11 @@ class Itineraries {
      */
     renderEmptyState() {
         const listContainer = document.getElementById('itinerariesList');
+        
+        if (!listContainer) {
+            return;
+        }
+        
         listContainer.innerHTML = `
             <div class="empty-state">
                 <span class="material-icons empty-icon">route</span>
@@ -226,7 +236,7 @@ class Itineraries {
             // Créer l'itinéraire via firebaseService
             if (window.firebaseService && window.firebaseService.createItinerary) {
                 const newItinerary = await window.firebaseService.createItinerary(itineraryName);
-                
+                    
                 if (newItinerary) {
                     // Utiliser setActiveItinerary pour une mise à jour complète avec loading
                     await this.setActiveItinerary(newItinerary.id);
@@ -469,7 +479,7 @@ class Itineraries {
     /**
      * Rendre un itinéraire actif
      */
-    async setActiveItinerary(itineraryId) {
+    async setActiveItinerary(itineraryId, manageLoading = true) {
         try {
             // Ne pas activer si une carte est en mode édition
             if (this.editingItineraryId) {
@@ -477,21 +487,27 @@ class Itineraries {
                 return;
             }
 
-            // Afficher le loading
-            window.showLoading();
+            // Gérer le loading si demandé
+            if (manageLoading) {
+                window.showLoading();
+            }
 
             const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
             const targetItinerary = itineraries.find(i => i.id === itineraryId);
             
             if (!targetItinerary) {
                 console.error('setActiveItinerary: Itinéraire non trouvé:', itineraryId);
-                window.hideLoading();
+                if (manageLoading) {
+                    window.hideLoading();
+                }
                 return;
             }
 
             // Si l'itinéraire est déjà actif, ne rien faire
             if (targetItinerary.active === true) {
-                window.hideLoading();
+                if (manageLoading) {
+                    window.hideLoading();
+                }
                 return;
             }
 
@@ -530,8 +546,10 @@ class Itineraries {
             console.error('Erreur activation itinéraire:', error);
             showErrorSnackBar('Erreur lors de l\'activation de l\'itinéraire');
         } finally {
-            // Masquer le loading dans tous les cas
-            window.hideLoading();
+            // Masquer le loading si géré
+            if (manageLoading) {
+                window.hideLoading();
+            }
         }
     }
 
