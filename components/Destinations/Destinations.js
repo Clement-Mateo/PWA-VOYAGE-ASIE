@@ -163,9 +163,9 @@ const Destinations = {
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
-                    <div class="address-input-container flex-center">
+                    <div class="address-input-container flex-center" onclick="Destinations.openAddressSearch(${index}, event)">
                         <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
-                        <button class="btn-icon address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
+                        <button class="btn-icon address-search-btn">
                             <span class="material-icons">search</span>
                         </button>
                     </div>
