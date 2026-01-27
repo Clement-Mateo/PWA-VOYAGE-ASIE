@@ -242,85 +242,14 @@ const ChooseAddress = {
         }
     },
     
+    // Importer les traductions depuis le fichier séparé
+// Note: placeTypesTranslations.js doit être chargé avant ce fichier
+
     // Fonction pour obtenir la traduction française du type
     getFrenchType(type) {
-        const translations = {
-            'restaurant': 'Restaurant',
-            'food': 'Restaurant',
-            'cafe': 'Café',
-            'bakery': 'Boulangerie',
-            'bar': 'Bar',
-            'night_club': 'Boîte de nuit',
-            'store': 'Magasin',
-            'shopping_mall': 'Centre commercial',
-            'supermarket': 'Supermarché',
-            'pharmacy': 'Pharmacie',
-            'hospital': 'Hôpital',
-            'doctor': 'Médecin',
-            'school': 'École',
-            'university': 'Université',
-            'library': 'Bibliothèque',
-            'bank': 'Banque',
-            'atm': 'DAB',
-            'gas_station': 'Station-service',
-            'parking': 'Parking',
-            'airport': 'Aéroport',
-            'train_station': 'Gare',
-            'bus_station': 'Gare routière',
-            'subway_station': 'Station de métro',
-            'hotel': 'Hôtel',
-            'lodging': 'Hébergement',
-            'museum': 'Musée',
-            'art_gallery': 'Galerie d\'art',
-            'movie_theater': 'Cinéma',
-            'gym': 'Salle de sport',
-            'spa': 'Spa',
-            'park': 'Parc',
-            'stadium': 'Stade',
-            'church': 'Église',
-            'mosque': 'Mosquée',
-            'hindu_temple': 'Temple hindou',
-            'synagogue': 'Synagogue',
-            'government': 'Gouvernement',
-            'post_office': 'Bureau de poste',
-            'police': 'Police',
-            'fire_station': 'Pompier',
-            'embassy': 'Ambassade',
-            'tourist_attraction': 'Attraction touristique',
-            'point_of_interest': 'Lieu d\'intérêt',
-            'establishment': 'Établissement',
-            'generic_business': 'Entreprise',
-            'finance': 'Finance',
-            'insurance': 'Assurance',
-            'lawyer': 'Avocat',
-            'real_estate': 'Immobilier',
-            'travel_agency': 'Agence de voyages',
-            'car_rental': 'Location de voiture',
-            'taxi_stand': 'Station de taxi',
-            'car_repair': 'Garage',
-            'beauty_salon': 'Salon de beauté',
-            'hair_care': 'Coiffeur',
-            'electronics_store': 'Magasin d\'électronique',
-            'clothing_store': 'Magasin de vêtements',
-            'furniture_store': 'Magasin de meubles',
-            'hardware_store': 'Quincaillerie',
-            'pet_store': 'Animalerie',
-            'florist': 'Fleuriste',
-            'book_store': 'Librairie',
-            'music_store': 'Magasin de musique',
-            'toy_store': 'Magasin de jouets',
-            'jewelry_store': 'Bijouterie',
-            'liquor_store': 'Cave',
-            'convenience_store': 'Supérette',
-            'grocery_or_supermarket': 'Épicerie',
-            'health': 'Santé',
-            'medical': 'Médical',
-            'fitness': 'Fitness',
-            'sports': 'Sports',
-            'recreation': 'Loisirs'
-        };
-        
-        return translations[type] || type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+        return window.PlaceTypeTranslations ? 
+            window.PlaceTypeTranslations.getFrenchType(type) : 
+            type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
     },
 
     // Fonction pour obtenir l'icône Google Font en fonction du type
