@@ -18,3 +18,331 @@
     line-height: 1.5;
     color: var(--font-color-gray);
 }
+
+/* Header avec statistiques */
+.synthese-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 5px;
+}
+
+.synthese-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.stat-card {
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon .material-icons {
+    color: white;
+    font-size: 24px;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--font-color);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--font-color-gray);
+}
+
+/* Section des graphiques */
+.synthese-charts {
+    margin-bottom: 30px;
+}
+
+.chart-section {
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--font-color);
+}
+
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-type-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--background);
+    color: var(--font-color);
+    font-size: 14px;
+}
+
+.chart-config-btn {
+    padding: 8px;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chart-config-btn:hover {
+    background: var(--background-hover);
+}
+
+.chart-config-btn .material-icons {
+    font-size: 18px;
+    color: var(--font-color-gray);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--font-color-gray);
+}
+
+.chart-placeholder-content {
+    text-align: center;
+}
+
+.chart-placeholder-content .material-icons {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.chart-placeholder-content p {
+    margin: 5px 0;
+    font-weight: 500;
+}
+
+.chart-placeholder-content small {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.chart-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-legend {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--font-color-gray);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* Section des détails */
+.synthese-details {
+    margin-bottom: 20px;
+}
+
+.details-section {
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.details-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: var(--font-color);
+}
+
+.activities-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-type-item {
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.activity-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.activity-type-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--font-color);
+}
+
+.activity-count {
+    font-size: 12px;
+    color: var(--font-color-gray);
+    background: var(--background-light);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.activity-type-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.activity-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.activity-stat .stat-label {
+    font-size: 11px;
+    color: var(--font-color-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.activity-stat .stat-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--font-color);
+}
+
+/* Loading et erreurs */
+.synthese-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--font-color-gray);
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color);
+    border-top: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.synthese-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--error-red);
+    text-align: center;
+}
+
+.synthese-error .material-icons {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .synthese-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .chart-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .activity-type-stats {
+        grid-template-columns: 1fr;
+    }
+}

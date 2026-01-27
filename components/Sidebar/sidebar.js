@@ -25,7 +25,7 @@ const Sidebar = {
         
         // Charger le contenu de tous les onglets une seule fois
         this.loadDestinationsContent();
-        this.loadSyntheseContent();
+        this.loadSyntheseContent(); // Créer le conteneur synthèse maintenant
         
         // Initialiser le premier onglet
         this.switchTab('destinations');
@@ -142,12 +142,12 @@ const Sidebar = {
         const container = document.getElementById('sidebar-synthese-content');
         if (!container) return;
         
-        // Vider le conteneur
-        container.innerHTML = '';
+        // Créer le conteneur pour le composant Synthèse
+        container.innerHTML = '<div class="synthese-container"></div>';
         
-        // Intégrer le composant Synthèse
-        if (window.Synthese) {
-            window.Synthese.render(container);
+        // Intégrer le composant Synthèse (vérification explicite pour éviter le falsy object problem)
+        if (window.Synthèse) {
+            window.Synthèse.render();
         } else {
             // Contenu par défaut en attendant le composant
             container.innerHTML = `
