@@ -44,12 +44,10 @@ const Sidebar = {
         container.innerHTML = `
             <!-- En-tête Settings intégré -->
             <div class="sidebar-header">
-                <div class="settings-left">
+                <button class="settings-left settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
                     <h2 class="itinerary-name" id="sidebar-itinerary-name">${this.escapeHtml(itineraryName)}</h2>
-                    <button class="settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
-                        <span class="material-icons">more_vert</span>
-                    </button>
-                </div>
+                    <span class="material-icons">more_vert</span>
+                </button>
                 <div class="settings-right">
                     <button class="settings-btn" onclick="Sidebar.openSettings()" title="Paramètres">
                         <span class="material-icons">settings</span>
