@@ -189,13 +189,6 @@ class FirebaseService {
     }
 
     /**
-     * Retrouver un itinéraire par son ID
-     */
-    getItinerary(itinerary) {
-        return this.itineraries.find(item => item.id === itinerary.id);
-    }
-
-    /**
      * Obtenir l'itinéraire actuel (celui avec active=true)
      */
     getCurrentItinerary() {
@@ -290,6 +283,13 @@ class FirebaseService {
     }
 
     /**
+     * Mettre à jour un itinéraire dans itineraries et en BDD
+     */
+    async updateCurrentItinerary() {
+        return updateItinerary(this.getCurrentItinerary());
+    }
+
+    /**
      * Supprimer un itinéraire de itineraries et de la base
      */
     async deleteItinerary(itinerary) {
@@ -364,25 +364,6 @@ class FirebaseService {
     }
 
     /**
-     * Retourner la liste des destinations d'un itinéraire
-     */
-    getDestinations(itinerary) {
-        try {
-            const foundItinerary = this.getItinerary(itinerary);
-            
-            if (!foundItinerary) {
-                console.error('getDestinations: Itinéraire non trouvé:', itinerary.id);
-                return [];
-            }
-            
-            return foundItinerary.destinations || [];
-        } catch (error) {
-            console.error('Erreur récupération destinations:', error);
-            return [];
-        }
-    }
-
-    /**
      * Récupérer les destinations de l'itinéraire actuel
      */
     getDestinationsOfCurrentItinerary() {
@@ -405,38 +386,11 @@ class FirebaseService {
     }
 
     /**
-     * Ajouter une destination à un itinéraire
-     */
-    async addDestination(destination, itinerary) {
-        try {
-            const foundItinerary = this.getItinerary(itinerary);
-            
-            if (!foundItinerary) {
-                console.error('addDestination: Itinéraire non trouvé');
-                return false;
-            }
-            
-            if (!foundItinerary.destinations) {
-                foundItinerary.destinations = [];
-            }
-            foundItinerary.destinations.push(destination);
-            
-            // Mettre à jour l'itinéraire avec la nouvelle liste de destinations
-            this.updateItinerary(foundItinerary);
-            console.log('✅ Destination ajoutée:', destination.name || 'Nouvelle destination');
-            return true;
-        } catch (error) {
-            console.error('Erreur ajout destination:', error);
-            return false;
-        }
-    }
-
-    /**
      * Mettre à jour une destination dans un itinéraire
      */
-    async updateDestination(destination, itinerary) {
+    async updateDestination(destination) {
         try {
-            const foundItinerary = this.getItinerary(itinerary);
+            const foundItinerary = this.getCurrentItinerary();
             
             if (!foundItinerary) {
                 console.error('updateDestination: Itinéraire non trouvé:', itinerary.id);
@@ -462,8 +416,7 @@ class FirebaseService {
             foundItinerary.destinations.push(destination);
             
             // Mettre à jour l'itinéraire
-            this.updateItinerary(foundItinerary);
-            return true;
+            return await this.updateCurrentItinerary();;
         } catch (error) {
             console.error('Erreur mise à jour destination:', error);
             return false;
@@ -473,9 +426,9 @@ class FirebaseService {
     /**
      * Supprimer une destination d'un itinéraire
      */
-    async deleteDestination(destination, itinerary) {
+    async deleteDestination(destination) {
         try {
-            const foundItinerary = this.getItinerary(itinerary);
+            const foundItinerary = this.getCurrentItinerary();
             
             if (!foundItinerary) {
                 console.error('deleteDestination: Itinéraire non trouvé:', itinerary.id);
@@ -498,8 +451,7 @@ class FirebaseService {
             foundItinerary.destinations.splice(index, 1);
             
             // Mettre à jour l'itinéraire
-            this.updateItinerary(foundItinerary);
-            return true;
+            return await this.updateCurrentItinerary();;
         } catch (error) {
             console.error('Erreur suppression destination:', error);
             return false;
@@ -509,20 +461,16 @@ class FirebaseService {
     /**
      * Retrouver une destination dans un itinéraire
      */
-    getDestination(destination, itinerary) {
-        const foundItinerary = this.getItinerary(itinerary);
-        if (!foundItinerary || !foundItinerary.destinations) {
-            return null;
-        }
-        return foundItinerary.destinations.find(dest => dest.id === destination.id);
+    getDestination(destination) {
+        return this.getCurrentItinerary().destinations.find(dest => dest.id === destination.id);
     }
 
     /**
      * Retourner la liste des activités d'une destination
      */
-    getActivities(destination, itinerary) {
+    getActivities(destination) {
         try {
-            const foundDestination = this.getDestination(destination, itinerary);
+            const foundDestination = this.getDestination(destination);
             
             if (!foundDestination) {
                 console.error('getActivities: Destination non trouvée:', destination.id);
@@ -537,100 +485,11 @@ class FirebaseService {
     }
 
     /**
-     * Ajouter une activité à une destination
-     */
-    async addActivity(activity, destination, itinerary) {
-        try {
-            const foundItinerary = this.getItinerary(itinerary);
-            
-            if (!foundItinerary) {
-                console.error('addActivity: Itinéraire non trouvé:', itinerary.id);
-                return false;
-            }
-            
-            const foundDestination = this.getDestination(destination, itinerary);
-            
-            if (!foundDestination) {
-                console.error('addActivity: Destination non trouvée:', destination.id);
-                return false;
-            }
-            
-            // Ajouter l'activité à la liste
-            if (!foundDestination.activities) {
-                foundDestination.activities = [];
-            }
-            foundDestination.activities.push(activity);
-            
-            // Mettre à jour l'itinéraire avec la nouvelle liste d'activités
-            this.updateItinerary(foundItinerary);
-            console.log('✅ Activité ajoutée:', activity.name || 'Nouvelle activité');
-            return true;
-        } catch (error) {
-            console.error('Erreur ajout activité:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Mettre à jour une activité dans une destination
-     */
-    async updateActivity(activity, destination, itinerary) {
-        try {
-            const foundItinerary = this.getItinerary(itinerary);
-            
-            if (!foundItinerary) {
-                console.error('updateActivity: Itinéraire non trouvé:', itinerary.id);
-                return false;
-            }
-            
-            const foundDestination = this.getDestination(destination, itinerary);
-            
-            if (!foundDestination) {
-                console.error('updateActivity: Destination non trouvée:', destination.id);
-                return false;
-            }
-            
-            if (!foundDestination.activities) {
-                console.error('updateActivity: Aucune activité trouvée dans la destination');
-                return false;
-            }
-            
-            // Trouver et supprimer l'ancienne activité
-            const index = foundDestination.activities.findIndex(act => act.id === activity.id);
-            
-            if (index === -1) {
-                console.error('updateActivity: Activité non trouvée:', activity.id);
-                return false;
-            }
-            
-            foundDestination.activities.splice(index, 1);
-            
-            // Ajouter la nouvelle activité
-            foundDestination.activities.push(activity);
-            
-            // Mettre à jour l'itinéraire
-            this.updateItinerary(foundItinerary);
-            console.log('✅ Activité mise à jour');
-            return true;
-        } catch (error) {
-            console.error('Erreur mise à jour activité:', error);
-            return false;
-        }
-    }
-
-    /**
      * Supprimer une activité d'une destination
      */
-    async deleteActivity(activity, destination, itinerary) {
+    async deleteActivity(activity, destination) {
         try {
-            const foundItinerary = this.getItinerary(itinerary);
-            
-            if (!foundItinerary) {
-                console.error('deleteActivity: Itinéraire non trouvé:', itinerary.id);
-                return false;
-            }
-            
-            const foundDestination = this.getDestination(destination, itinerary);
+            const foundDestination = this.getDestination(destination);
             
             if (!foundDestination) {
                 console.error('deleteActivity: Destination non trouvée:', destination.id);
@@ -653,7 +512,7 @@ class FirebaseService {
             foundDestination.activities.splice(index, 1);
             
             // Mettre à jour l'itinéraire
-            const updateSuccess = await this.updateItinerary(foundItinerary);
+            const updateSuccess = await this.updateCurrentItinerary();
             if (!updateSuccess) {
                 console.error('deleteActivity: Échec de la mise à jour de l\'itinéraire');
                 return false;

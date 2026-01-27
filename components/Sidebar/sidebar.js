@@ -25,7 +25,7 @@ const Sidebar = {
         
         // Charger le contenu de tous les onglets une seule fois
         this.loadDestinationsContent();
-        this.loadSyntheseContent();
+        this.loadSyntheseContent(); // Créer le conteneur synthèse maintenant
         
         // Initialiser le premier onglet
         this.switchTab('destinations');
@@ -44,12 +44,10 @@ const Sidebar = {
         container.innerHTML = `
             <!-- En-tête Settings intégré -->
             <div class="sidebar-header">
-                <div class="settings-left">
+                <button class="settings-left settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
                     <h2 class="itinerary-name" id="sidebar-itinerary-name">${this.escapeHtml(itineraryName)}</h2>
-                    <button class="settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
-                        <span class="material-icons">more_vert</span>
-                    </button>
-                </div>
+                    <span class="material-icons">more_vert</span>
+                </button>
                 <div class="settings-right">
                     <button class="settings-btn" onclick="Sidebar.openSettings()" title="Paramètres">
                         <span class="material-icons">settings</span>
@@ -144,12 +142,12 @@ const Sidebar = {
         const container = document.getElementById('sidebar-synthese-content');
         if (!container) return;
         
-        // Vider le conteneur
-        container.innerHTML = '';
+        // Créer le conteneur pour le composant Synthèse
+        container.innerHTML = '<div class="synthese-container"></div>';
         
-        // Intégrer le composant Synthèse
-        if (window.Synthese) {
-            window.Synthese.render(container);
+        // Intégrer le composant Synthèse (vérification explicite pour éviter le falsy object problem)
+        if (window.Synthèse) {
+            window.Synthèse.render();
         } else {
             // Contenu par défaut en attendant le composant
             container.innerHTML = `

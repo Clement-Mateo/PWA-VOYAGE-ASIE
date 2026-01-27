@@ -184,6 +184,7 @@
 .address-input {
     flex: 1;
     padding-right: 40px;
+    cursor: pointer;
 }
 
 .address-search-btn {
@@ -191,6 +192,7 @@
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
+    cursor: pointer;
     color: var(--font-color-gray);
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;

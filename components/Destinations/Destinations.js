@@ -163,9 +163,9 @@ const Destinations = {
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
-                    <div class="address-input-container flex-center">
+                    <div class="address-input-container flex-center" onclick="Destinations.openAddressSearch(${index}, event)">
                         <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
-                        <button class="btn-icon address-search-btn" onclick="Destinations.openAddressSearch(${index}, event)">
+                        <button class="btn-icon address-search-btn">
                             <span class="material-icons">search</span>
                         </button>
                     </div>
@@ -437,7 +437,7 @@ const Destinations = {
         // Scroll vers la destination
         this.scrollToDestination(index);
     },
-    
+
     /**
      * Ajouter une activité à une destination
      */
@@ -617,9 +617,7 @@ const Destinations = {
             }
             
             // Utiliser firebaseService pour supprimer la destination
-            const success = await window.firebaseService.deleteDestination(
-                destination, currentItinerary
-            );
+            const success = await window.firebaseService.deleteDestination(destination);
             
             if (success) {
                 console.log('✅ Destination supprimée');
@@ -929,7 +927,7 @@ const Destinations = {
                 console.log('✅ Destination crée', destination);
             } else {
                 // sinon maj la destination
-                await window.firebaseService.updateDestination(destination, currentItinerary);
+                await window.firebaseService.updateDestination(destination);
                 console.log('✅ Destination mise à jour:', destination);
             }
             
@@ -1054,7 +1052,7 @@ const Destinations = {
             const currentItinerary = window.firebaseService.getCurrentItinerary();;
             
             // Utiliser le nouveau service pour charger les activités
-            const activities = window.firebaseService.getActivities(destination, currentItinerary);
+            const activities = window.firebaseService.getActivities(destination);
             
             console.log('🔍 Activités chargées depuis la mémoire:', activities);
             
@@ -1162,14 +1160,12 @@ const Destinations = {
                 showErrorSnackBar('Aucun itinéraire trouvé');
                 return;
             }
-            
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
-            
+                        
             // Créer l'objet activité à supprimer
             const activityToDelete = { id: activityId };
             
             // Utiliser le nouveau service pour supprimer l'activité
-            const success = await window.firebaseService.deleteActivity(activityToDelete, destination, currentItinerary);
+            const success = await window.firebaseService.deleteActivity(activityToDelete, destination);
             
             if (success) {
                 console.log('✅ Activité supprimée:', activityId);

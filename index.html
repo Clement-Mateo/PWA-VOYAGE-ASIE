@@ -40,7 +40,6 @@
     <link rel="stylesheet" href="components/Itineraries/itineraries.css">
     <link rel="stylesheet" href="components/Settings/Settings.css">
     <link rel="stylesheet" href="components/Sidebar/sidebar.css">
-    <link rel="stylesheet" href="components/Synthese/synthese.css">
 </head>
 <body>
     <div id="map"></div>
@@ -164,6 +163,7 @@
     <script src="components/auth/ResetPassword.js"></script>
     <script src="components/Destinations/Destinations.js"></script>
     <script src="components/Destinations/Activity/Activity.js"></script>
+    <script src="components/Destinations/ChooseAddress/placeTypesTranslations.js"></script>
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
     <script src="components/LeafletMap/LeafletMap.js"></script>
     
@@ -299,12 +299,7 @@
 
                 // Charger les destinations (attendre que tout soit terminé)
                 await window.Destinations.loadDestinations();
-                
-                // Initialiser Synthèse
-                if (window.Synthese) {
-                    window.Synthese.init();
-                }
-                
+                                
                 // Initialiser ChooseAddress
                 if (window.ChooseAddress) {
                     window.ChooseAddress.init();
