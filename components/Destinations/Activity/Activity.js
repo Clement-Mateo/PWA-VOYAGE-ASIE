@@ -334,7 +334,6 @@ const Activity = {
                             <option value="nature">Nature</option>
                             <option value="sport">Sport</option>
                             <option value="shopping">Shopping</option>
-                            <option value="transport">Transport</option>
                             <option value="hebergement">Hébergement</option>
                             <option value="autre">Autre</option>
                         </select>

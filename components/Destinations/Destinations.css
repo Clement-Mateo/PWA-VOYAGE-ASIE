@@ -9,6 +9,84 @@
     gap: 12px;
 }
 
+/* Cartes de transport */
+.transportation-card {
+    background: var(--primary-blue);
+    border-radius: 8px;
+    padding: 10px 16px;
+    box-shadow: var(--box-shadow-1);
+    transition: all 0.3s ease;
+    border: 1px solid var(--primary-dark);
+}
+
+.transportation-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow-2);
+}
+
+.transportation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.transportation-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.transportation-type {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.transportation-details {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.transportation-actions .btn-edit {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.transportation-actions .btn-edit:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.transportation-actions .btn-edit .material-icons {
+    font-size: 16px;
+    color: var(--white);
+}
+
+/* Champs de durée */
+.duration-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.duration-inputs .form-input {
+    flex: 1;
+    max-width: 80px;
+    text-align: center;
+}
+
+.duration-separator {
+    color: var(--gray-dark);
+    font-weight: 500;
+    font-size: 14px;
+    user-select: none;
+}
+
 .destination-card {
     background: var(--background-light);
     border-radius: 20px;

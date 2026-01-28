@@ -54,21 +54,6 @@
     box-shadow: var(--box-shadow-2);
 }
 
-/* ===== Personnalisation des popups ===== */
-.leaflet-popup-content-wrapper {
-    background: var(--background-light) !important;
-    border: none !important;
-    border-radius: 20px !important;
-    box-shadow: var(--box-shadow-1) !important;
-    margin: 10px !important;
-}
-
-.leaflet-popup-tip {
-    background: var(--background-light) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-}
-
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .leaflet-control-zoom { /* Positionnement mobile */

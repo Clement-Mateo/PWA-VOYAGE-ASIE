@@ -40,17 +40,13 @@ const Synthèse = {
      */
     async calculateTotalCost() {
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        console.log('Synthèse: Destinations trouvées:', destinations.length);
         
         let totalCost = 0;
         let activitiesByType = {};
         
         for (const destination of destinations) {
-            console.log('Synthèse: Destination:', destination.name || 'Sans nom', 'ID:', destination.id);
-            
             // Vérifier que la destination a un ID avant de chercher ses activités
             if (!destination.id) {
-                console.log('Synthèse: Destination sans ID ignorée:', destination.name || 'Destination sans nom');
                 continue;
             }
             
@@ -58,12 +54,10 @@ const Synthèse = {
                 try {
                     // Récupérer les activités de cette destination
                     const activities = await window.firebaseService.getActivities(destination);
-                    console.log('Synthèse: Activités trouvées pour', destination.name, ':', activities.length);
                     
                     activities.forEach(activity => {
                         const cost = activity.price || 0; // Les activités utilisent 'price' pas 'cost'
                         totalCost += cost;
-                        console.log('Synthèse: Activité:', activity.name || 'Sans nom', 'Coût:', cost, 'Total partiel:', totalCost);
                         
                         // Regrouper par type d'activité
                         const type = activity.type || 'Autre';
@@ -88,7 +82,6 @@ const Synthèse = {
                                 }
                                 
                                 activityDuration = durationMinutes;
-                                console.log('Synthèse: Durée calculée pour', activity.name, ':', activityDuration, 'minutes');
                             }
                         }
                         
@@ -100,7 +93,6 @@ const Synthèse = {
             }
         }
         
-        console.log('Synthèse: Coût total final:', totalCost);
         return { totalCost, activitiesByType };
     },
     
@@ -164,15 +156,37 @@ const Synthèse = {
     },
     
     /**
-     * Calculer le temps de transport estimé
+     * Calculer le temps de transport total à partir des données réelles
      */
     async calculateTransportTime() {
-        const distance = await this.calculateTotalDistance();
-        // Estimation : 50 km/h en moyenne (mix voiture/train)
-        const transportMinutes = (distance / 50) * 60;
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        let totalMinutes = 0;
+        
+        for (const destination of destinations) {
+            // Ignorer la première destination (pas de transport)
+            if (destination.transportation && destination.transportation.duration) {
+                // Parser la durée au format "XhY" ou "Xh" ou "Ymin"
+                const durationStr = destination.transportation.duration;
+                
+                if (durationStr.includes('h')) {
+                    const parts = durationStr.split('h');
+                    const hours = parseInt(parts[0]) || 0;
+                    const minutes = parts[1] ? parseInt(parts[1]) : 0;
+                    totalMinutes += hours * 60 + minutes;
+                } else if (durationStr.includes('min')) {
+                    const minutes = parseInt(durationStr.replace('min', '')) || 0;
+                    totalMinutes += minutes;
+                } else {
+                    // Si c'est juste un nombre, considérer comme des minutes
+                    const minutes = parseInt(durationStr) || 0;
+                    totalMinutes += minutes;
+                }
+            }
+        }
+        
         return {
-            hours: Math.floor(transportMinutes / 60),
-            minutes: Math.round(transportMinutes % 60)
+            hours: Math.floor(totalMinutes / 60),
+            minutes: Math.round(totalMinutes % 60)
         };
     },
     
@@ -204,14 +218,13 @@ const Synthèse = {
      * Obtenir une couleur consistante pour un type d'activité
      */
     getActivityTypeColor(type, index) {
-        // Mapping fixe pour les 8 types d'activités disponibles
+        // Mapping fixe pour les types d'activités disponibles
         const typeColorMap = {
             'culture': '#FF6384',         // Rose
             'gastronomie': '#36A2EB',     // Bleu
             'nature': '#27AE60',          // Vert
             'sport': '#FFCE56',           // Jaune
             'shopping': '#9966FF',        // Violet
-            'transport': '#FF9F40',       // Orange
             'hebergement': '#4BC0C0',     // Turquoise
             'autre': '#95A5A6'            // Gris
         };
@@ -227,7 +240,6 @@ const Synthèse = {
         // Pour les types non prévus, utiliser l'index avec une palette de secours
         const fallbackColors = ['#E74C3C', '#34495E', '#16A085', '#F39C12'];
         const fallbackColor = fallbackColors[index % fallbackColors.length];
-        console.log(`🔄 Couleur de secours: ${fallbackColor}`);
         return fallbackColor;
     },
     
@@ -290,7 +302,7 @@ const Synthèse = {
                                 </div>
                                 <div class="stat-info">
                                     <div class="stat-value">${transportTime.hours}h${transportTime.minutes > 0 ? transportTime.minutes : ''}</div>
-                                    <div class="stat-label">Transport estimé</div>
+                                    <div class="stat-label">Transport</div>
                                 </div>
                             </div>
                             
@@ -415,13 +427,9 @@ const Synthèse = {
         const labels = Object.keys(activitiesByType).sort();
         const data = labels.map(type => activitiesByType[type].cost);
         
-        // Debug : voir les types réels
-        console.log('Types d\'activités trouvés:', labels);
-        
         // Générer des couleurs consistantes basées sur l'index trié
         const colors = labels.map((type, index) => {
             const color = this.getActivityTypeColor(type, index);
-            console.log(`Type: "${type}" -> Couleur: ${color}`);
             return color;
         });
         const hoverColors = colors.map(color => color + 'CC');
@@ -470,7 +478,6 @@ const Synthèse = {
                     if (elements.length > 0) {
                         const index = elements[0].index;
                         const type = labels[index];
-                        console.log('Clic sur catégorie budget:', type);
                         // TODO: Filtrer les activités par type
                     }
                 }
@@ -496,13 +503,9 @@ const Synthèse = {
             return `${hours}h${mins > 0 ? mins : ''}`;
         });
         
-        // Debug : voir les types réels (pour vérifier la consistance)
-        console.log('Types d\'activités (durée):', labels);
-        
         // Utiliser les mêmes couleurs consistantes que le graphique budget (même ordre trié)
         const colors = labels.map((type, index) => {
             const color = this.getActivityTypeColor(type, index);
-            console.log(`Type (durée): "${type}" -> Couleur: ${color}`);
             return color;
         });
         const hoverColors = colors.map(color => color + 'CC');
@@ -559,7 +562,6 @@ const Synthèse = {
                     if (elements.length > 0) {
                         const index = elements[0].index;
                         const type = labels[index];
-                        console.log('Clic sur catégorie durée:', type);
                         // TODO: Filtrer les activités par type
                     }
                 }
