@@ -67,38 +67,7 @@ const Destinations = {
         this.isVisible = true;
         this.updatePanelVisibility();
     },
-    
-    /**
-     * Créer une card de destination en mode lecture seule
-     * (utilisée dans la popup au clic sur un marqueur)
-     */
-    createDestinationReadCard(destination, index = null) {
-        const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
-        const durationText = this.formatDuration(duration);
-        
-        return `
-            <div class="destination-card">
-                <div class="destination-header">
-                    <h3 class="destination-title">${destination.name || 'Destination sans nom'}</h3>
-                    ${index !== null ? `
-                        <div class="destination-actions">
-                            <button class="btn-edit" onclick="Destinations.show(); setTimeout(() => Destinations.editDestination(${index}), 300)">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-delete" onclick="Destinations.show(); setTimeout(() => Destinations.deleteDestination(${index}), 300)">
-                                <span class="material-icons">delete</span>
-                            </button>
-                            <button class="btn-expand" onclick="Destinations.show(); setTimeout(() => Destinations.toggleDestinationCard(${index}), 300)">
-                                <span class="material-icons">expand_more</span>
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-                <p class="destination-address">${destination.address ? destination.address.address : 'Adresse non spécifiée'}</p>
-                <p class="destination-duration">⏱️ ${durationText}</p>
-            </div>
-        `;
-    },
+
     
     /**
      * Créer une card de destination
@@ -144,7 +113,7 @@ const Destinations = {
                 </div>
             </div>
             <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
-            <p class="destination-duration">⏱️ ${durationText}</p>
+            ${durationText ? `<p class="destination-duration">⏱️ ${durationText}</p>` : ''}
             
             <!-- Section des activités (visible quand dépliée) -->
             <div class="destination-activities" id="activities-${index}" style="display: none;">
@@ -196,6 +165,260 @@ const Destinations = {
         this.addDragAndDropEvents(card, index);
         
         return card;
+    },
+    
+    /**
+     * Créer une card de transport
+     */
+    createTransportationCard(transportation, destinationIndex) {
+        const card = document.createElement('div');
+        card.className = 'transportation-card';
+        card.id = `transportation-${destinationIndex}`;
+        
+        // Pas de drag & drop pour les cartes de transport
+        card.draggable = false;
+        
+        const transportTypes = {
+            'train': '🚆 Train',
+            'avion': '✈️ Avion', 
+            'bus': '🚌 Bus',
+            'voiture': '🚗 Voiture',
+            'velo': '🚴 Vélo',
+            'a pied': '🚶 À pied'
+        };
+        
+        const typeLabel = transportTypes[transportation.type] || '🚗 Transport';
+        
+        // Créer les éléments avec createElement au lieu de innerHTML
+        const header = document.createElement('div');
+        header.className = 'transportation-header';
+        
+        // Info section
+        const info = document.createElement('div');
+        info.className = 'transportation-info';
+        
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'transportation-type';
+        typeSpan.textContent = typeLabel;
+        info.appendChild(typeSpan);
+        
+        // Ajouter les détails seulement s'ils existent
+        if (transportation.cost || transportation.duration) {
+            const detailsSpan = document.createElement('span');
+            detailsSpan.className = 'transportation-details';
+            
+            const details = [];
+            if (transportation.cost) details.push(`${transportation.cost}€`);
+            if (transportation.duration) details.push(transportation.duration);
+            
+            detailsSpan.textContent = details.join(' • ');
+            info.appendChild(detailsSpan);
+        }
+        
+        // Actions section
+        const actions = document.createElement('div');
+        actions.className = 'transportation-actions';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-edit';
+        editBtn.title = 'Modifier le transport';
+        editBtn.onclick = () => this.editTransportation(destinationIndex);
+        
+        const icon = document.createElement('span');
+        icon.className = 'material-icons';
+        icon.textContent = 'edit';
+        
+        editBtn.appendChild(icon);
+        actions.appendChild(editBtn);
+        
+        // Assembler le tout
+        header.appendChild(info);
+        header.appendChild(actions);
+        card.appendChild(header);
+        
+        return card;
+    },
+    
+    /**
+     * Parser une durée au format "2h30" en heures et minutes
+     */
+    parseDuration(duration) {
+        if (!duration || typeof duration !== 'string') {
+            return { hours: 0, minutes: 0 };
+        }
+        
+        // Chercher le format "XhY" ou "Xh" ou "Y"
+        const hoursMatch = duration.match(/(\d+)h/);
+        const minutesMatch = duration.match(/h(\d+)|(\d+)$/);
+        
+        const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+        const minutes = minutesMatch ? parseInt(minutesMatch[1] || minutesMatch[2], 10) : 0;
+        
+        return { hours, minutes };
+    },
+    
+    /**
+     * Former une durée de transport à partir d'heures et minutes
+     */
+    formatTransportDuration(hours, minutes) {
+        const h = parseInt(hours) || 0;
+        const m = parseInt(minutes) || 0;
+         
+        if (h === 0 && m === 0) return '';
+        if (h === 0) return `${m}min`;
+        if (m === 0) return `${h}h`;
+        return `${h}h ${m}`;
+    },
+    
+    /**
+     * Éditer le transport d'une destination
+     */
+    editTransportation(destinationIndex) {
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destination = destinations[destinationIndex];
+        
+        if (!destination) return;
+        
+        const transportation = destination.transportation || {
+            type: 'avion',
+            cost: '',
+            duration: ''
+        };
+        
+        // Créer le popup d'édition
+        const popup = document.createElement('div');
+        popup.className = 'modal open';
+        popup.innerHTML = `
+            <div class="modal-backdrop" onclick="this.closest('.modal').remove()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Modifier le transport</h3>
+                    <button class="btn-close" onclick="this.closest('.modal').remove()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Type de transport</label>
+                        <select id="transportType" class="form-input">
+                            <option value="train" ${transportation.type === 'train' ? 'selected' : ''}>🚆 Train</option>
+                            <option value="avion" ${transportation.type === 'avion' ? 'selected' : ''}>✈️ Avion</option>
+                            <option value="bus" ${transportation.type === 'bus' ? 'selected' : ''}>🚌 Bus</option>
+                            <option value="voiture" ${transportation.type === 'voiture' ? 'selected' : ''}>🚗 Voiture</option>
+                            <option value="velo" ${transportation.type === 'velo' ? 'selected' : ''}>🚴 Vélo</option>
+                            <option value="a pied" ${transportation.type === 'a pied' ? 'selected' : ''}>🚶 À pied</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Coût (€)</label>
+                        <input type="number" id="transportCost" class="form-input" placeholder="0" min="0" step="0.01" value="${transportation.cost || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Durée</label>
+                        <div class="duration-inputs">
+                            <input type="number" id="transportHours" class="form-input" placeholder="0" min="0" max="23" value="${this.parseDuration(transportation.duration).hours || ''}" oninput="this.value = Math.max(0, Math.min(23, parseInt(this.value) || 0))">
+                            <span class="duration-separator">h</span>
+                            <input type="number" id="transportMinutes" class="form-input" placeholder="0" min="0" max="59" value="${this.parseDuration(transportation.duration).minutes || ''}" oninput="this.value = Math.max(0, Math.min(59, parseInt(this.value) || 0))">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="this.closest('.modal').remove()">Annuler</button>
+                    <button class="btn-save" onclick="Destinations.saveTransportation(${destinationIndex})">Enregistrer</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+    },
+    
+    // Ajouter un spinner au bouton save
+    showSaveButtonLoading() {
+        const saveButton = document.querySelector('.modal-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
+        }
+    },
+
+    // Restaurer le bouton save
+    restoreSaveButton() {
+        const saveButton = document.querySelector('.modal-footer .btn-save');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = 'Enregistrer';
+        }
+    },
+    
+    /**
+     * Sauvegarder le transport d'une destination
+     */
+    async saveTransportation(destinationIndex) {
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destination = destinations[destinationIndex];
+        
+        if (!destination) return;
+        
+        const type = document.getElementById('transportType').value;
+        const cost = document.getElementById('transportCost').value;
+        let hours = document.getElementById('transportHours').value;
+        let minutes = document.getElementById('transportMinutes').value;
+        
+        console.log('saveTransportation - Valeurs récupérées:', { type, cost, hours, minutes });
+        
+        // Afficher le spinner de chargement
+        this.showSaveButtonLoading();
+        
+        // Validation des contraintes de temps
+        const hoursNum = parseInt(hours) || 0;
+        const minutesNum = parseInt(minutes) || 0;
+        
+        if (hoursNum < 0 || hoursNum > 23) {
+            alert('Les heures doivent être comprises entre 0 et 23');
+            this.restoreSaveButton();
+            return;
+        }
+        
+        if (minutesNum < 0 || minutesNum > 59) {
+            alert('Les minutes doivent être comprises entre 0 et 59');
+            this.restoreSaveButton();
+            return;
+        }
+        
+        // Validation automatique : si un champ est vide mais pas l'autre, mettre 0
+        if (!hours && hours !== '0' && minutes && minutes !== '0') {
+            hours = '0';
+        }
+        if (!minutes && minutes !== '0' && hours && hours !== '0') {
+            minutes = '0';
+        }
+        
+        // Former la durée
+        const duration = this.formatTransportDuration(hours, minutes);
+        
+        // Mettre à jour l'objet destination
+        destination.transportation = {
+            type: type,
+            cost: cost ? parseFloat(cost) : null,
+            duration: duration || ''
+        };
+                
+        // Sauvegarder dans Firebase
+        try {
+            await window.firebaseService.updateDestination(destination);
+            
+            // Fermer le popup
+            document.querySelector('.modal.open')?.remove();
+            
+            // Recharger les destinations
+            await this.loadDestinations();
+            
+            console.log('✅ Transport mis à jour');
+        } catch (error) {
+            console.error('❌ Erreur lors de la sauvegarde du transport:', error);
+            // Restaurer le bouton en cas d'erreur
+            this.restoreSaveButton();
+        }
     },
     
     /**
@@ -294,12 +517,32 @@ const Destinations = {
             // Réassigner les ordres consécutifs à toutes les destinations
             sortedDestinations.forEach((dest, index) => {
                 dest.order = index;
+                
+                // Gérer les transports selon la position
+                if (index === 0) {
+                    // Première destination : ne doit pas avoir de transport
+                    if (dest.transportation) {
+                        console.log(`Suppression du transport pour la première destination: ${dest.name}`);
+                        delete dest.transportation;
+                    }
+                } else {
+                    // Destinations suivantes : doivent avoir un transport par défaut si elles n'en ont pas
+                    if (!dest.transportation) {
+                        console.log(`Ajout du transport par défaut pour la destination #${index}: ${dest.name}`);
+                        dest.transportation = {
+                            type: 'avion',
+                            cost: null,
+                            duration: null
+                        };
+                    }
+                    // Si la destination a déjà un transport, on le conserve tel quel
+                }
             });
             
             await window.firebaseService.updateItinerary(currentItinerary);
             await this.loadDestinations();
             
-            console.log('✅ Destinations réorganisées');            
+            console.log('✅ Destinations réorganisées avec gestion des transports');            
         } catch (error) {
             console.error('❌ Erreur réorganisation destinations:', error);
             showErrorSnackBar('Erreur lors de la réorganisation.');
@@ -336,7 +579,7 @@ const Destinations = {
         if (duration.days > 0) parts.push(`${duration.days}j`);
         if (duration.hours > 0) parts.push(`${duration.hours}h`);
         if (duration.minutes > 0) parts.push(`${duration.minutes}min`);
-        return parts.length > 0 ? parts.join(' ') : 'Aucune durée';
+        return parts.length > 0 ? parts.join(' ') : '';
     },
     
     /**
@@ -701,26 +944,6 @@ const Destinations = {
         }
         
         container.innerHTML = '';
-        
-        // Observer les changements sur le conteneur pour détecter qui le vide
-        if (!this.containerObserver) {
-            this.containerObserver = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList' && mutation.removedNodes.length > 0) {
-                        console.log('🚨 CONTENEUR VIDÉ PAR AUTRE CHOSE !');
-                        console.log('🚨 Noeuds supprimés:', mutation.removedNodes.length);
-                        console.log('🚨 Timestamp:', Date.now());
-                        console.trace('🚨 Stack trace du vidage');
-                    }
-                });
-            });
-            
-            // Observer le conteneur
-            this.containerObserver.observe(container, {
-                childList: true,
-                subtree: false
-            });
-        }
 
         const addButton = document.createElement('button');
         addButton.className = 'btn-add';
@@ -740,6 +963,17 @@ const Destinations = {
             });
             
             sortedDestinations.forEach((destination, sortedIndex) => {
+                // Ajouter une carte de transport si ce n'est pas la première destination
+                if (sortedIndex > 0) {
+                    const transportation = destination.transportation || {
+                        type: 'avion',
+                        cost: null,
+                        duration: null
+                    };
+                    const transportCard = this.createTransportationCard(transportation, sortedIndex);
+                    container.appendChild(transportCard);
+                }
+                
                 const card = this.createDestinationCard(destination, sortedIndex);
                 container.appendChild(card);
                 
@@ -919,6 +1153,15 @@ const Destinations = {
                 // Si la destination n'existe pas (nouvelle destination), la créer
                 destination.id = `dest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 destination.order = destinations.length;
+
+                // Ajouter le transport par défaut si ce n'est pas la première destination
+                if (destinations.length > 0) {
+                    destination.transportation = {
+                        type: 'avion',
+                        cost: null,
+                        duration: null
+                    };
+                }
 
                 if(!currentItinerary.desstinations) currentItinerary.desstinations = [];
                 currentItinerary.desstinations.push(destination);

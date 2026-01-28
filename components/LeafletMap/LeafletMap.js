@@ -328,13 +328,9 @@ class LeafletMap {
             }
             
             // Créer les marqueurs
-            validDestinations.forEach((destination, index) => {
-                // Utiliser la méthode de Destinations.js pour créer la card complète avec boutons
-                const popupContent = window.Destinations.createDestinationReadCard(destination, index);
-                
+            validDestinations.forEach((destination, index) => { 
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
                     .addTo(this.leafletMap)
-                    .bindPopup(popupContent)
                     .on('click', () => {
                         // Scroll vers la destination si le panneau est déjà ouvert
                         if (window.Destinations && window.Destinations.isVisible) {
