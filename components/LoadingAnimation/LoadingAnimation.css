@@ -24,7 +24,7 @@
     left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    background: rgba(0, 0, 0, 0.9) !important;
+    background: var(--glass-dark) !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
