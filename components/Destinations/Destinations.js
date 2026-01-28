@@ -179,15 +179,15 @@ const Destinations = {
         card.draggable = false;
         
         const transportTypes = {
-            'train': '🚆 Train',
-            'avion': '✈️ Avion', 
-            'bus': '🚌 Bus',
-            'voiture': '🚗 Voiture',
-            'velo': '🚴 Vélo',
-            'a pied': '🚶 À pied'
+            'train': '<span class="material-icons">train</span> Train',
+            'avion': '<span class="material-icons">flight</span> Avion', 
+            'bus': '<span class="material-icons">directions_bus</span> Bus',
+            'voiture': '<span class="material-icons">directions_car</span> Voiture',
+            'velo': '<span class="material-icons">directions_bike</span> Vélo',
+            'a pied': '<span class="material-icons">directions_walk</span> À pied'
         };
         
-        const typeLabel = transportTypes[transportation.type] || '🚗 Transport';
+        const typeLabel = transportTypes[transportation.type] || '<span class="material-icons">directions_car</span> Transport';
         
         // Créer les éléments avec createElement au lieu de innerHTML
         const header = document.createElement('div');
@@ -199,7 +199,7 @@ const Destinations = {
         
         const typeSpan = document.createElement('span');
         typeSpan.className = 'transportation-type';
-        typeSpan.textContent = typeLabel;
+        typeSpan.innerHTML = typeLabel;
         info.appendChild(typeSpan);
         
         // Ajouter les détails seulement s'ils existent
@@ -300,25 +300,30 @@ const Destinations = {
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label">Type de transport</label>
-                        <select id="transportType" class="form-input">
-                            <option value="train" ${transportation.type === 'train' ? 'selected' : ''}>🚆 Train</option>
-                            <option value="avion" ${transportation.type === 'avion' ? 'selected' : ''}>✈️ Avion</option>
-                            <option value="bus" ${transportation.type === 'bus' ? 'selected' : ''}>🚌 Bus</option>
-                            <option value="voiture" ${transportation.type === 'voiture' ? 'selected' : ''}>🚗 Voiture</option>
-                            <option value="velo" ${transportation.type === 'velo' ? 'selected' : ''}>🚴 Vélo</option>
-                            <option value="a pied" ${transportation.type === 'a pied' ? 'selected' : ''}>🚶 À pied</option>
-                        </select>
+                        <div class="custom-select" id="transportTypeSelect">
+                            <div class="select-trigger" onclick="Destinations.openTransportModal()">
+                                <span class="select-value">
+                                    <span class="material-icons">${this.getTransportIcon(transportation.type)}</span>
+                                    <span>${this.getTransportLabel(transportation.type)}</span>
+                                </span>
+                                <span class="material-icons select-arrow">expand_more</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="transportType" value="${transportation.type || ''}">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Coût (€)</label>
-                        <input type="number" id="transportCost" class="form-input" placeholder="0" min="0" step="0.01" value="${transportation.cost || ''}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Durée</label>
-                        <div class="duration-inputs">
-                            <input type="number" id="transportHours" class="form-input" placeholder="0" min="0" max="23" value="${this.parseDuration(transportation.duration).hours || ''}" oninput="this.value = Math.max(0, Math.min(23, parseInt(this.value) || 0))">
-                            <span class="duration-separator">h</span>
-                            <input type="number" id="transportMinutes" class="form-input" placeholder="0" min="0" max="59" value="${this.parseDuration(transportation.duration).minutes || ''}" oninput="this.value = Math.max(0, Math.min(59, parseInt(this.value) || 0))">
+                    
+                    <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="form-label">Coût (€)</label>
+                            <input type="number" class="form-input" id="transportCost" placeholder="0" min="0" step="0.01" value="${transportation.cost || ''}">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label class="form-label">Durée</label>
+                            <div class="duration-inputs" style="display: flex; align-items: center; gap: 4px;">
+                                <input type="number" class="form-input" id="transportHours" placeholder="0" min="0" max="23" value="${this.parseDuration(transportation.duration).hours || ''}" oninput="this.value = Math.max(0, Math.min(23, parseInt(this.value) || 0))" style="flex: 1;">
+                                <span style="color: var(--gray-dark); font-size: 14px;">h</span>
+                                <input type="number" class="form-input" id="transportMinutes" placeholder="0" min="0" max="59" value="${this.parseDuration(transportation.duration).minutes || ''}" oninput="this.value = Math.max(0, Math.min(59, parseInt(this.value) || 0))" style="flex: 1;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -572,8 +577,129 @@ const Destinations = {
     },
     
     /**
-     * Formater la durée
+     * Obtenir l'icône Material Icon pour un type de transport
      */
+    getTransportIcon(type) {
+        const icons = {
+            'train': 'train',
+            'avion': 'flight',
+            'bus': 'directions_bus',
+            'voiture': 'directions_car',
+            'velo': 'directions_bike',
+            'a pied': 'directions_walk'
+        };
+        return icons[type] || 'directions_car';
+    },
+
+    /**
+     * Obtenir le label pour un type de transport
+     */
+    getTransportLabel(type) {
+        const labels = {
+            'train': 'Train',
+            'avion': 'Avion',
+            'bus': 'Bus',
+            'voiture': 'Voiture',
+            'velo': 'Vélo',
+            'a pied': 'À pied'
+        };
+        return labels[type] || 'Transport';
+    },
+
+    /**
+     * Ouvrir la modale flottante des types de transport
+     */
+    openTransportModal() {
+        // Fermer la modale si elle existe déjà
+        this.closeTransportModal();
+        
+        const modal = document.createElement('div');
+        modal.id = 'transportTypeModal';
+        modal.className = 'transport-modal';
+        modal.innerHTML = `
+            <div class="transport-modal-backdrop"></div>
+            <div class="transport-modal-content">
+                <div class="transport-modal-header">
+                    <h4>Type de transport</h4>
+                    <button class="transport-modal-close" onclick="Destinations.closeTransportModal()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="transport-modal-body">
+                    <div class="transport-option" onclick="Destinations.selectTransportType('train')">
+                        <span class="material-icons">train</span>
+                        <span>Train</span>
+                    </div>
+                    <div class="transport-option" onclick="Destinations.selectTransportType('avion')">
+                        <span class="material-icons">flight</span>
+                        <span>Avion</span>
+                    </div>
+                    <div class="transport-option" onclick="Destinations.selectTransportType('bus')">
+                        <span class="material-icons">directions_bus</span>
+                        <span>Bus</span>
+                    </div>
+                    <div class="transport-option" onclick="Destinations.selectTransportType('voiture')">
+                        <span class="material-icons">directions_car</span>
+                        <span>Voiture</span>
+                    </div>
+                    <div class="transport-option" onclick="Destinations.selectTransportType('velo')">
+                        <span class="material-icons">directions_bike</span>
+                        <span>Vélo</span>
+                    </div>
+                    <div class="transport-option" onclick="Destinations.selectTransportType('a pied')">
+                        <span class="material-icons">directions_walk</span>
+                        <span>À pied</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Animation d'ouverture
+        setTimeout(() => {
+            modal.classList.add('open');
+        }, 10);
+        
+        // Fermer au clic sur le backdrop
+        const backdrop = modal.querySelector('.transport-modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', () => this.closeTransportModal());
+        }
+    },
+
+    /**
+     * Fermer la modale flottante
+     */
+    closeTransportModal() {
+        const modal = document.getElementById('transportTypeModal');
+        if (modal) {
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    },
+
+    /**
+     * Sélectionner un type de transport
+     */
+    selectTransportType(type) {
+        const hiddenInput = document.getElementById('transportType');
+        const selectValue = document.querySelector('.select-value');
+        
+        if (hiddenInput) hiddenInput.value = type;
+        
+        if (selectValue) {
+            selectValue.innerHTML = `
+                <span class="material-icons">${this.getTransportIcon(type)}</span>
+                <span>${this.getTransportLabel(type)}</span>
+            `;
+        }
+        
+        // Fermer la modale flottante
+        this.closeTransportModal();
+    },
     formatDuration(duration) {
         const parts = [];
         if (duration.days > 0) parts.push(`${duration.days}j`);
