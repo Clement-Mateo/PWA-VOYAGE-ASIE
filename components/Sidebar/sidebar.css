@@ -49,7 +49,7 @@
 }
 
 .settings-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--glass-input-bg);
     border: none;
     border-radius: 6px;
     padding: 8px;
@@ -62,7 +62,7 @@
 }
 
 .settings-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--glass-input-bg);
     transform: translateY(-1px);
 }
 
@@ -120,7 +120,6 @@
 .tab-btn.active {
     color: var(--font-color-white);
     background: transparent;
-    box-shadow: 0 2px 8px rgba(25, 102, 179, 0.3);
     transform: translateY(-1px);
 }
 

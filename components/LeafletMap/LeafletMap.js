@@ -328,8 +328,16 @@ class LeafletMap {
             }
             
             // Créer les marqueurs
-            validDestinations.forEach((destination, index) => { 
-                const marker = L.marker([destination.address.location.lat, destination.address.location.lng])
+            validDestinations.forEach((destination, index) => {
+                const customIcon = L.divIcon({
+                    html: '<span class="material-icons-round">location_on</span>',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32],
+                    className: 'custom-marker-icon'
+                });
+
+                const marker = L.marker([destination.address.location.lat, destination.address.location.lng], { icon: customIcon })
                     .addTo(this.leafletMap)
                     .on('click', () => {
                         // Scroll vers la destination si le panneau est déjà ouvert

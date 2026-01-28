@@ -50,19 +50,27 @@
 }
 
 .humanitarian-preview {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #c44569 100%);
+    background-image: url(../../Images/Claques/Humanitarian.webp);
+    background-size: cover;
+    background-position: center;
 }
 
 .osm-preview {
-    background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 100%);
+    background-image: url(../../Images/Claques/OpenStreetMap.webp);
+    background-size: cover;
+    background-position: center;
 }
 
 .maptiler-preview {
-    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    background-image: url(../../Images/Claques/MapTilerStreets.webp);
+    background-size: cover;
+    background-position: center;
 }
 
 .satellite-preview {
-    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+    background-image: url(../../Images/Claques/Satellite.webp);
+    background-size: cover;
+    background-position: center;
 }
 
 .map-style-name {
@@ -72,24 +80,31 @@
 }
 
 .terrain-preview {
-    background: linear-gradient(135deg, #8d6e63 0%, #6d4c41 100%);
+    background-image: url(../../Images/Claques/Topo.webp);
+    background-size: cover;
+    background-position: center;
 }
+
 
 .relief-preview {
-    background: linear-gradient(135deg, #bcaaa4 0%, #a1887f 100%);
+    background-image: url(../../Images/Claques/Relief.webp);
+    background-size: cover;
+    background-position: center;
 }
+
 
 .watercolor-preview {
-    background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 50%, #81d4fa 100%);
-}
-
-.buildings-preview {
-    background: linear-gradient(135deg, #263238 0%, #37474f 50%, #455a64 100%);
+    background-image: url(../../Images/Claques/Aquarelle.webp);
+    background-size: cover;
+    background-position: center;
 }
 
 .dark-preview {
-    background: linear-gradient(135deg, #263238 0%, #37474f 100%);
+    background-image: url(../../Images/Claques/Dark.webp);
+    background-size: cover;
+    background-position: center;
 }
+
 
 /* ========================================
    USER INFO SECTION
@@ -102,7 +117,7 @@
     padding: 16px;
     background: var(--background-light);
     border-radius: 12px;
-    margin-top: 16px;
+    margin-top: 12px;
 }
 
 .user-avatar {
@@ -169,9 +184,10 @@
     gap: 12px;
     padding: 12px;
     background: var(--warning-bg);
+    box-shadow: var(--box-shadow-2);
     border: 1px solid var(--warning-border);
     border-radius: 8px;
-    margin-top: 16px;
+    margin-top: 8px;
 }
 
 .warning-icon {

@@ -25,6 +25,30 @@
     transition: all 0.3s ease !important;
 }
 
+/*===== Les marqueurs =====*/
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 32
+}
+
+.custom-marker-icon .material-symbols-outlined {
+    color: var(--primary-blue) !important;
+    font-size: 32px !important;
+}
+
+.custom-marker-icon .material-icons-round {
+    color: var(--primary-blue) !important;
+    font-size: 32px !important;
+}
+
+.custom-marker-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
 /*===== Les contrôles de zoom (boutons + et -) =====*/
 .leaflet-control-zoom {
     box-shadow: var(--box-shadow-1) !important;

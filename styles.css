@@ -60,6 +60,8 @@
     --glass-border: rgba(255, 255, 255, 0.18);
     --glass-input-bg: rgba(255, 255, 255, 0.1);
     --glass-input-border: rgba(255, 255, 255, 0.3);
+    --glass-medium: rgba(58, 55, 55, 0.793);
+    --glass-dark: rgba(0, 0, 0, 0.9);
 }
 
 /* ========================================
