@@ -292,6 +292,52 @@ const Activity = {
         popup.className = 'modal';
         
         popup.innerHTML = `
+            <style>
+                /* ===== COMPOSANT CUSTOM TIME INPUT ===== */
+                .time-input-custom {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    position: relative;
+                }
+
+                .time-input-hours,
+                .time-input-minutes {
+                    width: 80px;
+                    padding: 12px 16px;
+                    border: 1px solid var(--gray-light);
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: 500;
+                    text-align: center;
+                    background: var(--white);
+                    color: var(--font-color-gray-dark);
+                    transition: all 0.2s ease;
+                    box-sizing: border-box;
+                    box-shadow: var(--box-shadow-1);
+                }
+
+                .time-input-hours:focus,
+                .time-input-minutes:focus {
+                    outline: none;
+                    border-color: var(--primary-blue);
+                    box-shadow: 0 0 0 3px rgba(25, 102, 179, 0.1);
+                }
+
+                .time-input-hours::placeholder,
+                .time-input-minutes::placeholder {
+                    color: var(--gray-light);
+                    font-weight: 400;
+                }
+
+                .time-separator {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: var(--gray-medium);
+                    user-select: none;
+                    padding: 0 4px;
+                }
+            </style>
             <div class="modal-backdrop" onclick="Activity.hideActivityPopup()"></div>
             <div class="modal-content">
                 <div class="modal-header">
@@ -308,11 +354,19 @@ const Activity = {
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label" for="startTime">Début</label>
-                            <input type="time" class="form-input" id="startTime" />
+                            <div class="time-input-custom">
+                                <input type="number" id="startTimeHours" class="time-input-hours" placeholder="HH" min="0" max="23" oninput="Activity.validateTimeInput(this, 'hours')">
+                                <span class="time-separator">:</span>
+                                <input type="number" id="startTimeMinutes" class="time-input-minutes" placeholder="MM" min="0" max="59" oninput="Activity.validateTimeInput(this, 'minutes')">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="endTime">Fin</label>
-                            <input type="time" class="form-input" id="endTime" />
+                            <div class="time-input-custom">
+                                <input type="number" id="endTimeHours" class="time-input-hours" placeholder="HH" min="0" max="23" oninput="Activity.validateTimeInput(this, 'hours')">
+                                <span class="time-separator">:</span>
+                                <input type="number" id="endTimeMinutes" class="time-input-minutes" placeholder="MM" min="0" max="59" oninput="Activity.validateTimeInput(this, 'minutes')">
+                            </div>
                         </div>
                     </div>
                     <div class="form-row" id="currencyRow">
@@ -416,8 +470,10 @@ const Activity = {
             await this.loadExchangeRates();
 
         const name = document.getElementById('activityName').value;
-        const startTime = document.getElementById('startTime').value;
-        const endTime = document.getElementById('endTime').value;
+        
+        // Récupérer les valeurs depuis les inputs custom
+        const startTime = this.getTimeFromInputs('startTime');
+        const endTime = this.getTimeFromInputs('endTime');
         const priceAmount = document.getElementById('priceAmount').value;
         let localCurrency = document.getElementById('localCurrency').value;
         const activityType = document.getElementById('activityType').value;
@@ -426,6 +482,9 @@ const Activity = {
             showErrorSnackBar('Veuillez saisir un nom d\'activité');
             return;
         }
+
+        // Valider et formater les temps
+        const { startTime: formattedStart, endTime: formattedEnd } = this.validateAndFormatTimes(startTime, endTime);
 
         // Si le champ devise locale est vide, le calculer automatiquement
         if (!localCurrency && priceAmount) {
@@ -437,8 +496,8 @@ const Activity = {
         const activity = {
             id: this.currentActivity?.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: name.trim(),
-            startTime: startTime,
-            endTime: endTime,
+            startTime: formattedStart,
+            endTime: formattedEnd,
             price: parseFloat(priceAmount) || 0, // TOUJOURS une simple valeur
             type: activityType
         };
@@ -505,6 +564,125 @@ const Activity = {
         }
     },
 
+    // Valider et compléter automatiquement les temps au moment de la sauvegarde
+    validateAndFormatTimes(startTime, endTime) {
+        let formattedStart = startTime;
+        let formattedEnd = endTime;
+        
+        // Parser les temps
+        const parseTime = (timeStr) => {
+            if (!timeStr || timeStr.trim() === '') return { hours: null, minutes: null };
+            const parts = timeStr.split(':');
+            return {
+                hours: parseInt(parts[0]) || null,
+                minutes: parseInt(parts[1]) || null
+            };
+        };
+        
+        const start = parseTime(startTime);
+        const end = parseTime(endTime);
+        
+        // --- Validation du temps de début ---
+        if (start.hours !== null && start.minutes === null) {
+            // Heures remplies, minutes vides → minutes = 0
+            formattedStart = `${start.hours.toString().padStart(2, '0')}:00`;
+        } else if (start.hours === null && start.minutes !== null) {
+            // Heures vides, minutes remplies → heures = 0
+            formattedStart = `00:${start.minutes.toString().padStart(2, '0')}`;
+        }
+        
+        // --- Validation du temps de fin ---
+        if (end.hours !== null && end.minutes === null) {
+            // Heures remplies, minutes vides
+            if (end.hours === start.hours) {
+                // Même heure que début → minutes = mêmes minutes que début
+                const startMinutes = start.minutes || 0;
+                formattedEnd = `${end.hours.toString().padStart(2, '0')}:${startMinutes.toString().padStart(2, '0')}`;
+            } else {
+                // Heure différente → minutes = 0
+                formattedEnd = `${end.hours.toString().padStart(2, '0')}:00`;
+            }
+        } else if (end.hours === null && end.minutes !== null) {
+            // Heures vides, minutes remplies
+            if (start.hours !== null && end.minutes < start.minutes) {
+                // Si minutes < minutes de début → heures = mêmes heures que début
+                formattedEnd = `${start.hours.toString().padStart(2, '0')}:${end.minutes.toString().padStart(2, '0')}`;
+            } else {
+                // Sinon → heures = 0
+                formattedEnd = `00:${end.minutes.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // --- Validation finale pour éviter que fin < début ---
+        const finalStart = parseTime(formattedStart);
+        const finalEnd = parseTime(formattedEnd);
+        
+        if (finalStart.hours !== null && finalEnd.hours !== null) {
+            if (finalEnd.hours < finalStart.hours || 
+                (finalEnd.hours === finalStart.hours && finalEnd.minutes < finalStart.minutes)) {
+                // Fin est avant début → ajuster fin
+                if (finalEnd.hours < finalStart.hours) {
+                    // Heures de fin < heures de début → mettre fin = début
+                    formattedEnd = formattedStart;
+                } else {
+                    // Mêmes heures mais minutes de fin < minutes de début → minutes de fin = minutes de début
+                    formattedEnd = `${finalStart.hours.toString().padStart(2, '0')}:${finalStart.minutes.toString().padStart(2, '0')}`;
+                }
+            }
+        }
+        
+        return { startTime: formattedStart, endTime: formattedEnd };
+    },
+
+    // Valider les inputs de temps
+    validateTimeInput(input, type) {
+        const value = parseInt(input.value) || 0;
+        
+        if (type === 'hours') {
+            // Limiter entre 0 et 23
+            if (value > 23) {
+                input.value = 23;
+            } else if (value < 0) {
+                input.value = 0;
+            }
+        } else if (type === 'minutes') {
+            // Limiter entre 0 et 59
+            if (value > 59) {
+                input.value = 59;
+            } else if (value < 0) {
+                input.value = 0;
+            }
+        }
+    },
+
+    // Obtenir la valeur formatée du temps depuis les inputs séparés
+    getTimeFromInputs(timeId) {
+        const hoursInput = document.getElementById(`${timeId}Hours`);
+        const minutesInput = document.getElementById(`${timeId}Minutes`);
+        
+        if (!hoursInput || !minutesInput) return '';
+        
+        const hours = parseInt(hoursInput.value) || 0;
+        const minutes = parseInt(minutesInput.value) || 0;
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    },
+
+    // Définir les valeurs des inputs depuis une chaîne de temps
+    setTimeFromValue(timeId, timeString) {
+        const hoursInput = document.getElementById(`${timeId}Hours`);
+        const minutesInput = document.getElementById(`${timeId}Minutes`);
+        
+        if (!hoursInput || !minutesInput || !timeString) return;
+        
+        const parts = timeString.split(':');
+        const hours = parseInt(parts[0]) || 0;
+        const minutes = parseInt(parts[1]) || 0;
+        
+        hoursInput.value = hours;
+        minutesInput.value = minutes;
+    },
+    
     // Ajouter un spinner au bouton save
     showSaveButtonLoading() {
         const saveButton = document.querySelector('.modal-footer .btn-save');
@@ -549,15 +727,15 @@ const Activity = {
             // Pré-remplir le formulaire avec les données de l'activité (après que le popup soit créé)
             setTimeout(() => {
                 const nameField = document.getElementById('activityName');
-                const startTime = document.getElementById('startTime');
-                const endTime = document.getElementById('endTime');
                 const priceField = document.getElementById('priceAmount');
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
                 if (nameField) nameField.value = this.currentActivity.name || '';
-                if (startTime) startTime.value = this.currentActivity.startTime || '';
-                if (endTime) endTime.value = this.currentActivity.endTime || '';
+                
+                // Utiliser les inputs custom pour les temps
+                this.setTimeFromValue('startTime', this.currentActivity.startTime || '');
+                this.setTimeFromValue('endTime', this.currentActivity.endTime || '');
                 
                 // Gérer le prix (TOUJOURS simple valeur) et devise locale
                 if (this.currentActivity.price) {
@@ -585,8 +763,13 @@ const Activity = {
     // Vider le formulaire d'activité
     clearActivityForm() {
         document.getElementById('activityName').value = '';
-        document.getElementById('startTime').value = '';
-        document.getElementById('endTime').value = '';
+        
+        // Vider les inputs custom de temps
+        document.getElementById('startTimeHours').value = '';
+        document.getElementById('startTimeMinutes').value = '';
+        document.getElementById('endTimeHours').value = '';
+        document.getElementById('endTimeMinutes').value = '';
+        
         document.getElementById('priceAmount').value = '';
         document.getElementById('localCurrency').value = '';
         document.getElementById('activityType').value = '';
