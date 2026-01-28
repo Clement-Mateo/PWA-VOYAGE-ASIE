@@ -341,7 +341,7 @@ class LeafletMap {
                     .addTo(this.leafletMap)
                     .on('click', () => {
                         // Scroll vers la destination si le panneau est déjà ouvert
-                        if (window.Destinations && window.Destinations.isVisible) {
+                        if (window.Destinations && window.Destinations) {
                             window.Destinations.scrollToDestination(index);
                         }
                     });
