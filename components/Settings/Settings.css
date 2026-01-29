@@ -180,30 +180,25 @@
 
 .settings-warning {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     padding: 12px;
-    background: var(--warning-bg);
-    box-shadow: var(--box-shadow-2);
-    border: 1px solid var(--warning-border);
+    background: var(--warning);
+    border: 1px solid var(--warning);
     border-radius: 8px;
     margin-top: 8px;
 }
 
 .warning-icon {
-    color: var(--warning-color);
+    color: var(--white);
     font-size: 20px;
     flex-shrink: 0;
 }
 
 .warning-text {
     font-size: 13px;
-    color: var(--font-color-gray);
+    color: var(--font-color-white);
     line-height: 1.4;
-}
-
-.warning-text strong {
-    color: var(--font-color-gray-dark);
 }
 
 /* ========================================
