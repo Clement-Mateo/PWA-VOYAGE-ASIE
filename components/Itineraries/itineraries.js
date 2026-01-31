@@ -324,23 +324,15 @@ class Itineraries {
             background: transparent;
         `;
 
-        // Créer le spinner (positionné à l'intérieur)
+        // Créer le spinner (utilise le service centralisé)
         const spinner = document.createElement('div');
-        spinner.innerHTML = `
-            <svg class="loading-spinner-small" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                <circle cx="12" cy="12" r="8" fill="none" stroke="var(--primary-blue)" stroke-width="2" stroke-linecap="round" stroke-dasharray="25.133 25.133" stroke-dashoffset="25.133">
-                    <animate attributeName="stroke-dashoffset" from="25.133" to="0" dur="1s" repeatCount="indefinite"/>
-                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-                </circle>
-            </svg>
-        `;
+        spinner.innerHTML = `<svg class="loading-spinner-small" viewBox="0 0 24 24" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>`;
         spinner.style.cssText = `
             position: absolute;
             right: 8px;
             top: 50%;
             transform: translateY(-50%);
-            display: none;
-            animation: spin 1s linear infinite;
+            pointer-events: none;
         `;
 
         // Ajouter les éléments au conteneur

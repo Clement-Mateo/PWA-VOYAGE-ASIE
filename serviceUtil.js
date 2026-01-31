@@ -184,3 +184,54 @@ function hideLoading() {
 // Exporter les fonctions de loading
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
+
+// ========================================
+// UTILITAIRES UI CENTRALISÉS
+// ========================================
+
+/**
+ * Affiche un spinner de chargement sur un bouton (méthode universelle)
+ * @param {HTMLElement|string} target - Élément bouton ou sélecteur CSS
+ * @param {string} text - Texte à afficher pendant le chargement
+ */
+function showButtonLoading(target, text = 'Chargement...') {
+    let button;
+    
+    // Si c'est un sélecteur, trouver l'élément
+    if (typeof target === 'string') {
+        button = document.querySelector(target);
+    } else {
+        button = target;
+    }
+    
+    if (!button) return;
+    
+    button.disabled = true;
+    button.innerHTML = `<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> ${text}`;
+}
+
+/**
+ * Restaure l'état normal d'un bouton (méthode universelle)
+ * @param {HTMLElement|string} target - Élément bouton ou sélecteur CSS
+ * @param {string} text - Texte à afficher après restauration
+ * @param {string} icon - Icône Material Icons
+ */
+function restoreButton(target, text = 'Bouton', icon = 'save') {
+    let button;
+    
+    // Si c'est un sélecteur, trouver l'élément
+    if (typeof target === 'string') {
+        button = document.querySelector(target);
+    } else {
+        button = target;
+    }
+    
+    if (!button) return;
+    
+    button.disabled = false;
+    button.innerHTML = `<span class="material-icons">${icon}</span> ${text}`;
+}
+
+// Exporter les fonctions utilitaires
+window.showButtonLoading = showButtonLoading;
+window.restoreButton = restoreButton;

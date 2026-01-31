@@ -34,9 +34,12 @@
     --success-green: #4CAF50;
     --success-green-dark: #45a049;
     --error-red: #f44336;
+    --error-red-transparent: rgba(244, 67, 54, 0.1);
     --error-red-dark: #da190b;
     --info-blue: #2196F3;
+    --info-blue-transparent: rgba(33, 150, 243, 0.1);
     --info-blue-dark: #1976d2;
+    --warning: #FF6445;
     
     /* Couleurs spécifiques */
     --background-light: #ffffff;

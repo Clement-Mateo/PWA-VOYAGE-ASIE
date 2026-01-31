@@ -25,6 +25,9 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
           crossorigin=""/>
     
+    <!-- Leaflet Control Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
+    
     <!-- Styles globaux -->
     <link rel="stylesheet" href="components/LoadingAnimation/LoadingAnimation.css">
     <link rel="stylesheet" href="styles.css">
@@ -34,7 +37,10 @@
     <link rel="stylesheet" href="styles/modals.css">
     <link rel="stylesheet" href="components/auth/auth.css">
     <link rel="stylesheet" href="components/Destinations/Destinations.css">
-    <link rel="stylesheet" href="components/Destinations/Activity/Activity.css">
+    <link rel="stylesheet" href="components/Destinations/Destination/Transportation/Transportation.css">
+    <link rel="stylesheet" href="components/Destinations/Destination/Destination.css">
+    <link rel="stylesheet" href="components/Destinations/Destination/Activities/Activities.css">
+    <link rel="stylesheet" href="components/Destinations/Destination/Activities/Activity/Activity.css">
     <link rel="stylesheet" href="components/Destinations/ChooseAddress/ChooseAddress.css">
     <link rel="stylesheet" href="components/LeafletMap/LeafletMap.css">
     <link rel="stylesheet" href="components/Itineraries/itineraries.css">
@@ -59,6 +65,9 @@
     
     <!-- Leaflet Polyline Decorator Plugin -->
     <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+    
+    <!-- Leaflet Control Geocoder Plugin -->
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
     
     <!-- Firebase SDK v12 -->
     <script type="module">
@@ -164,8 +173,11 @@
     <script src="components/auth/Login.js"></script>
     <script src="components/auth/Register.js"></script>
     <script src="components/auth/ResetPassword.js"></script>
+    <script src="components/Destinations/Destination/Destination.js"></script>
+    <script src="components/Destinations/Destination/Transportation/Transportation.js"></script>
+    <script src="components/Destinations/Destination/Activities/Activities.js"></script>
+    <script src="components/Destinations/Destination/Activities/Activity/Activity.js"></script>
     <script src="components/Destinations/Destinations.js"></script>
-    <script src="components/Destinations/Activity/Activity.js"></script>
     <script src="components/Destinations/ChooseAddress/placeTypesTranslations.js"></script>
     <script src="components/Destinations/ChooseAddress/ChooseAddress.js"></script>
     <script src="components/LeafletMap/LeafletMap.js"></script>
