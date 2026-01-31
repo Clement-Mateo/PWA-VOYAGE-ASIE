@@ -1,0 +1,40 @@
+/* ========================================
+   DESTINATION FORM STYLES
+   ======================================== */
+
+.destination-form {
+    display: none;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--white);
+}
+
+.destination-form.show {
+    display: block;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+/* Duration inputs for destination form */
+.form-group .duration-inputs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-group .duration-inputs .form-input {
+    flex: 1;
+    text-align: center;
+}
+
+.form-group .duration-inputs span {
+    font-size: 12px;
+    color: var(--gray-light);
+    min-width: 12px;
+}

@@ -1,0 +1,147 @@
+/* ========================================
+   ACTIVITIES STYLES
+   ======================================== */
+
+/* Section des activités */
+.destination-activities {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--background-light);
+    box-shadow: var(--box-shadow-2);
+    border-radius: 8px;
+    border: 1px solid var(--white);
+}
+
+.activities-header {
+    margin-bottom: 15px;
+}
+
+.activities-header h4 {
+    margin: 0;
+    color: var(--font-color-black);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.activities-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Bouton ajouter activité - force la largeur complète */
+.destination-activities .btn-add {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--primary-blue);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 12px;
+}
+
+.destination-activities .btn-add:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.destination-activities .btn-add .material-icons {
+    font-size: 18px;
+}
+
+.activity-item {
+    padding: 12px;
+    background: var(--background-light);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid var(--gray-dark);
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow-1);
+}
+
+.activity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.activity-info strong {
+    color: var(--font-color-black);
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 3px;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.activity-time {
+    color: var(--font-color-gray);
+    font-size: 12px;
+}
+
+.activity-price {
+    color: var(--success-green);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Messages pour les activités */
+.no-activities,
+.error-activities {
+    padding: 16px;
+    text-align: center;
+    color: var(--font-color-gray);
+    font-size: 13px;
+    font-style: italic;
+    background: var(--background);
+    border-radius: 6px;
+    border: 1px solid var(--gray);
+}
+
+.error-activities {
+    color: var(--error-red);
+    border-color: var(--error-red);
+    background: rgba(244, 67, 54, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .destination-activities {
+        padding: 12px;
+    }
+    
+    .activities-header h4 {
+        font-size: 15px;
+    }
+    
+    .activity-item {
+        padding: 10px;
+    }
+    
+    .activity-name-and-price {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}

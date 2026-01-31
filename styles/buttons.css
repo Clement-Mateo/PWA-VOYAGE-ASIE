@@ -76,7 +76,7 @@
 }
 
 .btn-delete:hover {
-    background: var(--accent-red-transparent-1);
+    background: var(--error-red-transparent);
     color: var(--error-red-dark);
 }
 

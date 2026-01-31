@@ -208,7 +208,7 @@ const Activity = {
                 if (localCurrencyField) localCurrencyField.value = '';
                 if (typeField) typeField.value = '';
             }
-            // En mode édition, ne pas réinitialiser car les champs seront pré-remplis dans editActivity
+            // En mode édition, les champs seront pré-remplis dans editActivity
             
             // Réinitialiser l'activité actuelle si on n'est pas en mode édition
             if (!this.currentActivity) {
@@ -292,52 +292,6 @@ const Activity = {
         popup.className = 'modal';
         
         popup.innerHTML = `
-            <style>
-                /* ===== COMPOSANT CUSTOM TIME INPUT ===== */
-                .time-input-custom {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    position: relative;
-                }
-
-                .time-input-hours,
-                .time-input-minutes {
-                    width: 80px;
-                    padding: 12px 16px;
-                    border: 1px solid var(--gray-light);
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: 500;
-                    text-align: center;
-                    background: var(--white);
-                    color: var(--font-color-gray-dark);
-                    transition: all 0.2s ease;
-                    box-sizing: border-box;
-                    box-shadow: var(--box-shadow-1);
-                }
-
-                .time-input-hours:focus,
-                .time-input-minutes:focus {
-                    outline: none;
-                    border-color: var(--primary-blue);
-                    box-shadow: 0 0 0 3px rgba(25, 102, 179, 0.1);
-                }
-
-                .time-input-hours::placeholder,
-                .time-input-minutes::placeholder {
-                    color: var(--gray-light);
-                    font-weight: 400;
-                }
-
-                .time-separator {
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: var(--gray-medium);
-                    user-select: none;
-                    padding: 0 4px;
-                }
-            </style>
             <div class="modal-backdrop" onclick="Activity.hideActivityPopup()"></div>
             <div class="modal-content">
                 <div class="modal-header">
@@ -453,6 +407,17 @@ const Activity = {
         if (form) {
             form.reset();
         }
+        
+        // Réinitialiser manuellement les champs custom time
+        const startTimeHours = document.getElementById('startTimeHours');
+        const startTimeMinutes = document.getElementById('startTimeMinutes');
+        const endTimeHours = document.getElementById('endTimeHours');
+        const endTimeMinutes = document.getElementById('endTimeMinutes');
+        
+        if (startTimeHours) startTimeHours.value = '';
+        if (startTimeMinutes) startTimeMinutes.value = '';
+        if (endTimeHours) endTimeHours.value = '';
+        if (endTimeMinutes) endTimeMinutes.value = '';
     },
 
     // Sauvegarder une activité
@@ -463,7 +428,7 @@ const Activity = {
         }
 
         // Afficher le spinner sur le bouton save
-        this.showSaveButtonLoading();
+        window.showButtonLoading('.modal-footer .btn-save', 'Enregistrement...');
 
         try {
             // S'assurer que les taux de change sont chargés
@@ -560,7 +525,7 @@ const Activity = {
             showErrorSnackBar('Erreur lors de la sauvegarde de l\'activité');
         } finally {
             // Restaurer le bouton save
-            this.restoreSaveButton();
+            window.restoreButton('.modal-footer .btn-save', 'Enregistrer', 'save');
         }
     },
 
@@ -682,24 +647,6 @@ const Activity = {
         hoursInput.value = hours;
         minutesInput.value = minutes;
     },
-    
-    // Ajouter un spinner au bouton save
-    showSaveButtonLoading() {
-        const saveButton = document.querySelector('.modal-footer .btn-save');
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
-        }
-    },
-
-    // Restaurer le bouton save
-    restoreSaveButton() {
-        const saveButton = document.querySelector('.modal-footer .btn-save');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = '<span class="material-icons">save</span> Enregistrer';
-        }
-    },
 
     // Modifier une activité existante
     async editActivity(activityId, destinationIndex) {
@@ -776,5 +723,5 @@ const Activity = {
     },
 };
 
-// Le composant est disponible globalement via window.Activity
+// Exporter pour utilisation globale (même système que les autres modules)
 window.Activity = Activity;

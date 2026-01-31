@@ -165,21 +165,31 @@ const Synthèse = {
         for (const destination of destinations) {
             // Ignorer la première destination (pas de transport)
             if (destination.transportation && destination.transportation.duration) {
-                // Parser la durée au format "XhY" ou "Xh" ou "Ymin"
-                const durationStr = destination.transportation.duration;
+                const duration = destination.transportation.duration;
                 
-                if (durationStr.includes('h')) {
-                    const parts = durationStr.split('h');
-                    const hours = parseInt(parts[0]) || 0;
-                    const minutes = parts[1] ? parseInt(parts[1]) : 0;
+                // Gérer le nouveau format objet {hours, minutes} ou l'ancien format chaîne
+                if (typeof duration === 'object' && duration !== null) {
+                    // Nouveau format : objet {hours, minutes}
+                    const hours = duration.hours || 0;
+                    const minutes = duration.minutes || 0;
                     totalMinutes += hours * 60 + minutes;
-                } else if (durationStr.includes('min')) {
-                    const minutes = parseInt(durationStr.replace('min', '')) || 0;
-                    totalMinutes += minutes;
-                } else {
-                    // Si c'est juste un nombre, considérer comme des minutes
-                    const minutes = parseInt(durationStr) || 0;
-                    totalMinutes += minutes;
+                } else if (typeof duration === 'string') {
+                    // Ancien format : chaîne "Xh Ymin" ou "XhYmin" ou "Xh" ou "Ymin"
+                    const durationStr = duration;
+                    
+                    if (durationStr.includes('h')) {
+                        const parts = durationStr.split('h');
+                        const hours = parseInt(parts[0]) || 0;
+                        const minutes = parts[1] ? parseInt(parts[1].replace('min', '').trim()) : 0;
+                        totalMinutes += hours * 60 + minutes;
+                    } else if (durationStr.includes('min')) {
+                        const minutes = parseInt(durationStr.replace('min', '')) || 0;
+                        totalMinutes += minutes;
+                    } else {
+                        // Si c'est juste un nombre, considérer comme des minutes
+                        const minutes = parseInt(durationStr) || 0;
+                        totalMinutes += minutes;
+                    }
                 }
             }
         }

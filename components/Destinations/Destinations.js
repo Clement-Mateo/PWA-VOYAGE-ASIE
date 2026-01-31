@@ -1,8 +1,8 @@
 /**
  * Composant Destinations - Module Pattern
  * Gère le bandeau des destinations avec édition
+ * Architecture modulaire avec fichiers séparés
  */
-
 
 const Destinations = {
     isSaving: false, // État de sauvegarde pour éviter les clics multiples
@@ -56,7 +56,7 @@ const Destinations = {
     hide() {
         this.isVisible = false;
         // Annuler toute création en cours lors de la fermeture
-        this.cancelCreation();
+        Destination.cancelCreation();
         this.updatePanelVisibility();
     },
     
@@ -68,7 +68,6 @@ const Destinations = {
         this.updatePanelVisibility();
     },
 
-    
     /**
      * Créer une card de destination
      */
@@ -90,49 +89,40 @@ const Destinations = {
         }
         
         const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
-        const durationText = this.formatDuration(duration);
+        const durationText = Destination.formatDuration(duration);
                 
         card.innerHTML = `
             <div class="destination-header flex-between">
                 <h3 class="destination-title">${destination.name || 'Nouvelle destination'}</h3>
                 <div class="destination-actions">
                     ${destination.id ? `
-                        <button class="btn-location" onclick="Destinations.zoomToDestination(${index})" title="Localiser sur la carte">
+                        <button class="btn-location" onclick="Destination.zoomToDestination(${index})" title="Localiser sur la carte">
                             <span class="material-icons">my_location</span>
                         </button>
-                        <button class="btn-edit" onclick="Destinations.editDestination(${index})">
+                        <button class="btn-edit" onclick="Destination.editDestination(${index})">
                             <span class="material-icons">edit</span>
                         </button>
                         <button class="btn-delete" onclick="Destinations.deleteDestination(${index})">
                             <span class="material-icons">delete</span>
                         </button>
-                        <button class="btn-expand" onclick="Destinations.toggleDestinationCard(${index})" title="Déplier">
+                        <button class="btn-expand" onclick="Destination.toggleDestinationCard(${index})" title="Déplier">
                             <span class="material-icons">expand_more</span>
                         </button>
                     ` : ''}
                 </div>
             </div>
-            <p class="destination-address">${destination.address ? destination.address.address : 'Adresse à spécifier'}</p>
-            ${durationText ? `<p class="destination-duration">⏱️ ${durationText}</p>` : ''}
+            <div class="destination-address">${destination.address ? destination.address.address : 'Adresse non définie'}</div>
+            <div class="destination-duration">Durée: ${durationText}</div>
             
-            <!-- Section des activités (visible quand dépliée) -->
-            <div class="destination-activities" id="activities-${index}" style="display: none;">
-                <div class="activities-header flex-between">
-                    <h4>Activités</h4>
-                </div>
-                <div class="activities-list" id="activities-list-${index}">
-                    <!-- Les activités seront chargées ici -->
-                </div>
-                <button class="btn-add" onclick="Destinations.addActivity(${index})" title="Ajouter une activité">
-                    <span class="material-icons">add_circle</span>
-                    Ajouter une activité
-                </button>
-            </div>
-            
+            <!-- Formulaire d'édition -->
             <div class="destination-form" id="form-${index}">
                 <div class="form-group">
+                    <label class="form-label">Nom de la destination</label>
+                    <input type="text" class="form-input" id="name-${index}" value="${destination.name || ''}" placeholder="Nom de la destination">
+                </div>
+                <div class="form-group">
                     <label class="form-label">Adresse</label>
-                    <div class="address-input-container flex-center" onclick="Destinations.openAddressSearch(${index}, event)">
+                    <div class="address-input-container flex-center" onclick="Destination.openAddressSearch(${index}, event)">
                         <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
                         <button class="btn-icon address-search-btn">
                             <span class="material-icons">search</span>
@@ -140,340 +130,177 @@ const Destinations = {
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Nom</label>
-                    <input type="text" class="form-input" id="title-${index}" value="${destination.name || ''}" placeholder="Nom de la destination">
-                </div>
-                <div class="form-group">
                     <label class="form-label">Durée</label>
                     <div style="display: flex; gap: 5px; align-items: center;">
-                        <input type="number" class="form-input" id="days-${index}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'days')">
+                        <input type="number" class="form-input" id="days-${index}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'days')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">j</span>
-                        <input type="number" class="form-input" id="hours-${index}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'hours')">
+                        <input type="number" class="form-input" id="hours-${index}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'hours')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">h</span>
-                        <input type="number" class="form-input" id="minutes-${index}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destinations.validateDurationInput(${index}, 'minutes')">
+                        <input type="number" class="form-input" id="minutes-${index}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'minutes')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
                 </div>
                 <div class="form-actions flex-center">
-                    <button class="btn-save" onclick="Destinations.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
-                    <button class="btn-cancel" onclick="Destinations.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
+                    <button class="btn-save" onclick="Destination.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
+                    <button class="btn-cancel" onclick="Destination.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
                 </div>
+            </div>
+            
+            <!-- Section des activités -->
+            <div class="destination-activities" id="activities-${index}" style="display: none;">
+                <div class="activities-header">
+                    <h4>Activités</h4>
+                </div>
+                <div class="activities-list" id="activities-list-${index}">
+                    <!-- Les activités seront chargées ici -->
+                </div>
+                <button class="btn-add" onclick="Activities.addActivity(${index})" title="Ajouter une activité">
+                    <span class="material-icons">add_circle</span>
+                    Ajouter une activité
+                </button>
             </div>
         `;
         
-        // Ajouter les événements drag and drop
+        // Ajouter les écouteurs d'événements pour le drag & drop
         this.addDragAndDropEvents(card, index);
         
         return card;
     },
-    
+
     /**
-     * Créer une card de transport
+     * Supprimer une destination
      */
-    createTransportationCard(transportation, destinationIndex) {
-        const card = document.createElement('div');
-        card.className = 'transportation-card';
-        card.id = `transportation-${destinationIndex}`;
+    async deleteDestination(index) {
+        const destinationsBefore = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destination = destinationsBefore[index];
         
-        // Pas de drag & drop pour les cartes de transport
-        card.draggable = false;
+        if (!destination) {
+            console.error('❌ Destination non trouvée à l\'index', index);
+            return;
+        }
+
+        this.scrollToDestination(index);
         
-        const transportTypes = {
-            'train': '<span class="material-icons">train</span> Train',
-            'avion': '<span class="material-icons">flight</span> Avion', 
-            'bus': '<span class="material-icons">directions_bus</span> Bus',
-            'voiture': '<span class="material-icons">directions_car</span> Voiture',
-            'velo': '<span class="material-icons">directions_bike</span> Vélo',
-            'a pied': '<span class="material-icons">directions_walk</span> À pied'
-        };
-        
-        const typeLabel = transportTypes[transportation.type] || '<span class="material-icons">directions_car</span> Transport';
-        
-        // Créer les éléments avec createElement au lieu de innerHTML
-        const header = document.createElement('div');
-        header.className = 'transportation-header';
-        
-        // Info section
-        const info = document.createElement('div');
-        info.className = 'transportation-info';
-        
-        const typeSpan = document.createElement('span');
-        typeSpan.className = 'transportation-type';
-        typeSpan.innerHTML = typeLabel;
-        info.appendChild(typeSpan);
-        
-        // Ajouter les détails seulement s'ils existent
-        if (transportation.cost || transportation.duration) {
-            const detailsSpan = document.createElement('span');
-            detailsSpan.className = 'transportation-details';
-            
-            const details = [];
-            if (transportation.cost) details.push(`${transportation.cost}€`);
-            if (transportation.duration) details.push(transportation.duration);
-            
-            detailsSpan.textContent = details.join(' • ');
-            info.appendChild(detailsSpan);
+        if (this.isDeleting) {
+            return;
+        }
+
+        this.isDeleting = true;
+
+        const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
         
-        // Actions section
-        const actions = document.createElement('div');
-        actions.className = 'transportation-actions';
-        
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn-edit';
-        editBtn.title = 'Modifier le transport';
-        editBtn.onclick = () => this.editTransportation(destinationIndex);
-        
-        const icon = document.createElement('span');
-        icon.className = 'material-icons';
-        icon.textContent = 'edit';
-        
-        editBtn.appendChild(icon);
-        actions.appendChild(editBtn);
-        
-        // Assembler le tout
-        header.appendChild(info);
-        header.appendChild(actions);
-        card.appendChild(header);
-        
-        return card;
-    },
-    
-    /**
-     * Parser une durée au format "2h30" en heures et minutes
-     */
-    parseDuration(duration) {
-        if (!duration || typeof duration !== 'string') {
-            return { hours: 0, minutes: 0 };
-        }
-        
-        // Chercher le format "XhY" ou "Xh" ou "Y"
-        const hoursMatch = duration.match(/(\d+)h/);
-        const minutesMatch = duration.match(/h(\d+)|(\d+)$/);
-        
-        const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-        const minutes = minutesMatch ? parseInt(minutesMatch[1] || minutesMatch[2], 10) : 0;
-        
-        return { hours, minutes };
-    },
-    
-    /**
-     * Former une durée de transport à partir d'heures et minutes
-     */
-    formatTransportDuration(hours, minutes) {
-        const h = parseInt(hours) || 0;
-        const m = parseInt(minutes) || 0;
-         
-        if (h === 0 && m === 0) return '';
-        if (h === 0) return `${m}min`;
-        if (m === 0) return `${h}h`;
-        return `${h}h ${m}`;
-    },
-    
-    /**
-     * Éditer le transport d'une destination
-     */
-    editTransportation(destinationIndex) {
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[destinationIndex];
+        const updatedDestination = destinations.find(d => d.id === destination.id);
         
-        if (!destination) return;
-        
-        const transportation = destination.transportation || {
-            type: 'avion',
-            cost: '',
-            duration: ''
-        };
-        
-        // Créer le popup d'édition
-        const popup = document.createElement('div');
-        popup.className = 'modal open';
-        popup.innerHTML = `
-            <div class="modal-backdrop" onclick="this.closest('.modal').remove()"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Modifier le transport</h3>
-                    <button class="btn-close" onclick="this.closest('.modal').remove()">
-                        <span class="material-icons">close</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Type de transport</label>
-                        <div class="custom-select" id="transportTypeSelect">
-                            <div class="select-trigger" onclick="Destinations.openTransportModal()">
-                                <span class="select-value">
-                                    <span class="material-icons">${this.getTransportIcon(transportation.type)}</span>
-                                    <span>${this.getTransportLabel(transportation.type)}</span>
-                                </span>
-                                <span class="material-icons select-arrow">expand_more</span>
-                            </div>
-                        </div>
-                        <input type="hidden" id="transportType" value="${transportation.type || ''}">
-                    </div>
-                    
-                    <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label class="form-label">Coût (€)</label>
-                            <input type="number" class="form-input" id="transportCost" placeholder="0" min="0" step="0.01" value="${transportation.cost || ''}">
-                        </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label class="form-label">Durée</label>
-                            <div class="duration-inputs" style="display: flex; align-items: center; gap: 4px;">
-                                <input type="number" class="form-input" id="transportHours" placeholder="0" min="0" max="23" value="${this.parseDuration(transportation.duration).hours || ''}" oninput="this.value = Math.max(0, Math.min(23, parseInt(this.value) || 0))" style="flex: 1;">
-                                <span style="color: var(--gray-dark); font-size: 14px;">h</span>
-                                <input type="number" class="form-input" id="transportMinutes" placeholder="0" min="0" max="59" value="${this.parseDuration(transportation.duration).minutes || ''}" oninput="this.value = Math.max(0, Math.min(59, parseInt(this.value) || 0))" style="flex: 1;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-cancel" onclick="this.closest('.modal').remove()">Annuler</button>
-                    <button class="btn-save" onclick="Destinations.saveTransportation(${destinationIndex})">Enregistrer</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(popup);
-    },
-    
-    // Ajouter un spinner au bouton save
-    showSaveButtonLoading() {
-        const saveButton = document.querySelector('.modal-footer .btn-save');
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
+        if (!updatedDestination) {
+            console.error('❌ Destination non trouvée après cancelCreation');
+            this.isDeleting = false;
+            return;
+        }
+
+        if (!updatedDestination.id) {
+            const card = document.getElementById(`destination-${index}`);
+            if (card) {
+                card.remove();
+            }
+            this.updateAddDestinationButtonVisibility();
+            this.isDeleting = false;
+            return;
+        }
+
+        try {
+            // Obtenir l'itinéraire actuel
+            const currentItinerary = await window.firebaseService.getCurrentItinerary();
+            if (!currentItinerary) {
+                console.error('❌ Aucun itinéraire trouvé pour supprimer la destination');
+                return;
+            }
+
+            // Utiliser firebaseService pour supprimer la destination
+            const success = await window.firebaseService.deleteDestination(destination);
+            
+            if (success) {
+                console.log('✅ Destination supprimée');
+                await this.loadDestinations();
+                
+                if (window.MapInstance && window.MapInstance.cleanMap) {
+                    window.MapInstance.cleanMap();
+                }
+            } else {
+                console.error('❌ Échec de la suppression de la destination');
+            }
+
+            // Mettre à jour les ordres des destinations suivantes
+            await this.updateOrdersAfterDeletion(destination.order);
+            
+        } catch (error) {
+            console.error('❌ Erreur suppression destination:', error);
+            window.showErrorSnackBar('Erreur lors de la suppression de la destination: ' + error.message);
+        } finally {
+            // Réactiver le bouton
+            if (deleteButton) {
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = '<span class="material-icons">delete</span>';
+            }
+
+            // Marquer comme terminé
+            this.isDeleting = false;
         }
     },
 
-    // Restaurer le bouton save
-    restoreSaveButton() {
-        const saveButton = document.querySelector('.modal-footer .btn-save');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = 'Enregistrer';
-        }
-    },
-    
     /**
-     * Sauvegarder le transport d'une destination
+     * Mettre à jour les ordres après suppression d'une destination
      */
-    async saveTransportation(destinationIndex) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[destinationIndex];
-        
-        if (!destination) return;
-        
-        const type = document.getElementById('transportType').value;
-        const cost = document.getElementById('transportCost').value;
-        let hours = document.getElementById('transportHours').value;
-        let minutes = document.getElementById('transportMinutes').value;
-        
-        console.log('saveTransportation - Valeurs récupérées:', { type, cost, hours, minutes });
-        
-        // Afficher le spinner de chargement
-        this.showSaveButtonLoading();
-        
-        // Validation des contraintes de temps
-        const hoursNum = parseInt(hours) || 0;
-        const minutesNum = parseInt(minutes) || 0;
-        
-        if (hoursNum < 0 || hoursNum > 23) {
-            alert('Les heures doivent être comprises entre 0 et 23');
-            this.restoreSaveButton();
-            return;
-        }
-        
-        if (minutesNum < 0 || minutesNum > 59) {
-            alert('Les minutes doivent être comprises entre 0 et 59');
-            this.restoreSaveButton();
-            return;
-        }
-        
-        // Validation automatique : si un champ est vide mais pas l'autre, mettre 0
-        if (!hours && hours !== '0' && minutes && minutes !== '0') {
-            hours = '0';
-        }
-        if (!minutes && minutes !== '0' && hours && hours !== '0') {
-            minutes = '0';
-        }
-        
-        // Former la durée
-        const duration = this.formatTransportDuration(hours, minutes);
-        
-        // Mettre à jour l'objet destination
-        destination.transportation = {
-            type: type,
-            cost: cost ? parseFloat(cost) : null,
-            duration: duration || ''
-        };
-                
-        // Sauvegarder dans Firebase
+    async updateOrdersAfterDeletion(deletedOrder) {
         try {
-            await window.firebaseService.updateDestination(destination);
+            // Récupérer l'itinéraire actuel
+            const itineraries = window.firebaseService.itineraries;
+            if (itineraries.length === 0) {
+                console.error('❌ Aucun itinéraire trouvé');
+                return;
+            }
+
+            const currentItinerary = window.firebaseService.getCurrentItinerary();
+            const destinations = currentItinerary.destinations || [];
             
-            // Fermer le popup
-            document.querySelector('.modal.open')?.remove();
+            // Mettre à jour les ordres : toutes les destinations après la supprimée voient leur order diminué de 1
+            destinations.forEach(destination => {
+                if (destination.order > deletedOrder) {
+                    destination.order = destination.order - 1;
+                }
+            });
+
+            // Sauvegarder l'itinéraire mis à jour
+            await window.firebaseService.updateItinerary(currentItinerary);
+            console.log('✅ Ordres mis à jour après suppression');
             
-            // Recharger les destinations
-            await this.loadDestinations();
-            
-            console.log('✅ Transport mis à jour');
         } catch (error) {
-            console.error('❌ Erreur lors de la sauvegarde du transport:', error);
-            // Restaurer le bouton en cas d'erreur
-            this.restoreSaveButton();
+            console.error('❌ Erreur mise à jour des ordres après suppression:', error);
         }
     },
-    
+
     /**
-     * Ajouter les événements drag and drop à une card
+     * Obtenir l'élément après lequel glisser
      */
-    addDragAndDropEvents(card, index) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[index];
+    getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.destination-card:not(.dragging)')];
         
-        // Si la destination n'existe pas ou si la dernière destination n'a pas d'ID, ne pas ajouter drag & drop
-        const lastDestination = destinations[destinations.length - 1];
-        if (!destination || !destination.id || (lastDestination && !lastDestination.id)) return;
-        
-        card.addEventListener('dragstart', (e) => {
-            card.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', card.innerHTML);
-            this.draggedIndex = index;
-        });
-        
-        card.addEventListener('dragend', (e) => {
-            card.classList.remove('dragging');
-        });
-        
-        card.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
             
-            if (this.draggedIndex !== undefined && this.draggedIndex !== index) {
-                card.classList.add('drag-over');
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
             }
-        });
-        
-        card.addEventListener('dragleave', (e) => {
-            card.classList.remove('drag-over');
-        });
-        
-        card.addEventListener('drop', (e) => {
-            e.preventDefault();
-            card.classList.remove('drag-over');
-            
-            if (this.draggedIndex !== undefined && this.draggedIndex !== index && !this.isReordering) {
-                this.isReordering = true;
-                this.reorderDestinations(this.draggedIndex, index).finally(() => {
-                    this.isReordering = false;
-                });
-            }
-        });
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
     },
-    
+
     /**
      * Réorganiser les destinations
      */
@@ -550,7 +377,9 @@ const Destinations = {
             console.log('✅ Destinations réorganisées avec gestion des transports');            
         } catch (error) {
             console.error('❌ Erreur réorganisation destinations:', error);
-            showErrorSnackBar('Erreur lors de la réorganisation.');
+            if (window.showErrorSnackBar) {
+                window.showErrorSnackBar('Erreur lors de la réorganisation.');
+            }
 
             await this.loadDestinations();
         }
@@ -558,466 +387,6 @@ const Destinations = {
         this.draggedIndex = undefined;
     },
 
-    // Valider les entrées de durée
-    validateDurationInput(index, type) {
-        const input = document.getElementById(type + '-' + index);
-        const value = parseInt(input.value);
-        
-        if (type === 'days' && value > 365) {
-            input.value = 365;
-        } else if (type === 'hours' && value > 23) {
-            input.value = 23;
-        } else if (type === 'minutes' && value > 59) {
-            input.value = 59;
-        }
-        
-        if (value < 0) {
-            input.value = 0;
-        }
-    },
-    
-    /**
-     * Obtenir l'icône Material Icon pour un type de transport
-     */
-    getTransportIcon(type) {
-        const icons = {
-            'train': 'train',
-            'avion': 'flight',
-            'bus': 'directions_bus',
-            'voiture': 'directions_car',
-            'velo': 'directions_bike',
-            'a pied': 'directions_walk'
-        };
-        return icons[type] || 'directions_car';
-    },
-
-    /**
-     * Obtenir le label pour un type de transport
-     */
-    getTransportLabel(type) {
-        const labels = {
-            'train': 'Train',
-            'avion': 'Avion',
-            'bus': 'Bus',
-            'voiture': 'Voiture',
-            'velo': 'Vélo',
-            'a pied': 'À pied'
-        };
-        return labels[type] || 'Transport';
-    },
-
-    /**
-     * Ouvrir la modale flottante des types de transport
-     */
-    openTransportModal() {
-        // Fermer la modale si elle existe déjà
-        this.closeTransportModal();
-        
-        const modal = document.createElement('div');
-        modal.id = 'transportTypeModal';
-        modal.className = 'transport-modal';
-        modal.innerHTML = `
-            <div class="transport-modal-backdrop"></div>
-            <div class="transport-modal-content">
-                <div class="transport-modal-header">
-                    <h4>Type de transport</h4>
-                    <button class="transport-modal-close" onclick="Destinations.closeTransportModal()">
-                        <span class="material-icons">close</span>
-                    </button>
-                </div>
-                <div class="transport-modal-body">
-                    <div class="transport-option" onclick="Destinations.selectTransportType('train')">
-                        <span class="material-icons">train</span>
-                        <span>Train</span>
-                    </div>
-                    <div class="transport-option" onclick="Destinations.selectTransportType('avion')">
-                        <span class="material-icons">flight</span>
-                        <span>Avion</span>
-                    </div>
-                    <div class="transport-option" onclick="Destinations.selectTransportType('bus')">
-                        <span class="material-icons">directions_bus</span>
-                        <span>Bus</span>
-                    </div>
-                    <div class="transport-option" onclick="Destinations.selectTransportType('voiture')">
-                        <span class="material-icons">directions_car</span>
-                        <span>Voiture</span>
-                    </div>
-                    <div class="transport-option" onclick="Destinations.selectTransportType('velo')">
-                        <span class="material-icons">directions_bike</span>
-                        <span>Vélo</span>
-                    </div>
-                    <div class="transport-option" onclick="Destinations.selectTransportType('a pied')">
-                        <span class="material-icons">directions_walk</span>
-                        <span>À pied</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Animation d'ouverture
-        setTimeout(() => {
-            modal.classList.add('open');
-        }, 10);
-        
-        // Fermer au clic sur le backdrop
-        const backdrop = modal.querySelector('.transport-modal-backdrop');
-        if (backdrop) {
-            backdrop.addEventListener('click', () => this.closeTransportModal());
-        }
-    },
-
-    /**
-     * Fermer la modale flottante
-     */
-    closeTransportModal() {
-        const modal = document.getElementById('transportTypeModal');
-        if (modal) {
-            modal.classList.remove('open');
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    },
-
-    /**
-     * Sélectionner un type de transport
-     */
-    selectTransportType(type) {
-        const hiddenInput = document.getElementById('transportType');
-        const selectValue = document.querySelector('.select-value');
-        
-        if (hiddenInput) hiddenInput.value = type;
-        
-        if (selectValue) {
-            selectValue.innerHTML = `
-                <span class="material-icons">${this.getTransportIcon(type)}</span>
-                <span>${this.getTransportLabel(type)}</span>
-            `;
-        }
-        
-        // Fermer la modale flottante
-        this.closeTransportModal();
-    },
-    formatDuration(duration) {
-        const parts = [];
-        if (duration.days > 0) parts.push(`${duration.days}j`);
-        if (duration.hours > 0) parts.push(`${duration.hours}h`);
-        if (duration.minutes > 0) parts.push(`${duration.minutes}min`);
-        return parts.length > 0 ? parts.join(' ') : '';
-    },
-    
-    /**
-     * Faire défiler jusqu'à une destination
-     */
-    scrollToDestination(index) {
-        const card = document.getElementById(`destination-${index}`);
-        if (card) {
-            // Attendre un peu que le panneau soit visible
-            setTimeout(() => {
-                card.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }, 350);
-        }
-    },
-
-    /**
-     * Zoomer sur la destination dans la carte
-     */
-    zoomToDestination(index) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[index];
-        
-        if (!destination || !destination.address || !destination.address.location) {
-            console.error('❌ Destination sans coordonnées valides');
-            showErrorSnackBar('Destination sans coordonnées valides');
-            return;
-        }
-        
-        const { lat, lng } = destination.address.location;
-        
-        // Ouvrir la carte si elle est cachée
-        const mapElement = document.getElementById('map');
-        if (mapElement && mapElement.style.display === 'none') {
-            mapElement.style.display = 'block';
-        }
-        
-        // Zoomer sur la destination
-        if (window.MapInstance && window.MapInstance.leafletMap) {
-            // Utiliser flyTo pour un zoom plus fluide et précis
-            window.MapInstance.leafletMap.flyTo([lat, lng], 8, {
-                animate: true,
-                duration: 1.5
-            });
-            
-            // Ouvrir la popup du marqueur après un court délai pour s'assurer que le zoom est terminé
-            setTimeout(() => {
-                const marker = window.MapInstance.destinationMarkers.find(m => 
-                    m.getLatLng && 
-                    Math.abs(m.getLatLng().lat - lat) < 0.0001 && 
-                    Math.abs(m.getLatLng().lng - lng) < 0.0001
-                );
-                if (marker && marker.openPopup) {
-                    marker.openPopup();
-                }
-            }, 1600);
-        } else {
-            console.error('❌ Carte non disponible');
-            showErrorSnackBar('Carte non disponible');
-        }
-    },
-
-    /**
-     * Éditer une destination
-     */
-    async editDestination(index) {
-        // Annuler d'abord toute création en cours
-        await this.cancelCreation();
-        
-        const card = document.getElementById(`destination-${index}`);
-        const form = document.getElementById(`form-${index}`);
-        const activitiesSection = document.getElementById(`activities-${index}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        // Replier la destination avant l'édition
-        if (activitiesSection && activitiesSection.style.display !== 'none') {
-            activitiesSection.style.display = 'none';
-            if (expandBtn) {
-                expandBtn.textContent = 'expand_more';
-            }
-            card.classList.remove('expanded');
-        }
-        
-        // Fermer les autres formulaires
-        document.querySelectorAll('.destination-form.show').forEach(f => {
-            f.classList.remove('show');
-        });
-        document.querySelectorAll('.destination-card.editing').forEach(c => {
-            c.classList.remove('editing');
-        });
-        
-        // Ouvrir ce formulaire
-        form.classList.add('show');
-        card.classList.add('editing');
-        
-        // Scroll vers la destination
-        this.scrollToDestination(index);
-    },
-
-    /**
-     * Ajouter une activité à une destination
-     */
-    addActivity(index) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[index];
-        if (!destination || !destination.id) {
-            console.error('❌ Destination invalide pour ajouter une activité');
-            return;
-        }
-        
-        // Définir la destination actuelle pour l'activité
-        if (window.Activity) {
-            window.Activity.setCurrentDestination(destination);
-            window.Activity.showActivityPopup();
-        } else {
-            console.error('❌ Activity non disponible');
-        }
-    },
-    
-    /**
-     * Annuler la création d'une destination
-     */
-    async cancelCreation() {
-        
-        // Trouver l'index de la destination en cours de création (sans ID)
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const creatingIndex = destinations.findIndex(dest => !dest.id);
-        
-        if (creatingIndex !== -1) {
-            const card = document.getElementById(`destination-${creatingIndex}`);
-            
-            // Supprimer la destination de la liste Firebase
-            destinations.splice(creatingIndex, 1);
-            
-            // Supprimer la card du DOM
-            if (card) {
-                card.remove();
-            }
-        }
-        
-        // Attendre un peu pour s'assurer que le DOM est bien nettoyé
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Mettre à jour la visibilité du bouton "Ajouter"
-        this.updateAddDestinationButtonVisibility();
-    },
-    
-    /**
-     * Annuler l'édition
-     */
-    cancelEdit(index) {
-        const card = document.getElementById(`destination-${index}`);
-        if (card) {
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-            const destination = destinations[index];
-            
-            // Si la destination n'existe pas ou n'a pas d'ID, supprimer simplement la card
-            if (!destination || !destination.id) {
-                this.cancelCreation();
-            } else {
-                // Destination existante : restaurer les valeurs et masquer le formulaire
-                const form = card.querySelector('.destination-form');
-                if (form) {
-                    form.classList.remove('show');
-                }
-                card.classList.remove('editing');
-                
-                // Restaurer les valeurs originales
-                const nameInput = card.querySelector('.destination-name');
-                const addressInput = card.querySelector('.destination-address');
-                const durationInputs = card.querySelectorAll('.duration-input');
-                
-                if (nameInput) nameInput.value = destination.name || '';
-                if (addressInput) addressInput.value = destination.address ? destination.address.address : '';
-                
-                if (destination.duration) {
-                    if (durationInputs[0]) durationInputs[0].value = destination.duration.days || 0;
-                    if (durationInputs[1]) durationInputs[1].value = destination.duration.hours || 0;
-                    if (durationInputs[2]) durationInputs[2].value = destination.duration.minutes || 0;
-                }
-            }
-        }
-    },
-    
-    /**
-     * Ouvrir la recherche d'adresse
-     */
-    openAddressSearch(index, event) {
-        this.currentEditIndex = index;
-        
-        if (event) {
-            event.stopPropagation();
-        }
-        
-        if (window.ChooseAddress) {
-            window.ChooseAddress.show((selectedAddress) => {
-                this.selectAddress(selectedAddress, index);
-            });
-        } else {
-            console.error('❌ ChooseAddress non disponible');
-        }
-    },
-    
-    /**
-     * Sélectionner une adresse
-     */
-    selectAddress(selectedAddress, index) {
-        // Mettre à jour le champ adresse
-        const addressInput = document.getElementById(`address-${index}`);
-        if (addressInput) {
-            addressInput.value = selectedAddress.address;
-        }
-        
-        // Auto-remplir le nom si vide avec le nom du lieu ou de la ville
-        const titleInput = document.getElementById(`title-${index}`);
-        if (titleInput && !titleInput.value.trim() && selectedAddress.name) {
-            titleInput.value = selectedAddress.name;
-        }
-        
-        // Stocker les données complètes de l'adresse
-        this.selectedAddress = selectedAddress;
-    },
-    
-    /**
-     * Supprimer une destination
-     */
-    async deleteDestination(index) {
-        const destinationsBefore = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinationsBefore[index];
-        
-        if (!destination) {
-            console.error('❌ Destination non trouvée à l\'index', index);
-            return;
-        }
-
-        this.scrollToDestination(index);
-        
-        if (this.isDeleting) {
-            return;
-        }
-                
-        this.isDeleting = true;
-        
-        const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
-        if (deleteButton) {
-            deleteButton.disabled = true;
-            deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
-        }
-        
-        await this.cancelCreation();
-        
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const updatedDestination = destinations.find(d => d.id === destination.id);
-        
-        if (!updatedDestination) {
-            console.error('❌ Destination non trouvée après cancelCreation');
-            this.isDeleting = false;
-            return;
-        }
-        
-        if (!updatedDestination.id) {
-            const card = document.getElementById(`destination-${index}`);
-            if (card) {
-                card.remove();
-            }
-            this.updateAddDestinationButtonVisibility();
-            this.isDeleting = false;
-            return;
-        }
-        
-        try {
-            // Obtenir l'itinéraire actuel
-            const currentItinerary = await window.firebaseService.getCurrentItinerary();
-            if (!currentItinerary) {
-                console.error('❌ Aucun itinéraire trouvé pour supprimer la destination');
-                return;
-            }
-            
-            // Utiliser firebaseService pour supprimer la destination
-            const success = await window.firebaseService.deleteDestination(destination);
-            
-            if (success) {
-                console.log('✅ Destination supprimée');
-                
-                await this.loadDestinations();
-                
-                if (window.MapInstance && window.MapInstance.cleanMap) {
-                    window.MapInstance.cleanMap();
-                }
-            } else {
-                console.error('❌ Échec de la suppression de la destination');
-            }
-            
-            // Mettre à jour les ordres des destinations suivantes
-            await this.updateOrdersAfterDeletion(destination.order);
-            
-        } catch (error) {
-            console.error('❌ Erreur suppression destination:', error);
-            showErrorSnackBar('Erreur lors de la suppression de la destination: ' + error.message);
-        } finally {
-            // Réactiver le bouton
-            if (deleteButton) {
-                deleteButton.disabled = false;
-                deleteButton.innerHTML = '<span class="material-icons">delete</span>';
-            }
-            
-            // Marquer comme terminé
-            this.isDeleting = false;
-        }
-    },
-    
     /**
      * Mettre à jour les ordres après suppression d'une destination
      */
@@ -1029,8 +398,8 @@ const Destinations = {
                 console.error('❌ Aucun itinéraire trouvé');
                 return;
             }
-            
-            const currentItinerary = window.firebaseService.getCurrentItinerary();;
+
+            const currentItinerary = window.firebaseService.getCurrentItinerary();
             const destinations = currentItinerary.destinations || [];
             
             // Mettre à jour les ordres : toutes les destinations après la supprimée voient leur order diminué de 1
@@ -1039,17 +408,48 @@ const Destinations = {
                     dest.order = dest.order - 1;
                 }
             });
-            
+
+            // Sauvegarder les changements
             await window.firebaseService.updateItinerary(currentItinerary);
-            
-            console.log('✅ Ordres mis à jour');
+            console.log('✅ Ordres mis à jour après suppression');
             
         } catch (error) {
-            console.error('❌ Erreur lors de la mise à jour des ordres:', error);
-            showErrorSnackBar('Erreur lors de la réorganisation. Veuillez rafraîchir la page.');
+            console.error('❌ Erreur mise à jour ordres après suppression:', error);
         }
     },
-    
+
+    /**
+     * Rafraîchir la liste des destinations
+     */
+    refreshDestinationsList() {
+        if (window.firebaseService && window.firebaseService.loadDestinations) {
+            window.firebaseService.loadDestinations();
+        }
+    },
+
+    /**
+     * Mettre à jour la visibilité du bouton "Ajouter une destination"
+     */
+    updateAddDestinationButtonVisibility() {
+        const addButton = document.getElementById('add-destination-btn');
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const lastDestination = destinations[destinations.length - 1];
+        
+        if (addButton) {
+            // Le bouton doit être visible si :
+            // - Il n'y a aucune destination
+            // - OU la dernière destination a un ID (elle est complètement sauvegardée)
+            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id);
+            if (shouldShow) {
+                addButton.style.display = 'block';
+            } else {
+                addButton.style.display = 'none';
+            }
+        } else {
+            console.log('erreur updateAddDestinationButtonVisibility -> addButton non trouvé');
+        }
+    },
+
     /**
      * Afficher les destinations
      */
@@ -1096,7 +496,7 @@ const Destinations = {
                         cost: null,
                         duration: null
                     };
-                    const transportCard = this.createTransportationCard(transportation, sortedIndex);
+                    const transportCard = Transportation.createTransportationCard(transportation, sortedIndex);
                     container.appendChild(transportCard);
                 }
                 
@@ -1116,223 +516,6 @@ const Destinations = {
         // Mettre à jour la visibilité du bouton "Ajouter"
         this.updateAddDestinationButtonVisibility();
     },
-    
-    /**
-     * Basculer l'affichage des activités d'une destination
-     */
-    toggleDestinationCard(index) {
-        const card = document.getElementById(`destination-${index}`);
-        const activitiesSection = document.getElementById(`activities-${index}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        if (!card || !activitiesSection || !expandBtn) return;
-        
-        const isExpanded = activitiesSection.style.display !== 'none';
-        
-        if (isExpanded) {
-            // Replier
-            activitiesSection.style.display = 'none';
-            expandBtn.textContent = 'expand_more';
-            card.classList.remove('expanded');
-        } else {
-            // Déplier
-            activitiesSection.style.display = 'block';
-            expandBtn.textContent = 'expand_less';
-            card.classList.add('expanded');
-            
-            // Charger les activités pour cette destination
-            this.displayActivitiesOfDestination(index);
-            
-            // Scroll vers la destination
-            this.scrollToDestination(index);
-        }
-    },
-
-    /**
-     * Mettre à jour la visibilité du bouton "Ajouter une destination"
-     */
-    updateAddDestinationButtonVisibility() {
-        const addButton = document.getElementById('add-destination-btn');
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const lastDestination = destinations[destinations.length - 1];
-        
-        if (addButton) {
-            // Le bouton doit être visible si :
-            // - Il n'y a aucune destination
-            // - OU la dernière destination a un ID (elle est complètement sauvegardée)
-            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id);
-            if (shouldShow) {
-                addButton.style.display = 'block';
-            } else {
-                addButton.style.display = 'none';
-            }
-        } else {
-            console.log('erreur updateAddDestinationButtonVisibility -> addButton non trouvé');
-        }
-    },
-    
-    /**
-     * Charger les destinations
-     */
-    async loadDestinations() {
-        try {
-            console.log('🔍 Chargement des destinations...');
-            
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-                        
-            // S'assurer que le panneau existe avant de faire le rendu
-            this.getPanel();
-            this.render();
-                        
-            // Afficher les destinations sur la carte
-            if (window.MapInstance && window.MapInstance.displayDestinations) {
-                window.MapInstance.displayDestinations();
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur chargement destinations:', error);
-            this.render();
-        }
-    },
-
-    // Obtenir le pays depuis les coordonnées (API Nominatim)
-    async getCountryFromCoordinates(lat, lng) {
-        try {
-            // Utiliser l'API Nominatim en anglais (standard et fiable)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en`
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.address && data.address.country) {
-                const countryName = data.address.country;
-                console.log(`🌍 Pays retourné par l'API (anglais): ${countryName}`);
-                return countryName;
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('Erreur lors du géocodage inverse:', error);
-            return null;
-        }
-    },
-
-    /**
-     * Sauvegarder une destination modifiée
-     */
-    async saveDestination(index) {
-        const saveButton = document.querySelector(`#form-${index} .btn-save`);
-        
-        // Si déjà en cours de sauvegarde, ignorer
-        if (this.isSaving) {
-            console.log('🚫 Sauvegarde déjà en cours, ignore le clic');
-            return;
-        }
-        
-        // Marquer comme en cours de sauvegarde
-        this.isSaving = true;
-        let saveButtonOldHtml = saveButton.innerHTML;
-        
-        // Désactiver le bouton et afficher le loading
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg> Enregistrer';
-        }
-        
-        try {
-            // Récupérer les valeurs du formulaire
-            const title = document.getElementById(`title-${index}`).value;
-            const address = document.getElementById(`address-${index}`).value;
-            const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
-            const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
-            const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
-            
-            // Validation : l'adresse est obligatoire
-            if (!address || !address.trim()) {
-                showErrorSnackBar('L\'adresse est obligatoire pour créer une destination');
-                return;
-            }
-            
-            // Récupérer les destinations actuelles
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-            
-            // Utiliser l'index pour les destinations existantes
-            let destination = destinations[index];
-            destination.name = title;
-            destination.duration = { days, hours, minutes };
-            
-            // Préserver les propriétés existantes de address (country, etc.)
-            destination.address = {
-                ...destination.address, // Préserver les propriétés existantes
-                address: address,
-                location: this.selectedAddress ? this.selectedAddress.location : (destination.address?.location || null)
-            };
-
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
-
-            if (!destination.id) {
-                // Si la destination n'existe pas (nouvelle destination), la créer
-                destination.id = `dest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                destination.order = destinations.length;
-
-                // Ajouter le transport par défaut si ce n'est pas la première destination
-                if (destinations.length > 0) {
-                    destination.transportation = {
-                        type: 'avion',
-                        cost: null,
-                        duration: null
-                    };
-                }
-
-                if(!currentItinerary.desstinations) currentItinerary.desstinations = [];
-                currentItinerary.desstinations.push(destination);
-                
-                await window.firebaseService.updateItinerary(currentItinerary);
-                console.log('✅ Destination crée', destination);
-            } else {
-                // sinon maj la destination
-                await window.firebaseService.updateDestination(destination);
-                console.log('✅ Destination mise à jour:', destination);
-            }
-            
-            // Détecter le pays via les coordonnées et le stocker
-            if (destination.address.location) {
-                const country = await this.getCountryFromCoordinates(
-                    destination.address.location.lat, 
-                    destination.address.location.lng
-                );
-                if (country) {
-                    destination.address.country = country;
-                    console.log(`🌍 Pays détecté et stocké: ${country}`);
-                }
-            }
-            
-            // Fermer le formulaire
-            this.cancelEdit(index);
-            
-            // Recharger les destinations
-            await this.loadDestinations();
-
-        } catch (error) {
-            console.error('❌ Erreur sauvegarde destination:', error);
-            showErrorSnackBar('Erreur lors de la sauvegarde de la destination');
-        } finally {
-            // Réactiver le bouton et restaurer le texte
-            if (saveButton) {
-                saveButton.disabled = false;
-                saveButton.innerHTML = saveButtonOldHtml;
-            }
-
-            // Marquer comme terminé
-            this.isSaving = false;
-    
-        }
-    },
 
     /**
      * Afficher le formulaire d'ajout
@@ -1345,9 +528,161 @@ const Destinations = {
         document.querySelectorAll('.destination-card.editing').forEach(c => {
             c.classList.remove('editing');
         });
-        
-        // Créer une destination vide pour l'ajout
+
+        // Créer une destination vide pour l'ajout (ajouter à l'itinéraire mais pas sauvegarder en base)
         const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const newDestination = {
+            name: '',
+            address: '',
+            duration: { days: 0, hours: 0, minutes: 0 },
+            order: destinations.length // Order = position dans la liste
+        };
+
+        // Ajouter la nouvelle destination à l'itinéraire courant (sans sauvegarder en base)
+        const currentItinerary = window.firebaseService.getCurrentItinerary();
+        if (currentItinerary) {
+            currentItinerary.destinations.push(newDestination);
+        }
+
+        // Créer une card pour la nouvelle destination dans la sidebar
+        const panel = this.getPanel();
+        if (!panel) {
+            console.error('❌ Panneau destinations non trouvé');
+            return;
+        }
+
+        const list = panel.querySelector('.destinations-list');
+        if (!list) {
+            console.error('❌ Liste destinations non trouvée');
+            return;
+        }
+
+        // Trouver le bouton "Ajouter une destination"
+        const addButton = document.getElementById('add-destination-btn');
+        
+        // L'index de la nouvelle destination est le dernier (après ajout)
+        const newIndex = currentItinerary.destinations.length - 1;
+        const card = this.createDestinationCard(newDestination, newIndex);
+        card.classList.add('editing');
+        
+        list.insertBefore(card, addButton);
+        
+        // Ouvrir automatiquement le formulaire
+        const form = document.getElementById(`form-${newIndex}`);
+        if (form) {
+            form.classList.add('show');
+        }
+
+        // Mettre à jour la visibilité du bouton "Ajouter"
+        this.updateAddDestinationButtonVisibility();
+        
+        // Scroller vers la nouvelle destination
+        setTimeout(() => {
+            this.scrollToDestination(newIndex);
+        }, 100);
+    },
+
+    /**
+     * Faire défiler jusqu'à une destination
+     */
+    scrollToDestination(index) {
+        const card = document.getElementById(`destination-${index}`);
+        if (card) {
+            // Attendre un peu que le panneau soit visible
+            setTimeout(() => {
+                card.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 350);
+        }
+    },
+
+    /**
+     * Charger les destinations (version corrigée comme l'ancien système)
+     */
+    async loadDestinations() {
+        try {
+            console.log('🔁 Chargement des destinations...');
+            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+            
+            // S'assurer que le panneau existe avant de faire le rendu
+            this.getPanel();
+            this.render();
+
+            // Afficher les destinations sur la carte
+            if (window.MapInstance && window.MapInstance.displayDestinations) {
+                window.MapInstance.displayDestinations();
+            }
+
+        } catch (error) {
+            console.error('❌ Erreur chargement destinations:', error);
+            this.render();
+        }
+    },
+
+    /**
+     * Rendre les destinations (méthode manquante de l'ancien système)
+     */
+    render() {
+        // Obtenir ou créer le panneau destinations
+        const panel = this.getPanel();
+        if (!panel) {
+            console.error('❌ Panneau destinations non trouvé');
+            return;
+        }
+
+        // Trouver le conteneur de liste dans le panneau
+        let container = panel.querySelector('.destinations-list');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'destinations-list';
+            panel.appendChild(container);
+        }
+
+        container.innerHTML = '';
+
+        const addButton = document.createElement('button');
+        addButton.className = 'btn-add';
+        addButton.id = 'add-destination-btn';
+        addButton.onclick = () => this.showAddForm();
+        addButton.textContent = 'Ajouter une destination';
+        
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        if (destinations.length === 0) {
+            container.appendChild(addButton);
+        } else {
+            // Trier les destinations par order
+            const sortedDestinations = [...destinations].sort((a, b) => {
+                const orderA = a.order || 0;
+                const orderB = b.order || 0;
+                return orderA - orderB;
+            });
+
+            sortedDestinations.forEach((destination, sortedIndex) => {
+                // Ajouter une carte de transport si ce n'est pas la première destination
+                if (sortedIndex > 0) {
+                    const transportation = destination.transportation || {
+                        type: 'avion',
+                        cost: null,
+                        duration: null
+                    };
+                    const transportCard = Transportation.createTransportationCard(transportation, sortedIndex);
+                    container.appendChild(transportCard);
+                }
+                
+                // Ajouter la carte de destination
+                const card = this.createDestinationCard(destination, sortedIndex);
+                container.appendChild(card);
+            });
+
+            // Ajouter le bouton à la fin
+            container.appendChild(addButton);
+        }
+    },
+
+    /**
+     * Afficher le formulaire d'ajout (version complète de l'ancien système)
         const newDestination = {
             name: '',
             address: '',
@@ -1405,21 +740,43 @@ const Destinations = {
         }
     },
 
-    // Charger les activités pour une destination spécifique
-    async displayActivitiesOfDestination(index) {
+    /**
+     * Obtenir le pays depuis les coordonnées (API Nominatim)
+     */
+    async getCountryFromCoordinates(lat, lng) {
+        try {
+            // Utiliser l'API Nominatim en anglais (standard et fiable)
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en` 
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data && data.address && data.address.country) {
+                const countryName = data.address.country;
+                console.log(`🌍 Pays retourné par l'API (anglais): ${countryName}`);
+                return countryName;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('Erreur lors du géocodage inverse:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Afficher les activités d'une destination spécifique
+     */
+    displayActivitiesOfDestination(index) {
         const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[index];
         if (!destination || !destination.id) return;
         
         try {
-            // Récupérer le premier itinéraire de l'utilisateur
-            const itineraries = window.firebaseService.itineraries;
-            if (itineraries.length === 0) {
-                console.error('❌ Aucun itinéraire trouvé');
-                return;
-            }
-            
-            const currentItinerary = window.firebaseService.getCurrentItinerary();;
-            
             // Utiliser le nouveau service pour charger les activités
             const activities = window.firebaseService.getActivities(destination);
             
@@ -1430,142 +787,200 @@ const Destinations = {
             
             if (activities.length === 0) {
                 activitiesList.innerHTML = '<p style="color: var(--gray-light); padding: 10px;">Aucune activité pour cette destination</p>';
-            } else {
-                activities.forEach(activity => {
-                    console.log('🔍 Activité trouvée:', { id: activity.id, name: activity.name });
-                    
-                    const activityElement = document.createElement('div');
-                    activityElement.className = 'activity-item';
-                    
-                    // Créer le contenu HTML proprement
-                    let activityHTML = `
-                        <div class="activity-info">
-                            <div class="activity-header flex-between">
-                            <div class="activity-name-and-price">
-                                <strong>${activity.name}</strong>`;
+            return;
+            }
+            
+            // Trier les activités par ordre
+            activities.sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            activities.forEach(activity => {
+                console.log('🔍 Activité trouvée:', { id: activity.id, name: activity.name });
+                
+                const activityElement = document.createElement('div');
+                activityElement.className = 'activity-item';
+                
+                // Créer le contenu HTML proprement
+                let activityHTML = `
+                    <div class="activity-info">
+                        <div class="activity-header flex-between">
+                        <div class="activity-name-and-price">
+                            <strong>${activity.name}</strong>`;
+                            
+                            // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
+                            if (activity.price) {
+                                const displayPrice = activity.price || 0;
                                 
-                                // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
-                                if (activity.price) {
-                                    const displayPrice = activity.price || 0;
+                                if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
+                                    // Devise étrangère : afficher conversion
+                                    const displayCurrency = activity.localCurrency || 0;
+                                    const displayCurrencyCode = activity.localCurrencyCode || '';
                                     
-                                    if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
-                                        // Devise étrangère : afficher conversion
-                                        const displayCurrency = activity.localCurrency || 0;
-                                        const displayCurrencyCode = activity.localCurrencyCode || '';
-                                        
-                                        if (displayPrice > 0 || displayCurrency > 0) {
-                                            activityHTML += `
-                                                <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
+                                    if (displayPrice > 0 || displayCurrency > 0) {
+                                        activityHTML += `
+                                            <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
                                             `;
-                                        }
-                                    } else {
-                                        // EUR : afficher seulement le prix en euros
-                                        if (displayPrice > 0) {
-                                            activityHTML += `
-                                                <span class="activity-price">${displayPrice}€</span>
+                                    }
+                                } else {
+                                    // EUR : afficher seulement le prix en euros
+                                    if (displayPrice > 0) {
+                                        activityHTML += `
+                                            <span class="activity-price">${displayPrice}€</span>
                                             `;
-                                        }
                                     }
                                 }
-                            
-                            activityHTML += `
-                                </div> <!-- Fin activity-name-and-price -->
-                                <div class="activity-actions">
-                                    <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${index})" title="Modifier l'activité">
-                                        <span class="material-icons">edit</span>
-                                    </button>
-                                    <button class="btn-delete" onclick="window.Destinations.deleteActivity('${activity.id}', ${index}, this)" title="Supprimer l'activité">
-                                        <span class="material-icons">delete</span>
-                                    </button>
-                                </div>
-                            </div>
-                    `;
-                    
-                    if (activity.startTime && activity.endTime) {
-                        activityHTML += `<span class="activity-time">${activity.startTime} - ${activity.endTime}</span>`;
-                    }
-                    
-                    // Afficher le type d'activité si présent
-                    if (activity.type) {
+                            }
+                        
                         activityHTML += `
-                            <span class="activity-type">${activity.type}</span>
-                        `;
-                    }
-                    
-                    activityHTML += `
+                            </div> <!-- Fin activity-name-and-price -->
+                            <div class="activity-actions">
+                                <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${index})" title="Modifier l'activité">
+                                    <span class="material-icons">edit</span>
+                                </button>
+                                <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', ${index}, this)" title="Supprimer l'activité">
+                                    <span class="material-icons">delete</span>
+                                </button>
+                            </div>
                         </div>
-                    `;
-                    
-                    activityElement.innerHTML = activityHTML;
-                    activitiesList.appendChild(activityElement);
-                });
-            }
+                `;
+                
+                if (activity.startTime && activity.endTime) {
+                    activityHTML += `<span class="activity-time">${activity.startTime} - ${activity.endTime}</span>`;
+                }
+                
+                // Afficher le type d'activité si présent
+                if (activity.type) {
+                    activityHTML += `
+                        <span class="activity-type">${activity.type}</span>
+                        `;
+                }
+                
+                activityHTML += `
+                    </div>
+                `;
+                
+                activityElement.innerHTML = activityHTML;
+                activitiesList.appendChild(activityElement);
+            });
             
         } catch (error) {
             console.error('Erreur lors du chargement des activités:', error);
             const activitiesList = document.getElementById(`activities-list-${index}`);
             if (activitiesList) {
-                activitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des activités</p>';
+                activitiesList.innerHTML = '<p class="no-activities">Erreur lors du chargement des activités</p>';
             }
         }
     },
 
-    // Supprimer une activité
-    async deleteActivity(activityId, destinationIndex, buttonElement) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[destinationIndex];
-        if (!destination || !destination.id) return;
-
-        // Désactiver le bouton et afficher le loading
-        if (buttonElement) {
-            buttonElement.disabled = true;
-            buttonElement.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
+    /**
+     * Mettre à jour la visibilité du panneau
+     */
+    updatePanelVisibility() {
+        const panel = this.getPanel();
+        if (this.isVisible) {
+            panel.classList.add('show');
+        } else {
+            panel.classList.remove('show');
         }
+    },
 
-        try {
-            // Récupérer le premier itinéraire de l'utilisateur
-            const itineraries = window.firebaseService.itineraries;
-            if (itineraries.length === 0) {
-                console.error('❌ Aucun itinéraire trouvé pour supprimer l\'activité');
-                showErrorSnackBar('Aucun itinéraire trouvé');
+
+    /**
+     * Ajouter les événements drag and drop à une card
+     */
+    addDragAndDropEvents(card, index) {
+        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destination = destinations[index];
+        
+        // Si la destination n'existe pas ou si la dernière destination n'a pas d'ID, ne pas ajouter drag & drop
+        const lastDestination = destinations[destinations.length - 1];
+        if (!destination || !destination.id || (lastDestination && !lastDestination.id)) return;
+											
+		 
+        
+        card.addEventListener('dragstart', (e) => {
+            // Désactiver le drag si une destination est en édition
+            const editingCard = document.querySelector('.destination-card.editing');
+            if (editingCard) {
+                e.preventDefault();
                 return;
             }
-                        
-            // Créer l'objet activité à supprimer
-            const activityToDelete = { id: activityId };
             
-            // Utiliser le nouveau service pour supprimer l'activité
-            const success = await window.firebaseService.deleteActivity(activityToDelete, destination);
-            
-            if (success) {
-                console.log('✅ Activité supprimée:', activityId);
-                showSuccessSnackBar('Activité supprimée avec succès');
-                
-                // Recharger la liste des activités
-                await this.displayActivitiesOfDestination(destinationIndex);
-            } else {
-                console.error('❌ Échec de la suppression de l\'activité');
-                showErrorSnackBar('Échec de la suppression de l\'activité');
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', card.innerHTML);
+											   
+            this.draggedIndex = index;
+        });
+        
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+										  
+        });
+        
+        card.addEventListener('dragover', (e) => {
+            // Désactiver le drop si une destination est en édition
+            const editingCard = document.querySelector('.destination-card.editing');
+            if (editingCard) {
+                e.preventDefault();
+                return;
             }
             
-        } catch (error) {
-            console.error('❌ Erreur suppression activité:', error);
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
             
-            // Gérer les erreurs réseau/offline
-            if (error.message && error.message.includes('network')) {
-                showErrorSnackBar('Erreur réseau. Vérifiez votre connexion.');
-            } else {
-                showErrorSnackBar('Erreur lors de la suppression de l\'activité');
+            if (this.draggedIndex !== undefined && this.draggedIndex !== index) {
+                card.classList.add('drag-over');
             }
-        } finally {
-            // Réactiver le bouton et restaurer l'icône
-            if (buttonElement) {
-                buttonElement.disabled = false;
-                buttonElement.innerHTML = '<span class="material-icons">delete</span>';
+        });
+        
+        card.addEventListener('dragleave', (e) => {
+            card.classList.remove('drag-over');
+        });
+        
+        card.addEventListener('drop', (e) => {
+            // Désactiver le drop si une destination est en édition
+            const editingCard = document.querySelector('.destination-card.editing');
+            if (editingCard) {
+                e.preventDefault();
+                return;
             }
-        }
+            
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            
+            if (this.draggedIndex !== undefined && this.draggedIndex !== index && !this.isReordering) {
+                this.isReordering = true;
+                this.reorderDestinations(this.draggedIndex, index).finally(() => {
+                    this.isReordering = false;
+                });
+            }
+        });
     },
-    
-    };
 
-// Le composant est disponible globalement via window.Destinations
+    /**
+     * Gérer le début du drag
+     */
+    handleDragStart(e) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', e.target.innerHTML);
+        e.target.classList.add('dragging');
+    },
+
+    /**
+     * Gérer la fin du drag
+     */
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    },
+
+    /**
+     * Gérer le survol pendant le drag
+     */
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+};
+
+// Exporter pour utilisation globale
 window.Destinations = Destinations;
