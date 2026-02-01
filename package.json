@@ -1,5 +1,11 @@
 {
-  "name": "carte-monde-interactive-functions", 
-  "version": "1.0.0", 
-  "type": "module"
+  "name": "carte-monde-interactive-functions",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "version:patch": "node version-management/version.js patch",
+    "version:minor": "node version-management/version.js minor",
+    "version:major": "node version-management/version.js major",
+    "version": "node version-management/version.js"
+  }
 }

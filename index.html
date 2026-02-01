@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carte du Monde Interactive</title>
     
+    <!-- Cache Version Manager - DOIT être chargé en premier -->
+    <script src="version-management/cache-version-manager.js"></script>
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="var(--primary-blue)">
@@ -219,6 +222,12 @@
         // Initialiser les composants quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Démarrage de l\'application...');
+            
+            // Vérifier la version au démarrage de l'app
+            if (window.CacheVersionManager) {
+                const cacheManager = new window.CacheVersionManager();
+                await cacheManager.checkAndUpdateCache();
+            }
             
             // Initialiser Login
             if (window.Login) {
