@@ -1,4 +1,4 @@
-# Carte du Monde Interactive - PWA
+# Carte du Monde Interactive - PWA Offline-First
 
 ## 🚀 Démonstration en ligne
 
@@ -46,16 +46,68 @@ http://localhost:8000
 
 ```
 carte-monde-interactive/
-├── index.html          # Application principale
-├── manifest.json       # Configuration PWA
-├── sw.js              # Service Worker (cache hors ligne)
-├── searchService.js   # Service de recherche (Places + Geocoding)
-├── places_server.py   # Serveur proxy (développement local)
-├── .env.local        # Variables d'environnement locales (à créer)
-├── .gitignore        # Fichiers ignorés par Git
-├── DEPLOYMENT.md     # Guide de déploiement
-└── README.md         # Ce fichier
+├── index.html                    # Application principale
+├── manifest.json                 # Configuration PWA
+├── services/                     # Services de l'architecture
+│   ├── firebaseService.js        # Service Firebase (auth + sync)
+│   ├── localStorage.js           # Service IndexedDB (données locales)
+│   ├── syncService.js            # Service de synchronisation
+│   ├── networkManager.js         # Gestionnaire de réseau
+│   ├── offlineFirstApp.js        # Application principale
+│   ├── service-worker.js         # Service Worker (PWA)
+│   └── serviceUtil.js            # Utilitaires de services
+├── components/                   # Composants UI
+├── styles/                       # Styles CSS
+├── version-management/           # Gestion de version
+├── searchService.js              # Service de recherche (Places + Geocoding)
+├── places_server.py              # Serveur proxy (développement local)
+├── .env.local                   # Variables d'environnement locales (à créer)
+├── .gitignore                   # Fichiers ignorés par Git
+├── DEPLOYMENT.md                # Guide de déploiement
+└── README.md                    # Ce fichier
 ```
+
+## 🔧 Architecture Offline-First
+
+### Vue d'ensemble
+
+L'application utilise une architecture **offline-first** complète :
+
+- **🔐 Authentification** : Firebase Auth uniquement
+- **💾 Stockage local** : IndexedDB via Dexie.js
+- **🔄 Synchronisation** : Service de sync automatique
+- **📱 PWA** : Service Worker pour le cache
+
+### Flux de données
+
+1. **Utilisateur connecté** → Authentification Firebase
+2. **Opérations CRUD** → IndexedDB (immédiat)
+3. **Synchronisation** → Firebase (en arrière-plan)
+4. **Mode hors ligne** → IndexedDB (pleinement fonctionnel)
+
+### Services principaux
+
+#### localStorage.js
+- **Rôle** : Gestion des données locales (IndexedDB)
+- **Fonctionnalités** : CRUD itinéraires, destinations, activités
+- **API simplifiée** : Pas besoin de passer les IDs utilisateur/itinéraire
+
+#### firebaseService.js
+- **Rôle** : Authentification et synchronisation Firebase
+- **Fonctionnalités** : Login, register, sync des données
+- **Sécurité** : Uniquement les opérations d'authentification
+
+#### syncService.js
+- **Rôle** : Synchronisation automatique
+- **Fonctionnalités** : Détection des changements, sync en arrière-plan
+- **Intelligence** : Gestion des conflits, retry automatique
+
+### Avantages de l'architecture
+
+- **⚡ Performance** : Données accessibles instantanément
+- **📱 Expérience** : Application utilisable hors ligne
+- **🔄 Fiabilité** : Synchronisation transparente
+- **🔒 Sécurité** : Isolation des données locales
 
 ## 🔧 Configuration
 
@@ -105,8 +157,11 @@ Le système utilise une architecture simple et sécurisée :
 ### Mode hors ligne
 
 - ✅ **Carte** : disponible (cache)
+- ✅ **Données** : itinéraires, destinations, activités (IndexedDB)
+- ✅ **CRUD** : création, modification, suppression (local)
+- ✅ **Navigation** : entre tous les écrans
 - ❌ **Recherche** : désactivée (nécessite internet)
-- 📱 **Message** : "Recherche indisponible hors ligne"
+- 📱 **Message** : "Mode hors ligne - Synchronisation en attente"
 
 ## 🌍 Déploiement
 
@@ -120,5 +175,8 @@ Le système utilise une architecture simple et sécurisée :
 
 - ✅ `index.html`
 - ✅ `manifest.json`
-- ✅ `sw.js`
+- ✅ `services/service-worker.js`
+- ✅ `services/` (tous les services)
+- ✅ `components/` (tous les composants)
+- ✅ `styles/` (tous les styles)
 - ❌ `places_server.py` (inutile en production)

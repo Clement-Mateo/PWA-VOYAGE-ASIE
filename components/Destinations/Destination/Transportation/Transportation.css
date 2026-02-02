@@ -134,15 +134,6 @@
     user-select: none;
 }
 
-/* ========================================
-   TRANSPORT MODAL - Utilise les styles de modals.css
-   ======================================== */
-
-/* Header spécifique pour le transport modal */
-.transport-modal-header {
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-}
-
 /* Options de transport */
 .transport-option {
     display: flex;

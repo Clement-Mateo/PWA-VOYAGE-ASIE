@@ -1,6 +1,5 @@
 /**
  * Destination Module - Gère le formulaire destination et la sauvegarde
- * Méthodes extraites de Destinations.js
  */
 
 const Destination = {
@@ -8,23 +7,22 @@ const Destination = {
     /**
      * Éditer une destination
      */
-    async editDestination(index) {
+    async editDestination(destinationId) {
         // Annuler d'abord toute création en cours
         await this.cancelCreation();
         
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[index];
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(d => d.id === destinationId);
         
         if (!destination) {
-            console.error('❌ Destination non trouvée à l\'index', index);
+            console.error('❌ Destination non trouvée avec l\'ID', destinationId);
             return;
         }
         
-        console.log('✅ Édition de la destination:', destination.name);
-        
-        const card = document.getElementById(`destination-${index}`);
-        const form = document.getElementById(`form-${index}`);
-        const activitiesSection = document.getElementById(`activities-${index}`);
+                
+        const card = document.getElementById(`destination-${destinationId}`);
+        const form = document.getElementById(`form-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
         const expandBtn = card.querySelector('.btn-expand span');
         
         // Replier la destination avant l'édition
@@ -48,20 +46,25 @@ const Destination = {
         card.classList.add('editing');
         
         // Désactiver le hover sur les autres destinations
-        this.disableOtherCardsHover(index);
+        this.disableOtherCardsHover(destinationId);
         
         // Scroll vers la destination
-        this.scrollToDestination(index);
+        this.scrollToDestination(destinationId);
         
         // Remplir les champs avec les données actuelles
-        const nameInput = document.getElementById(`name-${index}`);
-        const addressInput = document.getElementById(`address-${index}`);
-        const daysInput = document.getElementById(`days-${index}`);
-        const hoursInput = document.getElementById(`hours-${index}`);
-        const minutesInput = document.getElementById(`minutes-${index}`);
+        const nameInput = document.getElementById(`name-${destinationId}`);
+        const addressInput = document.getElementById(`address-${destinationId}`);
+        const daysInput = document.getElementById(`days-${destinationId}`);
+        const hoursInput = document.getElementById(`hours-${destinationId}`);
+        const minutesInput = document.getElementById(`minutes-${destinationId}`);
         
         if (nameInput) nameInput.value = destination.name || '';
-        if (addressInput) addressInput.value = destination.address ? destination.address.address : '';
+        if (addressInput) {
+            addressInput.value = destination.address ? destination.address.address : '';
+            
+            // Ajouter le comportement hover pour le mode hors ligne
+            this.setupAddressInputHover(addressInput);
+        }
         
         // Remplir les champs de durée
         if (destination.duration) {
@@ -74,15 +77,15 @@ const Destination = {
     /**
      * Sélectionner une adresse (avec auto-remplissage du nom)
      */
-    selectAddress(selectedAddress, index) {
+    selectAddress(selectedAddress, destinationId) {
         // Mettre à jour le champ adresse
-        const addressInput = document.getElementById(`address-${index}`);
+        const addressInput = document.getElementById(`address-${destinationId}`);
         if (addressInput) {
             addressInput.value = selectedAddress.address;
         }
         
         // Auto-remplir le nom si vide avec le nom du lieu ou de la ville
-        const nameInput = document.getElementById(`name-${index}`);
+        const nameInput = document.getElementById(`name-${destinationId}`);
         if (nameInput && !nameInput.value.trim() && selectedAddress.name) {
             nameInput.value = selectedAddress.name;
         }
@@ -94,8 +97,8 @@ const Destination = {
     /**
      * Scroll vers une destination spécifique
      */
-    scrollToDestination(index) {
-        const card = document.getElementById(`destination-${index}`);
+    scrollToDestination(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
         if (card) {
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -104,8 +107,8 @@ const Destination = {
     /**
      * Sauvegarder une destination modifiée
      */
-    async saveDestination(index) {
-        const saveButton = document.querySelector(`#form-${index} .btn-save`);
+    async saveDestination(destinationId) {
+        const saveButton = document.querySelector(`#form-${destinationId} .btn-save`);
         
         // Si déjà en cours de sauvegarde, ignorer
         if (this.isSaving) {
@@ -117,41 +120,42 @@ const Destination = {
             this.isSaving = true;
             
             // Afficher le spinner de chargement
-            window.showButtonLoading(`#form-${index} .btn-save`, 'Enregistrement...');
-            
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-            const destination = destinations[index];
+            window.showButtonLoading(`#form-${destinationId} .btn-save`, 'Enregistrement...');
+
+            // Récupérer l'itinéraire courant
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+            const destination = destinations.find(d => d.id === destinationId);
             
             if (!destination) {
-                console.error('❌ Destination non trouvée à l\'index', index);
-                window.restoreButton(`#form-${index} .btn-save`, 'Enregistrer', 'save');
+                console.error('❌ Destination non trouvée avec l\'ID', destinationId);
+                window.restoreButton(`#form-${destinationId} .btn-save`, 'Enregistrer', 'save');
                 return;
             }
             
             // Récupérer les valeurs du formulaire
-            const name = document.getElementById(`name-${index}`).value.trim();
-            const addressInput = document.getElementById(`address-${index}`);
+            const name = document.getElementById(`name-${destinationId}`).value.trim();
+            const addressInput = document.getElementById(`address-${destinationId}`);
             const address = addressInput ? addressInput.value.trim() : '';
             
             // Récupérer les valeurs de durée
-            const days = parseInt(document.getElementById(`days-${index}`).value) || 0;
-            const hours = parseInt(document.getElementById(`hours-${index}`).value) || 0;
-            const minutes = parseInt(document.getElementById(`minutes-${index}`).value) || 0;
+            const days = parseInt(document.getElementById(`days-${destinationId}`).value) || 0;
+            const hours = parseInt(document.getElementById(`hours-${destinationId}`).value) || 0;
+            const minutes = parseInt(document.getElementById(`minutes-${destinationId}`).value) || 0;
             
             if (!name) {
                 window.showErrorSnackBar('Le nom de la destination est requis');
-                window.restoreButton(`#form-${index} .btn-save`, 'Enregistrer', 'save');
+                window.restoreButton(`#form-${destinationId} .btn-save`, 'Enregistrer', 'save');
                 return;
             }
             
             if (!address) {
                 window.showErrorSnackBar('L\'adresse de la destination est requise');
-                window.restoreButton(`#form-${index} .btn-save`, 'Enregistrer', 'save');
+                window.restoreButton(`#form-${destinationId} .btn-save`, 'Enregistrer', 'save');
                 return;
             }
             
-            console.log('📝 Sauvegarde de la destination:', { name, address, duration: { days, hours, minutes } });
-            
+                        
             // Préparer les données mises à jour (structure correcte)
             const updatedDestination = {
                 ...destination,
@@ -179,9 +183,11 @@ const Destination = {
                 delete updatedDestination.address.country;
             }
             
-            // Si c'est une nouvelle destination (sans ID), la créer
-            if (!destination.id) {
-                console.log('🆕 Création d\'une nouvelle destination');
+            // Si c'est une nouvelle destination (ID temporaire), la créer
+            if (destination.id === 'temp_destination') {
+                
+                // Générer un ID aléatoire pour la destination sauvegardée
+                updatedDestination.id = `destination_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 
                 // Géocoder l'adresse pour obtenir les coordonnées
                 try {
@@ -197,7 +203,6 @@ const Destination = {
                             const country = await this.getCountryFromCoordinates(coords.lat, coords.lng);
                             if (country) {
                                 updatedDestination.address.country = country;
-                                console.log('🌍 Pays ajouté depuis coordonnées:', country);
                             }
                         } catch (error) {
                             console.warn('⚠️ Impossible d\'obtenir le pays depuis les coordonnées:', error);
@@ -206,37 +211,30 @@ const Destination = {
                 } catch (error) {
                     console.warn('⚠️ Impossible de géocoder l\'adresse:', error);
                 }
-                
-                // Générer un ID pour la nouvelle destination
+                                
+                // Générer un ID aléatoire pour la destination sauvegardée
                 updatedDestination.id = `destination_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 
-                // Récupérer l'itinéraire courant
-                const currentItinerary = window.firebaseService.getCurrentItinerary();
                 if (currentItinerary) {
-                    // Remplacer la dernière destination (vide) par la nouvelle destination
-                    const lastIndex = currentItinerary.destinations.length - 1;
-                    currentItinerary.destinations[lastIndex] = updatedDestination;
+                    // Mettre à jour la destination via localStorage (avec l'ID temporaire)
+                    await window.localStorageService.updateDestination('temp_destination', updatedDestination);
                     
-                    // Mettre à jour l'itinéraire en base
-                    const success = await window.firebaseService.updateItinerary(currentItinerary);
+                    window.showSuccessSnackBar('Destination créée avec succès');
                     
-                    if (success) {
-                        console.log('✅ Destination créée avec succès');
-                        window.showSuccessSnackBar('Destination créée avec succès');
-                        
-                        // Réactiver le hover sur les autres destinations
-                        this.enableOtherCardsHover();
-                        
-                        Destinations.loadDestinations();
-                    } else {
-                        throw new Error('Échec de la création de la destination');
+                    // Réactiver le hover sur les autres destinations
+                    this.enableOtherCardsHover();
+                    
+                    await Destinations.loadDestinations();
+                    
+                    // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
+                    if (window.Synthèse && window.Synthèse.refresh) {
+                        await window.Synthèse.refresh();
                     }
                 } else {
                     throw new Error('Aucun itinéraire courant trouvé');
                 }
             } else {
                 // Mettre à jour la destination existante
-                console.log('🔄 Mise à jour de la destination existante');
                 
                 // Géocoder la nouvelle adresse pour obtenir les coordonnées
                 try {
@@ -252,7 +250,6 @@ const Destination = {
                             const country = await this.getCountryFromCoordinates(coords.lat, coords.lng);
                             if (country) {
                                 updatedDestination.address.country = country;
-                                console.log('🌍 Pays mis à jour depuis coordonnées:', country);
                             }
                         } catch (error) {
                             console.warn('⚠️ Impossible d\'obtenir le pays depuis les coordonnées:', error);
@@ -262,19 +259,20 @@ const Destination = {
                     console.warn('⚠️ Impossible de géocoder l\'adresse lors de la mise à jour:', error);
                 }
                 
-                const success = await window.firebaseService.updateDestination(updatedDestination);
+                // Mettre à jour la destination existante via localStorage
+                await window.localStorageService.updateDestination(destination.id, updatedDestination);
                 
-                if (success) {
-                    console.log('✅ Destination mise à jour avec succès');
-                    window.showSuccessSnackBar('Destination mise à jour avec succès');
-                    
-                    // Réactiver le hover sur les autres destinations
-                    this.enableOtherCardsHover();
-                    
-                    // Mettre à jour l'affichage
-                    Destinations.loadDestinations();
-                } else {
-                    throw new Error('Échec de la mise à jour de la destination');
+                window.showSuccessSnackBar('Destination mise à jour avec succès');
+                
+                // Réactiver le hover sur les autres destinations
+                this.enableOtherCardsHover();
+                
+                // Mettre à jour l'affichage
+                await Destinations.loadDestinations();
+                
+                // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
+                if (window.Synthèse && window.Synthèse.refresh) {
+                    await window.Synthèse.refresh();
                 }
             }
             
@@ -283,7 +281,7 @@ const Destination = {
             window.showErrorSnackBar('Erreur lors de la sauvegarde: ' + error.message);
         } finally {
             this.isSaving = false;
-            window.restoreButton(`#form-${index} .btn-save`, 'Enregistrer', 'save');
+            window.restoreButton(`#form-${destinationId} .btn-save`, 'Enregistrer', 'save');
         }
     },
 
@@ -313,17 +311,7 @@ const Destination = {
         });
     },
 
-    /**
-     * Afficher un message de succès
-     */
-    showSuccess(message) {
-        if (window.showToast) {
-            window.showToast(message, 'success');
-        } else {
-            console.log('✅', message);
-        }
-    },
-
+    
     /**
      * Obtenir le pays depuis les coordonnées (API Nominatim)
      */
@@ -353,58 +341,107 @@ const Destination = {
         }
     },
 
+    
     /**
-     * Formater la durée
+     * Configurer le comportement hover pour les champs d'adresse en mode hors ligne
      */
-    formatDuration(duration) {
-        if (!duration) return '';
-        
-        const parts = [];
-        if (duration.days > 0) parts.push(`${duration.days}j`);
-        if (duration.hours > 0) parts.push(`${duration.hours}h`);
-        if (duration.minutes > 0) parts.push(`${duration.minutes}min`);
-        
-        return parts.length > 0 ? parts.join(' ') : '';
+    setupAddressInputHover(addressInput) {
+        // Créer l'élément tooltip s'il n'existe pas déjà
+        let tooltip = document.getElementById('offline-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'offline-tooltip';
+            tooltip.style.cssText = `
+                position: absolute;
+                background-color: #333;
+                color: white;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                z-index: 1000;
+                pointer-events: none;
+                display: none;
+                white-space: nowrap;
+            `;
+            document.body.appendChild(tooltip);
+        }
+
+        // Gestionnaires d'événements pour le hover
+        const showTooltip = (e) => {
+            if (!navigator.onLine) {
+                tooltip.textContent = 'Impossible sans connexion';
+                tooltip.style.display = 'block';
+                
+                const rect = e.target.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - 30) + 'px';
+            }
+        };
+
+        const hideTooltip = () => {
+            tooltip.style.display = 'none';
+        };
+
+        const handleFocus = (e) => {
+            if (!navigator.onLine) {
+                e.target.blur();
+                if (typeof window.showErrorSnackBar === 'function') {
+                    window.showErrorSnackBar('Impossible sans connexion');
+                }
+            }
+        };
+
+        // Ajouter les écouteurs d'événements
+        addressInput.addEventListener('mouseenter', showTooltip);
+        addressInput.addEventListener('mouseleave', hideTooltip);
+        addressInput.addEventListener('focus', handleFocus);
+
+        // Nettoyer les écouteurs lors de la destruction de l'élément
+        addressInput.addEventListener('DOMNodeRemoved', () => {
+            addressInput.removeEventListener('mouseenter', showTooltip);
+            addressInput.removeEventListener('mouseleave', hideTooltip);
+            addressInput.removeEventListener('focus', handleFocus);
+        });
     },
 
     /**
      * Annuler l'édition
      */
-    cancelEdit(index) {
-        const card = document.getElementById(`destination-${index}`);
-        if (card) {
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-            const destination = destinations[index];
+    async cancelEdit(destinationId) {
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(d => d.id === destinationId);
+        
+        // Si la destination n'existe pas ou n'a pas d'ID, supprimer simplement la card
+        if (!destination || !destination.id) {
+            this.cancelCreation();
+        } else {
+            // Destination existante : restaurer les valeurs et masquer le formulaire
+            const form = document.querySelector(`#form-${destinationId}`);
+            if (form) {
+                form.classList.remove('show');
+            }
             
-            // Si la destination n'existe pas ou n'a pas d'ID, supprimer simplement la card
-            if (!destination || !destination.id) {
-                this.cancelCreation();
-            } else {
-                // Destination existante : restaurer les valeurs et masquer le formulaire
-                const form = card.querySelector('.destination-form');
-                if (form) {
-                    form.classList.remove('show');
-                }
-                
+            const card = document.querySelector(`#destination-${destinationId}`);
+            if (card) {
                 card.classList.remove('editing');
-                
-                // Réactiver le hover sur les autres destinations
-                this.enableOtherCardsHover();
-                
-                // Restaurer les valeurs originales
-                const nameInput = card.querySelector(`#name-${index}`);
-                const addressInput = card.querySelector(`#address-${index}`);
-                const durationInputs = card.querySelectorAll('.duration-inputs input');
-                
-                if (nameInput) nameInput.value = destination.name || '';
-                if (addressInput) addressInput.value = destination.address ? destination.address.address : '';
-                
-                if (durationInputs.length >= 3) {
-                    const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
-                    durationInputs[0].value = duration.days || 0;
-                    durationInputs[1].value = duration.hours || 0;
-                    durationInputs[2].value = duration.minutes || 0;
-                }
+            }
+            
+            // Réactiver le hover sur les autres destinations
+            this.enableOtherCardsHover();
+            
+            // Restaurer les valeurs originales
+            const nameInput = document.querySelector(`#name-${destinationId}`);
+            const addressInput = document.querySelector(`#address-${destinationId}`);
+            const durationInputs = document.querySelectorAll('#form-' + destinationId + ' .duration-inputs input');
+            
+            if (nameInput) nameInput.value = destination.name || '';
+            if (addressInput) addressInput.value = destination.address ? destination.address.address : '';
+            
+            if (durationInputs.length >= 3) {
+                const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
+                durationInputs[0].value = duration.days || 0;
+                durationInputs[1].value = duration.hours || 0;
+                durationInputs[2].value = duration.minutes || 0;
             }
         }
     },
@@ -414,40 +451,45 @@ const Destination = {
      */
     async cancelCreation() {
         // Trouver l'itinéraire actuel
-        const currentItinerary = window.firebaseService.getCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
         if (!currentItinerary) {
             console.warn('⚠️ Aucun itinéraire courant trouvé');
             return;
         }
         
-        // Trouver et supprimer les destinations sans ID de l'itinéraire
-        const unsavedDestinations = currentItinerary.destinations.filter(d => !d.id);
-        unsavedDestinations.forEach(destination => {
-            const index = currentItinerary.destinations.indexOf(destination);
-            if (index > -1) {
-                currentItinerary.destinations.splice(index, 1);
-                
-                // Supprimer la card du DOM
-                const card = document.getElementById(`destination-${index}`);
-                if (card) {
-                    card.remove();
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        
+        // Trouver et supprimer les destinations avec l'ID temporaire
+        const tempDestination = destinations.find(d => d.id === 'temp_destination');
+        if (tempDestination) {
+            await window.localStorageService.deleteDestination('temp_destination');
+            
+            // Supprimer la card du DOM (chercher par classe ou attribut)
+            const tempCard = document.querySelector('[data-temp-destination="true"]');
+            if (tempCard) {
+                tempCard.remove();
+            } else {
+                // Fallback : supprimer la dernière card (celle en création)
+                const allCards = document.querySelectorAll('.destination-card');
+                if (allCards.length > 0) {
+                    allCards[allCards.length - 1].remove();
                 }
             }
-        });
+        }
         
         console.log('✅ Création de destination annulée, destinations non sauvegardées supprimées');
         
         // Mettre à jour la visibilité du bouton ajouter
         if (window.Destinations && window.Destinations.updateAddDestinationButtonVisibility) {
-            window.Destinations.updateAddDestinationButtonVisibility();
+            await window.Destinations.updateAddDestinationButtonVisibility();
         }
     },
 
     /**
      * Valider les entrées de durée
      */
-    validateDurationInput(index, type) {
-        const input = document.getElementById(type + '-' + index);
+    validateDurationInput(destinationId, type) {
+        const input = document.getElementById(type + '-' + destinationId);
         const value = parseInt(input.value);
         
         if (type === 'days' && value > 365) {
@@ -466,9 +508,9 @@ const Destination = {
     /**
      * Toggle l'affichage des activités d'une destination
      */
-    toggleDestinationCard(index) {
-        const card = document.getElementById(`destination-${index}`);
-        const activitiesSection = document.getElementById(`activities-${index}`);
+    toggleDestinationCard(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
         const expandBtn = card.querySelector('.btn-expand span');
         
         if (!card || !activitiesSection || !expandBtn) return;
@@ -488,7 +530,7 @@ const Destination = {
             
             // Charger les activités si pas encore chargées
             if (activitiesSection.querySelector('.activities-list').children.length === 0) {
-                Activities.loadActivities(index);
+                Activities.loadActivities(destinationId);
             }
         }
     },
@@ -496,9 +538,9 @@ const Destination = {
     /**
      * Zoomer sur une destination dans la carte
      */
-    zoomToDestination(index) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[index];
+    async zoomToDestination(destinationId) {
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(d => d.id === destinationId);
         
         if (!destination || !destination.address || !destination.address.latitude || !destination.address.longitude) {
             console.warn('⚠️ Destination sans coordonnées, impossible de zoomer');
@@ -523,12 +565,12 @@ const Destination = {
     /**
      * Ouvrir la recherche d'adresse
      */
-    openAddressSearch(destinationIndex, event) {
+    openAddressSearch(destinationId, event) {
         event.stopPropagation();
         
         if (window.ChooseAddress && window.ChooseAddress.show) {
             window.ChooseAddress.show((selectedAddress) => {
-                this.selectAddress(selectedAddress, destinationIndex);
+                this.selectAddress(selectedAddress, destinationId);
             });
         } else {
             console.error('❌ Module ChooseAddress non disponible');
@@ -538,11 +580,14 @@ const Destination = {
     /**
      * Désactiver le hover sur les autres destinations pendant l'édition
      */
-    disableOtherCardsHover(editingIndex) {
+    disableOtherCardsHover(editingDestinationId) {
         const allCards = document.querySelectorAll('.destination-card');
-        allCards.forEach((card, index) => {
-            if (index !== editingIndex) {
-                card.classList.add('destination-edit-disabled');
+        allCards.forEach((card) => {
+            const cardDestinationId = card.id.replace('destination-', '');
+            if (cardDestinationId !== editingDestinationId) {
+                card.classList.add('no-hover');
+            } else {
+                card.classList.remove('no-hover');
             }
         });
     },

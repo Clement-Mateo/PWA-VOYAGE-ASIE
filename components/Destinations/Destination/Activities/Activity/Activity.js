@@ -151,11 +151,6 @@ const Activity = {
         }
     },
 
-    // Mettre à jour le tableau de mapping avec un nouveau pays
-    updateCountryMapping(countryName) {
-        // Cette méthode n'est plus nécessaire avec l'API anglaise
-    },
-
     // Convertir les euros en devise locale
     async convertEurToLocalCurrency(eurAmount) {
         if (!this.exchangeRatesCache) {
@@ -231,16 +226,7 @@ const Activity = {
             const hasCurrencyName = localCurrency.name && localCurrency.name !== localCurrency.code;
             const isNotEuro = localCurrency.code !== 'EUR'; // Masquer si c'est EUR
             const showCurrencyField = hasExchangeRate && hasCurrencyName && isNotEuro;
-            
-            console.log('🔍 Validation devise locale:', {
-                currency: localCurrency,
-                hasExchangeRate: !!hasExchangeRate,
-                hasCurrencyName: !!hasCurrencyName,
-                isNotEuro: !!isNotEuro,
-                showCurrencyField: showCurrencyField,
-                exchangeRate: hasExchangeRate ? this.exchangeRatesCache[localCurrency.code] : null
-            });
-            
+                        
             // Mettre à jour le label de la devise locale
             const label = popup.querySelector('label[for="localCurrency"]');
             if (label) {
@@ -326,11 +312,11 @@ const Activity = {
                     <div class="form-row" id="currencyRow">
                         <div class="form-group">
                             <label class="form-label" for="priceAmount">Prix (€)</label>
-                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="0.01" oninput="Activity.updateLocalCurrency()" />
+                            <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="1" oninput="Activity.updateLocalCurrency()" />
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="0.01" oninput="Activity.updateEurFromLocalCurrency()" style="display: none;" />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="Activity.updateEurFromLocalCurrency()" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -474,14 +460,14 @@ const Activity = {
         }
 
         // Récupérer l'itinéraire actuel
-        const itineraries = window.firebaseService.itineraries;
-        if (itineraries.length === 0) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        if (!currentItinerary) {
             console.error('❌ Aucun itinéraire trouvé pour sauvegarder l\'activité');
             return;
         }
         
-        const currentItinerary = window.firebaseService.getCurrentItinerary();;
-        const destination = currentItinerary.destinations.find(dest => dest.id === this.currentDestination.id);
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(dest => dest.id === this.currentDestination.id);
         
         if (!destination) {
             console.error('❌ Destination non trouvée dans l\'itinéraire');
@@ -498,26 +484,25 @@ const Activity = {
             const activityIndex = destination.activities.findIndex(act => act.id === this.currentActivity.id);
             if (activityIndex !== -1) {
                 destination.activities[activityIndex] = activity;
-                console.log('✅ Activité mise à jour:', activity);
             }
         } else {
             // Mode création : ajouter une nouvelle activité
             destination.activities.push(activity);
-            console.log('✅ Activité ajoutée:', activity);
         }
 
-        // Sauvegarder l'itinéraire complet
-        await window.firebaseService.updateItinerary(currentItinerary);
+        // Sauvegarder la destination mise à jour via localStorage
+        await window.localStorageService.updateDestination(destination.id, destination);
         
         this.hideActivityPopup();
         
         // Recharger les activités pour la destination actuelle
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destinationIndex = destinations.findIndex(dest => dest.id === this.currentDestination.id);
+        if (this.currentDestination && this.currentDestination.id) {
+            await window.Activities.displayActivitiesOfDestination(this.currentDestination.id);
+        }
         
-        if (destinationIndex !== -1) {
-            console.log('🔄 Rechargement des activités pour la destination:', destinationIndex);
-            await window.Destinations.displayActivitiesOfDestination(destinationIndex);
+        // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
+        if (window.Synthèse && window.Synthèse.refresh) {
+            await window.Synthèse.refresh();
         }
         
         } catch (error) {
@@ -649,8 +634,10 @@ const Activity = {
     },
 
     // Modifier une activité existante
-    async editActivity(activityId, destinationIndex) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[destinationIndex];
+    async editActivity(activityId, destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         if (!destination || !destination.id) return;
 
         try {        
@@ -666,7 +653,6 @@ const Activity = {
             
             // Stocker l'activité actuelle
             this.currentActivity = activity;
-            console.log('Activité actuelle en cours d\'edition:', this.currentActivity);
             
             // Afficher le popup
             await this.showActivityPopup();
@@ -698,7 +684,6 @@ const Activity = {
                 
                 if (typeField) typeField.value = this.currentActivity.type || '';
                 
-                console.log('✅ Formulaire pré-rempli avec les données de l\'activité');
             }, 100);
             
         } catch (error) {

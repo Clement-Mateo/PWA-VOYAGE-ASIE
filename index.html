@@ -8,6 +8,9 @@
     <!-- Cache Version Manager - DOIT être chargé en premier -->
     <script src="version-management/cache-version-manager.js"></script>
     
+    <!-- Dexie.js pour IndexedDB -->
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="var(--primary-blue)">
@@ -96,6 +99,7 @@
         const auth = getAuth(app);
         
         // Exporter globalement pour notre service
+        window.firebaseConfig = firebaseConfig;
         window.firebase = {
             app,
             db,
@@ -130,15 +134,6 @@
             
             window.firebaseService.initialize();
             
-            // Écouter l'événement d'authentification prête
-            window.addEventListener('firebaseAuthReady', async (event) => {
-                console.log('🔥 Événement firebaseAuthReady reçu');
-                
-                // Appeler updateUserPanel quand l'auth est prête
-                if (window.updateUserPanel) {
-                    await window.updateUserPanel();
-                }
-            });
         }
         
     </script>
@@ -146,17 +141,21 @@
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
+            navigator.serviceWorker.register('/services/service-worker.js')
                 .then(registration => console.log('Service Worker enregistré'))
                 .catch(error => console.error('Service Worker erreur:', error));
         }
     </script>
     
-    <!-- Firebase Service -->
-    <script src="firebaseService.js"></script>
+    <!-- Services de l'architecture offline-first -->
+    <script src="services/localStorageService.js"></script>
+    <script src="services/firebaseService.js"></script>
+    <script src="services/syncService.js"></script>
+    <script src="services/networkManager.js"></script>
+    <script src="services/offlineFirstApp.js"></script>
     
     <!-- Services Utilitaires -->
-    <script src="serviceUtil.js"></script>
+    <script src="services/serviceUtil.js"></script>
     
     <!-- Loading Animation -->
     <script src="components/LoadingAnimation/LoadingAnimation.js"></script>
@@ -229,6 +228,19 @@
                 await cacheManager.checkAndUpdateCache();
             }
             
+            // Initialiser l'architecture offline-first
+            if (window.OfflineFirstApp) {
+                const app = new window.OfflineFirstApp();
+                await app.init();
+                
+                // Exporter l'instance globalement
+                window.offlineFirstApp = app;
+                
+                console.log('✅ Architecture offline-first prête');
+            } else {
+                console.error('❌ OfflineFirstApp non trouvé');
+            }
+            
             // Initialiser Login
             if (window.Login) {
                 window.Login.init();
@@ -293,6 +305,13 @@
                 // Utilisateur connecté
                 console.log('✅ Utilisateur connecté');
                 
+                if (window.offlineFirstApp && window.offlineFirstApp.loadUserDataFromFirebase) {
+                    console.log('📥 Chargement des données utilisateur depuis Firebase...');
+                    await window.offlineFirstApp.loadUserDataFromFirebase();
+                } else {
+                    console.warn('⚠️ loadUserDataFromFirebase non disponible');
+                }
+                
                 // Masquer la page de connexion
                 if (window.Login) {
                     window.Login.hide();
@@ -300,18 +319,18 @@
                     console.error('❌ Login non trouvé');
                 }
 
-                // Charger les itinéraires d'abord
-                await window.firebaseService.getItineraries();
+                // Utiliser IndexedDB comme source de données principale
+                const itineraries = await window.localStorageService.getItineraries();
                 
                 // Créer un itinéraire si aucun n'existe
                 let newItinerary = null;
-                if (window.firebaseService.itineraries.length === 0) {
-                    newItinerary = await window.firebaseService.createItinerary('Mon itinéraire', false);
+                if (itineraries.length === 0) {
+                    newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
                 }
 
                 // Initialiser le sidebar maintenant que les itinéraires sont chargés
                 if (window.Sidebar) {
-                    window.Sidebar.init();
+                    await window.Sidebar.init();
                 } else {
                     console.error('❌ Sidebar non trouvé');
                 }
@@ -321,13 +340,13 @@
                     await window.Itineraries.setActiveItinerary(newItinerary.id, false);
                 }
 
-                // Charger les destinations (attendre que tout soit terminé)
-                await window.Destinations.loadDestinations();
-                                
                 // Initialiser ChooseAddress
                 if (window.ChooseAddress) {
                     window.ChooseAddress.init();
                 }
+                
+                // Charger les destinations (après que la sidebar soit initialisée)
+                await window.Destinations.loadDestinations();
 
                 // Initialiser Activity
                 if (window.Activity) {
@@ -381,6 +400,16 @@
         // Exporter les fonctions globalement
         window.updateUserPanel = updateUserPanel;
         window.handleLogout = handleLogout;
+        
+        // Écouter l'événement d'authentification prête (après la définition des fonctions)
+        window.addEventListener('firebaseAuthReady', async (event) => {
+            console.log('🔥 Événement firebaseAuthReady reçu');
+            
+            // Appeler updateUserPanel quand l'auth est prête
+            if (window.updateUserPanel) {
+                await window.updateUserPanel();
+            }
+        });
     </script>
 </body>
 </html>

@@ -20,16 +20,7 @@ const Destinations = {
      * Obtenir ou créer le panneau
      */
     getPanel() {
-        // Chercher d'abord dans la sidebar
-        let panel = document.querySelector('#sidebar-destinations-content #destinationsPanel');
-        
-        // Si toujours pas trouvé, en créer un nouveau
-        if (!panel) {
-            panel = this.createPanel();
-            document.body.appendChild(panel);
-        }
-        
-        return panel;
+        return document.querySelector('#sidebar-destinations-content #destinationsPanel');
     },
     
     /**
@@ -71,59 +62,57 @@ const Destinations = {
     /**
      * Créer une card de destination
      */
-    createDestinationCard(destination, index) {
+    createDestinationCard(destination) {
         
         const card = document.createElement('div');
         card.className = 'destination-card';
-        card.id = `destination-${index}`;
+        card.id = `destination-${destination.id}`; // Utiliser l'ID de la destination
         
-        // Rendre draggable seulement si la destination existe (destination.id)
-        if (destination.id) {
+        // Ajouter la classe 'editing' si c'est une destination temporaire
+        if (destination.id === 'temp_destination') {
+            card.classList.add('editing');
+        } else {
+            // Rendre draggable seulement si la destination existe et n'est pas temporaire
             card.draggable = true;
             card.classList.add('draggable');
         }
         
-        // Ajouter la classe 'editing' si c'est une nouvelle destination
-        if (!destination.id) {
-            card.classList.add('editing');
-        }
-        
         const duration = destination.duration || { days: 0, hours: 0, minutes: 0 };
-        const durationText = Destination.formatDuration(duration);
+        const durationText = window.formatDuration(duration, true);
                 
         card.innerHTML = `
             <div class="destination-header flex-between">
                 <h3 class="destination-title">${destination.name || 'Nouvelle destination'}</h3>
                 <div class="destination-actions">
-                    ${destination.id ? `
-                        <button class="btn-location" onclick="Destination.zoomToDestination(${index})" title="Localiser sur la carte">
+                    ${destination.id !== 'temp_destination' ? `
+                        <button class="btn-location" onclick="Destination.zoomToDestination('${destination.id}')" title="Localiser sur la carte">
                             <span class="material-icons">my_location</span>
                         </button>
-                        <button class="btn-edit" onclick="Destination.editDestination(${index})">
+                        <button class="btn-edit" onclick="Destination.editDestination('${destination.id}')">
                             <span class="material-icons">edit</span>
                         </button>
-                        <button class="btn-delete" onclick="Destinations.deleteDestination(${index})">
+                        <button class="btn-delete" onclick="Destinations.deleteDestination('${destination.id}')">
                             <span class="material-icons">delete</span>
                         </button>
-                        <button class="btn-expand" onclick="Destination.toggleDestinationCard(${index})" title="Déplier">
+                        <button class="btn-expand" onclick="Destination.toggleDestinationCard('${destination.id}')" title="Déplier">
                             <span class="material-icons">expand_more</span>
                         </button>
                     ` : ''}
                 </div>
             </div>
             <div class="destination-address">${destination.address ? destination.address.address : 'Adresse non définie'}</div>
-            <div class="destination-duration">Durée: ${durationText}</div>
+            <div class="destination-duration">${durationText || "Aucune durée"}</div>
             
             <!-- Formulaire d'édition -->
-            <div class="destination-form" id="form-${index}">
+            <div class="destination-form" id="form-${destination.id}">
                 <div class="form-group">
                     <label class="form-label">Nom de la destination</label>
-                    <input type="text" class="form-input" id="name-${index}" value="${destination.name || ''}" placeholder="Nom de la destination">
+                    <input type="text" class="form-input" id="name-${destination.id}" value="${destination.name || ''}" placeholder="Nom de la destination">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Adresse</label>
-                    <div class="address-input-container flex-center" onclick="Destination.openAddressSearch(${index}, event)">
-                        <input type="text" class="form-input address-input" id="address-${index}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
+                    <div class="address-input-container flex-center" onclick="Destination.openAddressSearch('${destination.id}', event)">
+                        <input type="text" class="form-input address-input" id="address-${destination.id}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
                         <button class="btn-icon address-search-btn">
                             <span class="material-icons">search</span>
                         </button>
@@ -132,29 +121,29 @@ const Destinations = {
                 <div class="form-group">
                     <label class="form-label">Durée</label>
                     <div style="display: flex; gap: 5px; align-items: center;">
-                        <input type="number" class="form-input" id="days-${index}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'days')">
+                        <input type="number" class="form-input" id="days-${destination.id}" value="${duration.days || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput('${destination.id}', 'days')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">j</span>
-                        <input type="number" class="form-input" id="hours-${index}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'hours')">
+                        <input type="number" class="form-input" id="hours-${destination.id}" value="${duration.hours || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput('${destination.id}', 'hours')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">h</span>
-                        <input type="number" class="form-input" id="minutes-${index}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput(${index}, 'minutes')">
+                        <input type="number" class="form-input" id="minutes-${destination.id}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput('${destination.id}', 'minutes')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
                 </div>
                 <div class="form-actions flex-center">
-                    <button class="btn-save" onclick="Destination.saveDestination(${index})"><span class="material-icons">save</span> Enregistrer</button>
-                    <button class="btn-cancel" onclick="Destination.cancelEdit(${index})"><span class="material-icons">close</span> Annuler</button>
+                    <button class="btn-save" onclick="Destination.saveDestination('${destination.id}')"><span class="material-icons">save</span> Enregistrer</button>
+                    <button class="btn-cancel" onclick="Destination.cancelEdit('${destination.id}')"><span class="material-icons">close</span> Annuler</button>
                 </div>
             </div>
             
             <!-- Section des activités -->
-            <div class="destination-activities" id="activities-${index}" style="display: none;">
+            <div class="destination-activities" id="activities-${destination.id}" style="display: none;">
                 <div class="activities-header">
                     <h4>Activités</h4>
                 </div>
-                <div class="activities-list" id="activities-list-${index}">
+                <div class="activities-list" id="activities-list-${destination.id}">
                     <!-- Les activités seront chargées ici -->
                 </div>
-                <button class="btn-add" onclick="Activities.addActivity(${index})" title="Ajouter une activité">
+                <button class="btn-add" onclick="Activities.addActivity('${destination.id}')" title="Ajouter une activité">
                     <span class="material-icons">add_circle</span>
                     Ajouter une activité
                 </button>
@@ -162,7 +151,7 @@ const Destinations = {
         `;
         
         // Ajouter les écouteurs d'événements pour le drag & drop
-        this.addDragAndDropEvents(card, index);
+        this.addDragAndDropEvents(card, destination.id);
         
         return card;
     },
@@ -170,16 +159,16 @@ const Destinations = {
     /**
      * Supprimer une destination
      */
-    async deleteDestination(index) {
-        const destinationsBefore = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinationsBefore[index];
+    async deleteDestination(destinationId) {
+        const destinationsBefore = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinationsBefore.find(d => d.id === destinationId);
         
         if (!destination) {
-            console.error('❌ Destination non trouvée à l\'index', index);
+            console.error('❌ Destination non trouvée avec l\'ID', destinationId);
             return;
         }
 
-        this.scrollToDestination(index);
+        this.scrollToDestination(destinationId);
         
         if (this.isDeleting) {
             return;
@@ -187,13 +176,13 @@ const Destinations = {
 
         this.isDeleting = true;
 
-        const deleteButton = document.querySelector(`#destination-${index} .btn-delete`);
+        const deleteButton = document.querySelector(`#destination-${destinationId} .btn-delete`);
         if (deleteButton) {
             deleteButton.disabled = true;
             deleteButton.innerHTML = '<svg class="loading-spinner-small" viewBox="0 0 24 24" style="overflow: visible;"><circle cx="12" cy="12" r="10" fill="none" stroke="var(--error-red)" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>';
         }
         
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const updatedDestination = destinations.find(d => d.id === destination.id);
         
         if (!updatedDestination) {
@@ -203,7 +192,7 @@ const Destinations = {
         }
 
         if (!updatedDestination.id) {
-            const card = document.getElementById(`destination-${index}`);
+            const card = document.getElementById(`destination-${destinationId}`);
             if (card) {
                 card.remove();
             }
@@ -213,29 +202,23 @@ const Destinations = {
         }
 
         try {
-            // Obtenir l'itinéraire actuel
-            const currentItinerary = await window.firebaseService.getCurrentItinerary();
-            if (!currentItinerary) {
-                console.error('❌ Aucun itinéraire trouvé pour supprimer la destination');
-                return;
-            }
-
-            // Utiliser firebaseService pour supprimer la destination
-            const success = await window.firebaseService.deleteDestination(destination);
+            // Utiliser localStorageService pour supprimer la destination
+            await window.localStorageService.deleteDestination(destination.id);
             
-            if (success) {
-                console.log('✅ Destination supprimée');
-                await this.loadDestinations();
-                
-                if (window.MapInstance && window.MapInstance.cleanMap) {
-                    window.MapInstance.cleanMap();
-                }
-            } else {
-                console.error('❌ Échec de la suppression de la destination');
+            console.log('✅ Destination supprimée');
+            await this.loadDestinations();
+            
+            if (window.MapInstance && window.MapInstance.cleanMap) {
+                window.MapInstance.cleanMap();
             }
 
             // Mettre à jour les ordres des destinations suivantes
             await this.updateOrdersAfterDeletion(destination.order);
+            
+            // Nettoyer le transport de la nouvelle première destination si nécessaire
+            if (window.Destinations && window.Destinations.cleanFirstDestinationTransport) {
+                await window.Destinations.cleanFirstDestinationTransport();
+            }
             
         } catch (error) {
             console.error('❌ Erreur suppression destination:', error);
@@ -257,15 +240,15 @@ const Destinations = {
      */
     async updateOrdersAfterDeletion(deletedOrder) {
         try {
-            // Récupérer l'itinéraire actuel
-            const itineraries = window.firebaseService.itineraries;
+            // Récupérer l'itinéraire actuel depuis IndexedDB
+            const itineraries = await window.localStorageService.getItineraries();
             if (itineraries.length === 0) {
                 console.error('❌ Aucun itinéraire trouvé');
                 return;
             }
 
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
-            const destinations = currentItinerary.destinations || [];
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
             
             // Mettre à jour les ordres : toutes les destinations après la supprimée voient leur order diminué de 1
             destinations.forEach(destination => {
@@ -302,89 +285,99 @@ const Destinations = {
     },
 
     /**
+     * Nettoyer les transports des destinations en première position
+     * La première destination (order = 0) ne doit pas avoir de transport
+     */
+    async cleanFirstDestinationTransport() {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        
+        for (const destination of destinations) {
+            // Si c'est la première destination (order = 0) et qu'elle a un transport
+            if (destination.order === 0 && destination.transportation) {
+                console.log(`🧹 Suppression du transport de la première destination: ${destination.name}`);
+                
+                // Mettre à jour la destination sans transport
+                const updatedDestination = {
+                    ...destination,
+                    transportation: undefined
+                };
+                
+                await window.localStorageService.updateDestination(destination.id, updatedDestination);
+                hasChanges = true;
+            }
+        }
+        
+        // Rafraîchir la synthèse seulement s'il y a eu des changements
+        if (window.Synthèse && window.Synthèse.refresh) {
+            await window.Synthèse.refresh();
+        }
+    },
+
+    /**
      * Réorganiser les destinations
      */
-    async reorderDestinations(fromIndex, toIndex) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const draggedDestination = destinations[fromIndex];
-        const targetDestination = destinations[toIndex];
+    async reorderDestinations(draggedId, targetId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const draggedDestination = destinations.find(d => d.id === draggedId);
+        const targetDestination = destinations.find(d => d.id === targetId);
         
-        if (!draggedDestination.id || !targetDestination.id) {
+        if (!draggedDestination || !targetDestination) {
+            console.error('❌ Destinations non trouvées pour la réorganisation');
             return;
         }
         
         try {
-            // Récupérer l'itinéraire actuel
-            const itineraries = window.firebaseService.itineraries;
-            if (itineraries.length === 0) {
-                console.error('Impossible de réorganiser: aucun itinéraire trouvé');
+            // Récupérer les ordres actuels
+            const draggedOrder = draggedDestination.order || 0;
+            const targetOrder = targetDestination.order || 0;
+            
+            console.log('🔄 Réorganisation:', { draggedId, targetId, draggedOrder, targetOrder });
+            
+            // Si même ordre, rien à faire
+            if (draggedOrder === targetOrder) {
                 return;
             }
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
             
-            // Trier les destinations par ordre actuel
-            const sortedDestinations = [...currentItinerary.destinations].sort((a, b) => {
-                const orderA = a.order || 0;
-                const orderB = b.order || 0;
-                return orderA - orderB;
-            });
-            
-            // Trouver les positions dans la liste triée
-            const draggedPosition = sortedDestinations.findIndex(d => d.id === draggedDestination.id);
-            const targetPosition = sortedDestinations.findIndex(d => d.id === targetDestination.id);
-            
-            // Extraire la destination déplacée
-            const [movedDestination] = sortedDestinations.splice(draggedPosition, 1);
-            
-            // Si on déplace vers le bas, insérer après la cible
-            // Si on déplace vers le haut, insérer avant la cible
-            if (draggedPosition < targetPosition) {
-                // Déplacement vers le bas : insérer après la cible
-                sortedDestinations.splice(targetPosition, 0, movedDestination);
-            } else {
-                // Déplacement vers le haut : insérer avant la cible
-                sortedDestinations.splice(targetPosition, 0, movedDestination);
-            }
-            
-            // Réassigner les ordres consécutifs à toutes les destinations
-            sortedDestinations.forEach((dest, index) => {
-                dest.order = index;
+            // Mettre à jour les ordres de toutes les destinations
+            destinations.forEach(destination => {
+                const currentOrder = destination.order || 0;
                 
-                // Gérer les transports selon la position
-                if (index === 0) {
-                    // Première destination : ne doit pas avoir de transport
-                    if (dest.transportation) {
-                        console.log(`Suppression du transport pour la première destination: ${dest.name}`);
-                        delete dest.transportation;
+                if (currentOrder === draggedOrder) {
+                    // La destination déplacée prend l'ordre de la cible
+                    destination.order = targetOrder;
+                } else if (draggedOrder < targetOrder) {
+                    // Déplacement vers le bas : incrémenter les destinations entre
+                    if (currentOrder > draggedOrder && currentOrder <= targetOrder) {
+                        destination.order = currentOrder - 1;
                     }
                 } else {
-                    // Destinations suivantes : doivent avoir un transport par défaut si elles n'en ont pas
-                    if (!dest.transportation) {
-                        console.log(`Ajout du transport par défaut pour la destination #${index}: ${dest.name}`);
-                        dest.transportation = {
-                            type: 'avion',
-                            cost: null,
-                            duration: null
-                        };
+                    // Déplacement vers le haut : décrémenter les destinations entre
+                    if (currentOrder >= targetOrder && currentOrder < draggedOrder) {
+                        destination.order = currentOrder + 1;
                     }
-                    // Si la destination a déjà un transport, on le conserve tel quel
                 }
             });
             
-            await window.firebaseService.updateItinerary(currentItinerary);
+            // Sauvegarder toutes les destinations mises à jour
+            for (const destination of destinations) {
+                await window.localStorageService.updateDestination(destination.id, destination);
+            }
+            
+            console.log('✅ Destinations réorganisées avec succès');
+            
+            // Recharger l'affichage
             await this.loadDestinations();
             
-            console.log('✅ Destinations réorganisées avec gestion des transports');            
-        } catch (error) {
-            console.error('❌ Erreur réorganisation destinations:', error);
-            if (window.showErrorSnackBar) {
-                window.showErrorSnackBar('Erreur lors de la réorganisation.');
+            // Nettoyer le transport de la nouvelle première destination si nécessaire
+            if (window.Destinations && window.Destinations.cleanFirstDestinationTransport) {
+                await window.Destinations.cleanFirstDestinationTransport();
             }
-
-            await this.loadDestinations();
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la réorganisation des destinations:', error);
         }
-        
-        this.draggedIndex = undefined;
     },
 
     /**
@@ -392,15 +385,13 @@ const Destinations = {
      */
     async updateOrdersAfterDeletion(deletedOrder) {
         try {
-            // Récupérer l'itinéraire actuel
-            const itineraries = window.firebaseService.itineraries;
-            if (itineraries.length === 0) {
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            if (!currentItinerary) {
                 console.error('❌ Aucun itinéraire trouvé');
                 return;
             }
 
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
-            const destinations = currentItinerary.destinations || [];
+            const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
             
             // Mettre à jour les ordres : toutes les destinations après la supprimée voient leur order diminué de 1
             destinations.forEach(dest => {
@@ -409,8 +400,10 @@ const Destinations = {
                 }
             });
 
-            // Sauvegarder les changements
-            await window.firebaseService.updateItinerary(currentItinerary);
+            // Sauvegarder les changements via localStorage (qui déclenchera la sync)
+            await window.localStorageService.updateItinerary(currentItinerary.id, {
+                destinations: destinations
+            });
             console.log('✅ Ordres mis à jour après suppression');
             
         } catch (error) {
@@ -421,25 +414,31 @@ const Destinations = {
     /**
      * Rafraîchir la liste des destinations
      */
-    refreshDestinationsList() {
-        if (window.firebaseService && window.firebaseService.loadDestinations) {
-            window.firebaseService.loadDestinations();
+    async refreshDestinationsList() {
+        if (window.localStorageService) {
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            if (currentItinerary) {
+                this.getPanel();
+                this.render();
+            }
         }
     },
 
     /**
      * Mettre à jour la visibilité du bouton "Ajouter une destination"
      */
-    updateAddDestinationButtonVisibility() {
+    async updateAddDestinationButtonVisibility() {
         const addButton = document.getElementById('add-destination-btn');
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const lastDestination = destinations[destinations.length - 1];
+        
         
         if (addButton) {
             // Le bouton doit être visible si :
             // - Il n'y a aucune destination
-            // - OU la dernière destination a un ID (elle est complètement sauvegardée)
-            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id);
+            // - OU la dernière destination n'a pas l'ID temporaire (elle est complètement sauvegardée)
+            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id !== 'temp_destination');
+            
             if (shouldShow) {
                 addButton.style.display = 'block';
             } else {
@@ -453,7 +452,7 @@ const Destinations = {
     /**
      * Afficher les destinations
      */
-    render() {
+    async render() {
         // Obtenir ou créer le panneau destinations
         const panel = this.getPanel();
         if (!panel) {
@@ -477,7 +476,8 @@ const Destinations = {
         addButton.onclick = () => this.showAddForm();
         addButton.textContent = 'Ajouter une destination';
         
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         if (destinations.length === 0) {
             container.appendChild(addButton);
         } else {
@@ -488,7 +488,7 @@ const Destinations = {
                 return orderA - orderB;
             });
             
-            sortedDestinations.forEach((destination, sortedIndex) => {
+            for (const [sortedIndex, destination] of sortedDestinations.entries()) {
                 // Ajouter une carte de transport si ce n'est pas la première destination
                 if (sortedIndex > 0) {
                     const transportation = destination.transportation || {
@@ -496,31 +496,40 @@ const Destinations = {
                         cost: null,
                         duration: null
                     };
-                    const transportCard = Transportation.createTransportationCard(transportation, sortedIndex);
+                    
+                    // Sauvegarder le transport par défaut dans la base si la destination n'en a pas
+                    if (!destination.transportation) {
+                        await window.localStorageService.updateDestination(destination.id, {
+                            ...destination,
+                            transportation: transportation
+                        });
+                    }
+                    
+                    const transportCard = Transportation.createTransportationCard(transportation, destination.id);
                     container.appendChild(transportCard);
                 }
                 
-                const card = this.createDestinationCard(destination, sortedIndex);
+                const card = this.createDestinationCard(destination);
                 container.appendChild(card);
                 
                 // Réactiver le drag & drop sur les cartes existantes (si la dernière destination a un ID)
                 const lastDestination = destinations[destinations.length - 1];
                 if (!lastDestination || lastDestination.id) {
-                    this.addDragAndDropEvents(card, sortedIndex);
+                    await this.addDragAndDropEvents(card, destination.id);
                 }
-            });
+            }
             
             container.appendChild(addButton);
         }
         
         // Mettre à jour la visibilité du bouton "Ajouter"
-        this.updateAddDestinationButtonVisibility();
+        await this.updateAddDestinationButtonVisibility();
     },
 
     /**
      * Afficher le formulaire d'ajout
      */
-    showAddForm() {
+    async showAddForm() {
         // Masquer tous les formulaires d'édition
         document.querySelectorAll('.destination-form.show').forEach(f => {
             f.classList.remove('show');
@@ -529,64 +538,81 @@ const Destinations = {
             c.classList.remove('editing');
         });
 
-        // Créer une destination vide pour l'ajout (ajouter à l'itinéraire mais pas sauvegarder en base)
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const newDestination = {
+        // Créer une destination vide pour l'ajout
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destinationData = {
             name: '',
             address: '',
             duration: { days: 0, hours: 0, minutes: 0 },
             order: destinations.length // Order = position dans la liste
         };
 
-        // Ajouter la nouvelle destination à l'itinéraire courant (sans sauvegarder en base)
-        const currentItinerary = window.firebaseService.getCurrentItinerary();
+        // Ajouter la nouvelle destination avec ID temporaire
+        let newDestination;
         if (currentItinerary) {
-            currentItinerary.destinations.push(newDestination);
+            newDestination = await window.localStorageService.createDestination(destinationData);
         }
 
-        // Créer une card pour la nouvelle destination dans la sidebar
-        const panel = this.getPanel();
-        if (!panel) {
-            console.error('❌ Panneau destinations non trouvé');
-            return;
-        }
-
-        const list = panel.querySelector('.destinations-list');
-        if (!list) {
-            console.error('❌ Liste destinations non trouvée');
-            return;
-        }
-
-        // Trouver le bouton "Ajouter une destination"
-        const addButton = document.getElementById('add-destination-btn');
-        
-        // L'index de la nouvelle destination est le dernier (après ajout)
-        const newIndex = currentItinerary.destinations.length - 1;
-        const card = this.createDestinationCard(newDestination, newIndex);
+        // Créer la card pour la nouvelle destination
+        const card = this.createDestinationCard(newDestination);
         card.classList.add('editing');
         
+        // Ajouter un attribut pour identifier la destination temporaire
+        if (newDestination.id === 'temp_destination') {
+            card.setAttribute('data-temp-destination', 'true');
+        }
+
+        // Trouver où insérer la card (panneau principal ou sidebar)
+        let list, addButton;
+        
+        // Essayer d'abord le panneau principal
+        const panel = this.getPanel();
+        if (panel) {
+            list = panel.querySelector('.destinations-list');
+            addButton = document.getElementById('add-destination-btn');
+        }
+        
+        // Si le panneau principal n'existe pas, essayer la sidebar
+        if (!list || !addButton) {
+            const container = document.getElementById('sidebar-destinations-content');
+            if (container) {
+                const destinationsPanel = container.querySelector('.destinations-panel');
+                if (destinationsPanel) {
+                    list = destinationsPanel.querySelector('.destinations-list');
+                    addButton = list.querySelector('.add-destination-btn');
+                }
+            }
+        }
+        
+        if (!list || !addButton) {
+            console.error('❌ Conteneur pour les destinations non trouvé');
+            return;
+        }
+
+        // Insérer la card avant le bouton d'ajout
         list.insertBefore(card, addButton);
         
         // Ouvrir automatiquement le formulaire
-        const form = document.getElementById(`form-${newIndex}`);
+        const form = document.getElementById(`form-${newDestination.id}`);
         if (form) {
             form.classList.add('show');
         }
 
         // Mettre à jour la visibilité du bouton "Ajouter"
-        this.updateAddDestinationButtonVisibility();
+        await this.updateAddDestinationButtonVisibility();
         
         // Scroller vers la nouvelle destination
         setTimeout(() => {
-            this.scrollToDestination(newIndex);
+            this.scrollToDestination(newDestination.id);
         }, 100);
     },
 
     /**
      * Faire défiler jusqu'à une destination
      */
-    scrollToDestination(index) {
-        const card = document.getElementById(`destination-${index}`);
+    scrollToDestination(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
         if (card) {
             // Attendre un peu que le panneau soit visible
             setTimeout(() => {
@@ -603,12 +629,9 @@ const Destinations = {
      */
     async loadDestinations() {
         try {
-            console.log('🔁 Chargement des destinations...');
-            const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-            
             // S'assurer que le panneau existe avant de faire le rendu
             this.getPanel();
-            this.render();
+            await this.render();
 
             // Afficher les destinations sur la carte
             if (window.MapInstance && window.MapInstance.displayDestinations) {
@@ -617,126 +640,7 @@ const Destinations = {
 
         } catch (error) {
             console.error('❌ Erreur chargement destinations:', error);
-            this.render();
-        }
-    },
-
-    /**
-     * Rendre les destinations (méthode manquante de l'ancien système)
-     */
-    render() {
-        // Obtenir ou créer le panneau destinations
-        const panel = this.getPanel();
-        if (!panel) {
-            console.error('❌ Panneau destinations non trouvé');
-            return;
-        }
-
-        // Trouver le conteneur de liste dans le panneau
-        let container = panel.querySelector('.destinations-list');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'destinations-list';
-            panel.appendChild(container);
-        }
-
-        container.innerHTML = '';
-
-        const addButton = document.createElement('button');
-        addButton.className = 'btn-add';
-        addButton.id = 'add-destination-btn';
-        addButton.onclick = () => this.showAddForm();
-        addButton.textContent = 'Ajouter une destination';
-        
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        if (destinations.length === 0) {
-            container.appendChild(addButton);
-        } else {
-            // Trier les destinations par order
-            const sortedDestinations = [...destinations].sort((a, b) => {
-                const orderA = a.order || 0;
-                const orderB = b.order || 0;
-                return orderA - orderB;
-            });
-
-            sortedDestinations.forEach((destination, sortedIndex) => {
-                // Ajouter une carte de transport si ce n'est pas la première destination
-                if (sortedIndex > 0) {
-                    const transportation = destination.transportation || {
-                        type: 'avion',
-                        cost: null,
-                        duration: null
-                    };
-                    const transportCard = Transportation.createTransportationCard(transportation, sortedIndex);
-                    container.appendChild(transportCard);
-                }
-                
-                // Ajouter la carte de destination
-                const card = this.createDestinationCard(destination, sortedIndex);
-                container.appendChild(card);
-            });
-
-            // Ajouter le bouton à la fin
-            container.appendChild(addButton);
-        }
-    },
-
-    /**
-     * Afficher le formulaire d'ajout (version complète de l'ancien système)
-        const newDestination = {
-            name: '',
-            address: '',
-            duration: { days: 0, hours: 0, minutes: 0 },
-            order: destinations.length // Order = position dans la liste
-        };
-        
-        // Ajouter la nouvelle destination à la liste (sans ID pour l'instant)
-        const currentItinerary = window.firebaseService.getCurrentItinerary();
-        if (currentItinerary) {
-            currentItinerary.destinations.push(newDestination);
-        }
-        
-        // Créer une card pour la nouvelle destination dans la sidebar
-        const container = document.getElementById('sidebar-destinations-content');
-        if (container) {
-            // Trouver le panneau destinations dans la sidebar
-            const destinationsPanel = container.querySelector('.destinations-panel');
-            if (!destinationsPanel) {
-                console.error('❌ Panneau destinations non trouvé dans la sidebar');
-                return;
-            }
-            
-            const list = destinationsPanel.querySelector('.destinations-list');
-            if (!list) {
-                console.error('❌ Liste destinations non trouvée dans la sidebar');
-                return;
-            }
-            
-            // Trouver le bouton "Ajouter une destination"
-            const addButton = list.querySelector('.add-destination-btn');
-            
-            // L'index de la nouvelle destination est le dernier
-            const newIndex = destinations.length - 1;
-            const card = this.createDestinationCard(newDestination, newIndex);
-            card.classList.add('editing');
-            
-            list.insertBefore(card, addButton);
-            
-            // Ouvrir automatiquement le formulaire
-            const form = document.getElementById(`form-${newIndex}`);
-            if (form) {
-                form.classList.add('show');
-            }
-            
-            // Mettre à jour la visibilité du bouton "Ajouter"
-            this.updateAddDestinationButtonVisibility();
-            
-            // Scroller vers la nouvelle destination
-            setTimeout(() => {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        } else {
-            console.error('❌ Conteneur sidebar-destinations-content non trouvé');
+            await this.render();
         }
     },
 
@@ -770,108 +674,6 @@ const Destinations = {
     },
 
     /**
-     * Afficher les activités d'une destination spécifique
-     */
-    displayActivitiesOfDestination(index) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[index];
-        if (!destination || !destination.id) return;
-        
-        try {
-            // Utiliser le nouveau service pour charger les activités
-            const activities = window.firebaseService.getActivities(destination);
-            
-            console.log('🔍 Activités chargées depuis la mémoire:', activities);
-            
-            const activitiesList = document.getElementById(`activities-list-${index}`);
-            activitiesList.innerHTML = '';
-            
-            if (activities.length === 0) {
-                activitiesList.innerHTML = '<p style="color: var(--gray-light); padding: 10px;">Aucune activité pour cette destination</p>';
-            return;
-            }
-            
-            // Trier les activités par ordre
-            activities.sort((a, b) => (a.order || 0) - (b.order || 0));
-            
-            activities.forEach(activity => {
-                console.log('🔍 Activité trouvée:', { id: activity.id, name: activity.name });
-                
-                const activityElement = document.createElement('div');
-                activityElement.className = 'activity-item';
-                
-                // Créer le contenu HTML proprement
-                let activityHTML = `
-                    <div class="activity-info">
-                        <div class="activity-header flex-between">
-                        <div class="activity-name-and-price">
-                            <strong>${activity.name}</strong>`;
-                            
-                            // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
-                            if (activity.price) {
-                                const displayPrice = activity.price || 0;
-                                
-                                if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
-                                    // Devise étrangère : afficher conversion
-                                    const displayCurrency = activity.localCurrency || 0;
-                                    const displayCurrencyCode = activity.localCurrencyCode || '';
-                                    
-                                    if (displayPrice > 0 || displayCurrency > 0) {
-                                        activityHTML += `
-                                            <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
-                                            `;
-                                    }
-                                } else {
-                                    // EUR : afficher seulement le prix en euros
-                                    if (displayPrice > 0) {
-                                        activityHTML += `
-                                            <span class="activity-price">${displayPrice}€</span>
-                                            `;
-                                    }
-                                }
-                            }
-                        
-                        activityHTML += `
-                            </div> <!-- Fin activity-name-and-price -->
-                            <div class="activity-actions">
-                                <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${index})" title="Modifier l'activité">
-                                    <span class="material-icons">edit</span>
-                                </button>
-                                <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', ${index}, this)" title="Supprimer l'activité">
-                                    <span class="material-icons">delete</span>
-                                </button>
-                            </div>
-                        </div>
-                `;
-                
-                if (activity.startTime && activity.endTime) {
-                    activityHTML += `<span class="activity-time">${activity.startTime} - ${activity.endTime}</span>`;
-                }
-                
-                // Afficher le type d'activité si présent
-                if (activity.type) {
-                    activityHTML += `
-                        <span class="activity-type">${activity.type}</span>
-                        `;
-                }
-                
-                activityHTML += `
-                    </div>
-                `;
-                
-                activityElement.innerHTML = activityHTML;
-                activitiesList.appendChild(activityElement);
-            });
-            
-        } catch (error) {
-            console.error('Erreur lors du chargement des activités:', error);
-            const activitiesList = document.getElementById(`activities-list-${index}`);
-            if (activitiesList) {
-                activitiesList.innerHTML = '<p class="no-activities">Erreur lors du chargement des activités</p>';
-            }
-        }
-    },
-
-    /**
      * Mettre à jour la visibilité du panneau
      */
     updatePanelVisibility() {
@@ -887,15 +689,13 @@ const Destinations = {
     /**
      * Ajouter les événements drag and drop à une card
      */
-    addDragAndDropEvents(card, index) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[index];
+    async addDragAndDropEvents(card, destinationId) {
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(d => d.id === destinationId);
         
         // Si la destination n'existe pas ou si la dernière destination n'a pas d'ID, ne pas ajouter drag & drop
         const lastDestination = destinations[destinations.length - 1];
         if (!destination || !destination.id || (lastDestination && !lastDestination.id)) return;
-											
-		 
         
         card.addEventListener('dragstart', (e) => {
             // Désactiver le drag si une destination est en édition
@@ -908,29 +708,18 @@ const Destinations = {
             card.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', card.innerHTML);
-											   
-            this.draggedIndex = index;
+            
+            // Stocker l'ID de la destination déplacée
+            this.draggedId = destinationId;
         });
         
         card.addEventListener('dragend', (e) => {
             card.classList.remove('dragging');
-										  
         });
         
         card.addEventListener('dragover', (e) => {
-            // Désactiver le drop si une destination est en édition
-            const editingCard = document.querySelector('.destination-card.editing');
-            if (editingCard) {
-                e.preventDefault();
-                return;
-            }
-            
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            
-            if (this.draggedIndex !== undefined && this.draggedIndex !== index) {
-                card.classList.add('drag-over');
-            }
+            card.classList.add('drag-over');
         });
         
         card.addEventListener('dragleave', (e) => {
@@ -948,13 +737,25 @@ const Destinations = {
             e.preventDefault();
             card.classList.remove('drag-over');
             
-            if (this.draggedIndex !== undefined && this.draggedIndex !== index && !this.isReordering) {
+            // Trouver l'ID de la destination cible
+            const targetCard = e.currentTarget;
+            const targetId = this.getDestinationIdFromCard(targetCard);
+            
+            if (this.draggedId && this.draggedId !== targetId && !this.isReordering) {
                 this.isReordering = true;
-                this.reorderDestinations(this.draggedIndex, index).finally(() => {
+                this.reorderDestinations(this.draggedId, targetId).finally(() => {
                     this.isReordering = false;
                 });
             }
         });
+    },
+
+    /**
+     * Obtenir l'ID de la destination depuis une card DOM
+     */
+    getDestinationIdFromCard(card) {
+        // L'ID de la destination est directement dans l'ID de la card
+        return card.id.replace('destination-', '');
     },
 
     /**

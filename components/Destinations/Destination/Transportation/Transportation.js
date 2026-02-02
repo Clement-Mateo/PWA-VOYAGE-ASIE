@@ -1,6 +1,5 @@
 /**
- * Transportation Module - Gère le formulaire transport et la sauvegarde
- * Méthodes extraites de Destinations.js
+ * Transportation Module - Gère les transports entre destinations
  */
 
 const Transportation = {
@@ -8,10 +7,10 @@ const Transportation = {
     /**
      * Créer une card de transport
      */
-    createTransportationCard(transportation, destinationIndex) {
+    createTransportationCard(transportation, destinationId) {
         const card = document.createElement('div');
         card.className = 'transportation-card';
-        card.id = `transportation-${destinationIndex}`;
+        card.id = `transportation-${destinationId}`;
         
         // Définir les types de transport avec Material Icons
         const transportTypes = {
@@ -28,7 +27,7 @@ const Transportation = {
         
         // Formater la durée
         const duration = transportation.duration || { hours: 0, minutes: 0 };
-        const durationText = this.formatTransportDuration(duration);
+        const durationText = window.formatDuration(duration, false);
         
         // Créer le contenu de la carte
         card.innerHTML = `
@@ -52,7 +51,7 @@ const Transportation = {
         
         // Ajouter l'événement de clic sur le bouton d'édition
         const editBtn = card.querySelector('.btn-edit');
-        editBtn.onclick = () => this.editTransportation(destinationIndex);
+        editBtn.onclick = () => this.editTransportation(destinationId);
         
         return card;
     },
@@ -60,12 +59,13 @@ const Transportation = {
     /**
      * Éditer le transport d'une destination
      */
-    editTransportation(destinationIndex) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[destinationIndex];
+    async editTransportation(destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         
         if (!destination) {
-            console.error('❌ Destination non trouvée à l\'index', destinationIndex);
+            console.error('❌ Destination non trouvée avec l\'ID', destinationId);
             return;
         }
         
@@ -123,7 +123,7 @@ const Transportation = {
                 </div>
                 <div class="modal-footer">
                     <button class="btn-cancel" onclick="this.closest('.modal.open').remove()">Annuler</button>
-                    <button class="btn-save" onclick="Transportation.saveTransportation(${destinationIndex})">Enregistrer</button>
+                    <button class="btn-save" onclick="Transportation.saveTransportation('${destinationId}')">Enregistrer</button>
                 </div>
             </div>
         `;
@@ -136,12 +136,13 @@ const Transportation = {
     /**
      * Sauvegarder le transport d'une destination
      */
-    async saveTransportation(destinationIndex) {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
-        const destination = destinations[destinationIndex];
+    async saveTransportation(destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         
         if (!destination) {
-            console.error('❌ Destination non trouvée à l\'index', destinationIndex);
+            console.error('❌ Destination non trouvée avec l\'ID', destinationId);
             return;
         }
         
@@ -193,20 +194,20 @@ const Transportation = {
                 transportation: transportationData
             };
             
-            // Sauvegarder via firebaseService
-            const success = await window.firebaseService.updateDestination(updatedDestination);
+            // Sauvegarder via localStorage
+            await window.localStorageService.updateDestination(destination.id, updatedDestination);
             
-            if (success) {
-                console.log('✅ Transport mis à jour avec succès');
-                window.showSuccessSnackBar('Transport mis à jour avec succès');
-                
-                // Fermer la modale principale (plus spécifique)
-                document.querySelector('.modal.open').remove();
-                
-                // Mettre à jour l'affichage
-                this.refreshTransportationCard(destinationIndex, transportationData);
-            } else {
-                throw new Error('Échec de la mise à jour du transport');
+            window.showSuccessSnackBar('Transport mis à jour avec succès');
+            
+            // Fermer la modale principale (plus spécifique)
+            document.querySelector('.modal.open').remove();
+            
+            // Mettre à jour l'affichage
+            this.refreshTransportationCard(destinationId, transportationData);
+            
+            // Rafraîchir la synthèse pour mettre à jour les temps en temps réel
+            if (window.Synthèse && window.Synthèse.refresh) {
+                await window.Synthèse.refresh();
             }
             
         } catch (error) {
@@ -226,17 +227,17 @@ const Transportation = {
         
         const modal = document.createElement('div');
         modal.id = 'transportTypeModal';
-        modal.className = 'transport-modal';
+        modal.className = 'modal';
         modal.innerHTML = `
-            <div class="transport-modal-backdrop"></div>
-            <div class="transport-modal-content">
-                <div class="transport-modal-header">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
                     <h4>Type de transport</h4>
-                    <button class="transport-modal-close" onclick="Transportation.closeTransportModal()">
+                    <button class="btn-close" onclick="Transportation.closeTransportModal()">
                         <span class="material-icons">close</span>
                     </button>
                 </div>
-                <div class="transport-modal-body">
+                <div class="modal-body">
                     <div class="transport-option" onclick="Transportation.selectTransportType('train')">
                         <span class="material-icons">train</span>
                         <span>Train</span>
@@ -273,7 +274,7 @@ const Transportation = {
         }, 10);
         
         // Fermer au clic sur le backdrop
-        const backdrop = modal.querySelector('.transport-modal-backdrop');
+        const backdrop = modal.querySelector('.modal-backdrop');
         if (backdrop) {
             backdrop.addEventListener('click', () => this.closeTransportModal());
         }
@@ -312,24 +313,6 @@ const Transportation = {
     },
 
     /**
-     * Parser une durée au format "2h30" en heures et minutes
-     */
-    parseDuration(duration) {
-        if (!duration || typeof duration !== 'string') {
-            return { hours: 0, minutes: 0 };
-        }
-        
-        // Chercher le format "XhY" ou "Xh" ou "Y"
-        const hoursMatch = duration.match(/(\d+)h/);
-        const minutesMatch = duration.match(/h(\d+)|(\d+)$/);
-        
-        const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-        const minutes = minutesMatch ? parseInt(minutesMatch[1] || minutesMatch[2], 10) : 0;
-        
-        return { hours, minutes };
-    },
-
-    /**
      * Obtenir l'icône Material Icons pour un type de transport
      */
     getTransportIcon(type) {
@@ -359,28 +342,14 @@ const Transportation = {
         return labels[type] || type;
     },
 
-    /**
-     * Formater la durée du transport
-     */
-    formatTransportDuration(duration) {
-        if (!duration) return '';
-        
-        const hours = duration.hours || 0;
-        const minutes = duration.minutes || 0;
-        
-        if (hours === 0 && minutes === 0) return '';
-        if (hours === 0) return `${minutes}min`;
-        if (minutes === 0) return `${hours}h`;
-        return `${hours}h ${minutes}`;
-    },
-
+    
     /**
      * Mettre à jour la carte de transport
      */
-    refreshTransportationCard(destinationIndex, transportationData) {
-        const card = document.getElementById(`transportation-${destinationIndex}`);
+    refreshTransportationCard(destinationId, transportationData) {
+        const card = document.getElementById(`transportation-${destinationId}`);
         if (card) {
-            const newCard = this.createTransportationCard(transportationData, destinationIndex);
+            const newCard = this.createTransportationCard(transportationData, destinationId);
             card.replaceWith(newCard);
         }
     }

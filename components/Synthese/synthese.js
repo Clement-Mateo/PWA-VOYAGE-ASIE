@@ -13,18 +13,36 @@ const Synthèse = {
     },
     
     /**
-     * Calculer la durée totale de l'itinéraire
+     * Calculer la durée totale de l'itinéraire (destinations + transports)
      */
-    calculateTotalDuration() {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+    async calculateTotalDuration() {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         let totalMinutes = 0;
         
+        // Ajouter les durées des destinations
         destinations.forEach(destination => {
             if (destination.duration) {
                 totalMinutes += 
                     (destination.duration.days || 0) * 24 * 60 +
                     (destination.duration.hours || 0) * 60 +
                     (destination.duration.minutes || 0);
+            }
+            
+            // Ajouter les durées de transport (sauf pour la première destination)
+            if (destination.order > 0 && destination.transportation && destination.transportation.duration) {
+                const transportDuration = destination.transportation.duration;
+                
+                // Gérer le format objet {hours, minutes}
+                if (typeof transportDuration === 'object' && transportDuration !== null) {
+                    const hours = transportDuration.hours || 0;
+                    const minutes = transportDuration.minutes || 0;
+                    totalMinutes += hours * 60 + minutes;
+                } else if (typeof transportDuration === 'string') {
+                    // Ancien format chaîne
+                    const parsed = window.parseDuration(transportDuration);
+                    totalMinutes += parsed.hours * 60 + parsed.minutes;
+                }
             }
         });
         
@@ -39,7 +57,8 @@ const Synthèse = {
      * Calculer le coût total de l'itinéraire
      */
     async calculateTotalCost() {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         
         let totalCost = 0;
         let activitiesByType = {};
@@ -50,10 +69,15 @@ const Synthèse = {
                 continue;
             }
             
-            if (window.firebaseService) {
+            // Ajouter le coût du transport s'il existe
+            if (destination.transportation && destination.transportation.cost) {
+                totalCost += destination.transportation.cost;
+            }
+            
+            if (window.localStorageService) {
                 try {
                     // Récupérer les activités de cette destination
-                    const activities = await window.firebaseService.getActivities(destination);
+                    const activities = await window.localStorageService.getActivities(destination.id);
                     
                     activities.forEach(activity => {
                         const cost = activity.price || 0; // Les activités utilisent 'price' pas 'cost'
@@ -97,21 +121,11 @@ const Synthèse = {
     },
     
     /**
-     * Formater la durée pour l'affichage
-     */
-    formatDuration(duration) {
-        const parts = [];
-        if (duration.days > 0) parts.push(`${duration.days}j`);
-        if (duration.hours > 0) parts.push(`${duration.hours}h`);
-        if (duration.minutes > 0) parts.push(`${duration.minutes}min`);
-        return parts.length > 0 ? parts.join(' ') : 'Aucune durée';
-    },
-    
-    /**
      * Calculer la distance totale du voyage
      */
     async calculateTotalDistance() {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         let totalDistance = 0;
         
         for (let i = 0; i < destinations.length - 1; i++) {
@@ -159,7 +173,8 @@ const Synthèse = {
      * Calculer le temps de transport total à partir des données réelles
      */
     async calculateTransportTime() {
-        const destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         let totalMinutes = 0;
         
         for (const destination of destinations) {
@@ -281,7 +296,7 @@ const Synthèse = {
      */
     async createSyntheseContent() {
         // Calculer les statistiques
-        const duration = this.calculateTotalDuration();
+        const duration = await this.calculateTotalDuration();
         const costData = await this.calculateTotalCost();
         const totalDistance = await this.calculateTotalDistance();
         const transportTime = await this.calculateTransportTime();
@@ -301,7 +316,7 @@ const Synthèse = {
                                     <span class="material-icons">schedule</span>
                                 </div>
                                 <div class="stat-info">
-                                    <div class="stat-value">${this.formatDuration(duration)}</div>
+                                    <div class="stat-value">${window.formatDuration(duration, true)}</div>
                                     <div class="stat-label">Durée totale</div>
                                 </div>
                             </div>
@@ -411,11 +426,11 @@ const Synthèse = {
                         ${data.duration > 0 ? `
                         <div class="activity-stat">
                             <span class="stat-label">Durée totale:</span>
-                            <span class="stat-value">${this.formatDuration({
+                            <span class="stat-value">${window.formatDuration({
                                 days: Math.floor(data.duration / (24 * 60)),
                                 hours: Math.floor((data.duration % (24 * 60)) / 60),
                                 minutes: data.duration % 60
-                            })}</span>
+                            }, true)}</span>
                         </div>
                         ` : ''}
                     </div>
