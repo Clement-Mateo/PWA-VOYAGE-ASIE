@@ -79,7 +79,7 @@ const Destinations = {
                 <div class="destination-actions">
                     ${destination.id !== 'temp_destination' ? `
                         <button class="btn-location" onclick="Destination.zoomToDestination('${destination.id}')" title="Localiser sur la carte">
-                            <span class="material-icons">my_location</span>
+                            <span class="material-icons">place</span>
                         </button>
                         <button class="btn-edit" onclick="Destination.editDestination('${destination.id}')">
                             <span class="material-icons">edit</span>
@@ -88,7 +88,7 @@ const Destinations = {
                             <span class="material-icons">delete</span>
                         </button>
                         <button class="btn-expand" onclick="Destination.toggleDestinationCard('${destination.id}')" title="Déplier">
-                            <span class="material-icons">expand_more</span>
+                            <span class="material-icons">keyboard_arrow_down</span>
                         </button>
                     ` : ''}
                 </div>
@@ -419,7 +419,7 @@ const Destinations = {
      * Mettre à jour la visibilité du bouton "Ajouter une destination"
      */
     async updateAddDestinationButtonVisibility() {
-        const addButton = document.getElementById('add-destination-btn');
+        const addButton = document.querySelector('.sidebar-footer .btn-add');
         const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const lastDestination = destinations[destinations.length - 1];
         
@@ -430,12 +430,12 @@ const Destinations = {
             // - ET il n'y a aucune destination
             // - OU la dernière destination n'a pas l'ID temporaire (elle est complètement sauvegardée)
             const isOnline = navigator.onLine;
-            const shouldShow = isOnline && (destinations.length === 0 || (lastDestination && lastDestination.id !== 'temp_destination'));
+            const shouldEnable = isOnline && (destinations.length === 0 || (lastDestination && lastDestination.id !== 'temp_destination'));
             
-            if (shouldShow) {
-                addButton.style.display = 'block';
+            if (shouldEnable) {
+                addButton.disabled = false;
             } else {
-                addButton.style.display = 'none';
+                addButton.disabled = true;
             }
             
             // Ajouter un indicateur visuel si hors ligne
@@ -445,7 +445,7 @@ const Destinations = {
                 addButton.title = "Ajouter une destination";
             }
         } else {
-            console.log('erreur updateAddDestinationButtonVisibility -> addButton non trouvé');
+            console.log('erreur updateAddDestinationButtonVisibility -> bouton sidebar footer non trouvé');
         }
     },
 
@@ -470,16 +470,12 @@ const Destinations = {
         
         container.innerHTML = '';
 
-        const addButton = document.createElement('button');
-        addButton.className = 'btn-add';
-        addButton.id = 'add-destination-btn';
-        addButton.onclick = () => this.showAddForm();
-        addButton.textContent = 'Ajouter une destination';
+        // Pas de bouton ajouter ici - il est dans le sidebar footer
         
         const currentItinerary = await window.localStorageService.getCurrentItinerary();
         const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         if (destinations.length === 0) {
-            container.appendChild(addButton);
+            // Contenu vide - le bouton ajouter est dans le footer
         } else {
             // Trier les destinations par order
             const sortedDestinations = [...destinations].sort((a, b) => {
@@ -488,9 +484,13 @@ const Destinations = {
                 return orderA - orderB;
             });
             
-            for (const [sortedIndex, destination] of sortedDestinations.entries()) {
-                // Ajouter une carte de transport si ce n'est pas la première destination
+            sortedDestinations.forEach(async (destination, sortedIndex) => {
+                // Ajouter un connecteur pointillé si ce n'est pas la première destination
                 if (sortedIndex > 0) {
+                    const connector = document.createElement('div');
+                    connector.className = 'destination-connector';
+                    
+                    // Ajouter la carte de transport à l'intérieur du connecteur
                     const transportation = destination.transportation || {
                         type: 'avion',
                         cost: null,
@@ -506,7 +506,8 @@ const Destinations = {
                     }
                     
                     const transportCard = Transportation.createTransportationCard(transportation, destination.id);
-                    container.appendChild(transportCard);
+                    connector.appendChild(transportCard);
+                    container.appendChild(connector);
                 }
                 
                 const card = this.createDestinationCard(destination);
@@ -517,9 +518,8 @@ const Destinations = {
                 if (!lastDestination || lastDestination.id) {
                     await this.addDragAndDropEvents(card, destination.id);
                 }
-            }
-            
-            container.appendChild(addButton);
+            });
+            // Pas de bouton ajouter ici - il est dans le sidebar footer
         }
         
         // Mettre à jour la visibilité du bouton "Ajouter"
@@ -570,7 +570,6 @@ const Destinations = {
         const panel = this.getPanel();
         if (panel) {
             list = panel.querySelector('.destinations-list');
-            addButton = document.getElementById('add-destination-btn');
         }
         
         // Si le panneau principal n'existe pas, essayer la sidebar
@@ -580,18 +579,12 @@ const Destinations = {
                 const destinationsPanel = container.querySelector('.destinations-panel');
                 if (destinationsPanel) {
                     list = destinationsPanel.querySelector('.destinations-list');
-                    addButton = list.querySelector('.add-destination-btn');
                 }
             }
         }
         
-        if (!list || !addButton) {
-            console.error('❌ Conteneur pour les destinations non trouvé');
-            return;
-        }
-
-        // Insérer la card avant le bouton d'ajout
-        list.insertBefore(card, addButton);
+        // Ajouter la carte à la fin de la liste
+        list.appendChild(card);
         
         // Ouvrir automatiquement le formulaire
         const form = document.getElementById(`form-${newDestination.id}`);

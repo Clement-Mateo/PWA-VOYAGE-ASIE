@@ -38,7 +38,7 @@ const Transportation = {
                         <span>${this.getTransportLabel(transportation.type)}</span>
                     </div>
                     <div class="transportation-details">
-                        ${transportation.cost ? `${transportation.cost}€` : 'Non défini'} • ${durationText}
+                        ${transportation.cost ? `${transportation.cost}€` : 'Non défini'} - ${durationText}
                     </div>
                 </div>
                 <div class="transportation-actions">

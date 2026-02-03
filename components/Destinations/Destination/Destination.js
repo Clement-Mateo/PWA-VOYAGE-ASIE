@@ -29,7 +29,7 @@ const Destination = {
         if (activitiesSection && activitiesSection.style.display !== 'none') {
             activitiesSection.style.display = 'none';
             if (expandBtn) {
-                expandBtn.textContent = 'expand_more';
+                expandBtn.textContent = 'keyboard_arrow_down';
             }
         }
         
@@ -520,12 +520,12 @@ const Destination = {
         if (isExpanded) {
             // Replier
             activitiesSection.style.display = 'none';
-            expandBtn.textContent = 'expand_more';
+            expandBtn.textContent = 'keyboard_arrow_down';
             card.classList.remove('expanded');
         } else {
             // Déplier
             activitiesSection.style.display = 'block';
-            expandBtn.textContent = 'expand_less';
+            expandBtn.textContent = 'keyboard_arrow_up';
             card.classList.add('expanded');
             
             // Charger les activités si pas encore chargées

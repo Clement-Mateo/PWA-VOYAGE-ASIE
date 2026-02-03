@@ -46,9 +46,23 @@
 }
 
 /* Boutons d'action (edit, delete, expand) */
-.btn-edit, .btn-location, .btn-delete, .btn-expand {
+.btn-edit, .btn-location, .btn-delete {
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-expand {
+    font-family: 'Material Symbols Outlined', sans-serif;
+    font-size: 10px;
     background: none;
     border: none;
     border-radius: 6px;
@@ -81,7 +95,7 @@
 }
 
 .btn-expand {
-    color: var(--secondary-blue-majorelle);
+    color: var(--primary-blue);
 }
 
 .btn-expand:hover {
@@ -147,9 +161,10 @@
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
     color: var(--font-color-white);
     border: none;
-    border-radius: 20px;
-    padding: 15px;
-    font-size: 16px;
+    width: 100%;
+    border-radius: 32px;
+    padding: 45px;
+    font-size: 48px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -163,11 +178,7 @@
     box-shadow: var(--box-shadow-1);
 }
 
-.btn-add:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
 .btn-add:active {
     transform: translateY(0);
+    box-shadow: var(--box-shadow-2);
 }

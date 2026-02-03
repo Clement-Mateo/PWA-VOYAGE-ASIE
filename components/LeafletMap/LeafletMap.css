@@ -26,15 +26,7 @@
 }
 
 /*===== Les marqueurs =====*/
-.material-symbols-outlined {
-  font-variation-settings:
-    'FILL' 1,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 32
-}
-
-.custom-marker-icon .material-symbols-outlined {
+.custom-marker-icon .material-icons {
     color: var(--primary-blue) !important;
     font-size: 32px !important;
 }
