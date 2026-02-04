@@ -542,7 +542,7 @@ const Destination = {
         const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const destination = destinations.find(d => d.id === destinationId);
         
-        if (!destination || !destination.address || !destination.address.latitude || !destination.address.longitude) {
+        if (!destination || !destination.address || !destination.address.location.lat || !destination.address.location.lng) {
             console.warn('⚠️ Destination sans coordonnées, impossible de zoomer');
             if (window.showToast) {
                 window.showToast('Destination sans localisation définie', 'warning');
@@ -554,9 +554,9 @@ const Destination = {
         
         // Utiliser le service de carte pour zoomer
         if (window.mapService && window.mapService.flyTo) {
-            window.mapService.flyTo([destination.address.latitude, destination.address.longitude], 15);
+            window.mapService.flyTo([destination.address.location.lat, destination.address.location.lng], 15);
         } else if (window.L && window.map) {
-            window.map.flyTo([destination.address.latitude, destination.address.longitude], 15);
+            window.map.flyTo([destination.address.location.lat, destination.address.location.lng], 15);
         } else {
             console.warn('⚠️ Service de carte non disponible');
         }

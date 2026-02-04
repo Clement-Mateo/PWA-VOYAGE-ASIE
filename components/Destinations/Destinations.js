@@ -10,13 +10,6 @@ const Destinations = {
     isReordering: false, // État de réorganisation pour éviter les doubles appels
     
     /**
-     * Initialiser le composant
-     */
-    init() {
-        // Initialisation silencieuse
-    },
-    
-    /**
      * Obtenir ou créer le panneau
      */
     getPanel() {
@@ -297,11 +290,9 @@ const Destinations = {
             if (destination.order === 0 && destination.transportation) {
                 console.log(`🧹 Suppression du transport de la première destination: ${destination.name}`);
                 
-                // Mettre à jour la destination sans transport
-                const updatedDestination = {
-                    ...destination,
-                    transportation: undefined
-                };
+                // Mettre à jour la destination sans transport (supprimer la propriété)
+                const updatedDestination = { ...destination };
+                delete updatedDestination.transportation;
                 
                 await window.localStorageService.updateDestination(destination.id, updatedDestination);
                 hasChanges = true;
@@ -435,14 +426,23 @@ const Destinations = {
         
         if (addButton) {
             // Le bouton doit être visible si :
-            // - Il n'y a aucune destination
+            // - L'utilisateur est en ligne (pour la géocodification)
+            // - ET il n'y a aucune destination
             // - OU la dernière destination n'a pas l'ID temporaire (elle est complètement sauvegardée)
-            const shouldShow = destinations.length === 0 || (lastDestination && lastDestination.id !== 'temp_destination');
+            const isOnline = navigator.onLine;
+            const shouldShow = isOnline && (destinations.length === 0 || (lastDestination && lastDestination.id !== 'temp_destination'));
             
             if (shouldShow) {
                 addButton.style.display = 'block';
             } else {
                 addButton.style.display = 'none';
+            }
+            
+            // Ajouter un indicateur visuel si hors ligne
+            if (!isOnline) {
+                addButton.title = "Ajout de destination indisponible en mode hors ligne (géocodification requise)";
+            } else {
+                addButton.title = "Ajouter une destination";
             }
         } else {
             console.log('erreur updateAddDestinationButtonVisibility -> addButton non trouvé');

@@ -30,6 +30,14 @@ class NetworkManager {
             this.isOnline = true;
             this.updateNetworkStatus();
             this.showOnlineMessage();
+            
+            // Mettre à jour les boutons d'ajout
+            if (window.Destinations && window.Destinations.updateAddDestinationButtonVisibility) {
+                window.Destinations.updateAddDestinationButtonVisibility();
+            }
+            if (window.Itineraries && window.Itineraries.updateAddItineraryButtonVisibility) {
+                window.Itineraries.updateAddItineraryButtonVisibility();
+            }
         });
 
         window.addEventListener('offline', () => {
@@ -37,6 +45,14 @@ class NetworkManager {
             this.isOnline = false;
             this.updateNetworkStatus();
             this.showOfflineMessage();
+            
+            // Mettre à jour les boutons d'ajout
+            if (window.Destinations && window.Destinations.updateAddDestinationButtonVisibility) {
+                window.Destinations.updateAddDestinationButtonVisibility();
+            }
+            if (window.Itineraries && window.Itineraries.updateAddItineraryButtonVisibility) {
+                window.Itineraries.updateAddItineraryButtonVisibility();
+            }
         });
     }
 

@@ -16,6 +16,24 @@ class Itineraries {
     }
 
     /**
+     * Mettre à jour la visibilité du bouton d'ajout d'itinéraire
+     */
+    updateAddItineraryButtonVisibility() {
+        const addButton = document.getElementById('add-itinerary-btn');
+        if (addButton) {
+            const isOnline = navigator.onLine;
+            if (isOnline) {
+                addButton.style.display = 'block';
+                addButton.title = "Ajouter un itinéraire";
+            } else {
+                addButton.style.display = 'none';
+            }
+        } else {
+            console.log('erreur updateAddItineraryButtonVisibility -> addButton non trouvé');
+        }
+    }
+
+    /**
      * Ouvrir la modal des itinéraires
      */
     open() {
@@ -26,6 +44,7 @@ class Itineraries {
         
         this.createModal();
         this.renderItineraries();
+        this.updateAddItineraryButtonVisibility();
         // Attacher les événements à chaque ouverture pour s'assurer qu'ils fonctionnent
         this.bindEvents();
     }
@@ -67,7 +86,7 @@ class Itineraries {
                         </div>
                         
                         <!-- Bouton Ajouter un itinéraire -->
-                        <button class="btn-add" onclick="window.Itineraries.addItinerary()">
+                        <button class="btn-add" id="add-itinerary-btn" onclick="window.Itineraries.addItinerary()">
                             <span class="material-icons">add</span>
                             Ajouter un itinéraire
                         </button>

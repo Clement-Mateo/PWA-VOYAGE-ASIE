@@ -327,17 +327,19 @@
                 if (itineraries.length === 0) {
                     newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
                 }
+                
+                // Vérifier s'il y a un itinéraire actif
+                const currentItinerary = await window.localStorageService.getCurrentItinerary();
+                if (!currentItinerary && itineraries.length > 0 && window.Itineraries) {
+                    console.log('🔄 Aucun itinéraire actif trouvé, activation du premier disponible');
+                    await window.Itineraries.setActiveItinerary(itineraries[0].id, false);
+                }
 
                 // Initialiser le sidebar maintenant que les itinéraires sont chargés
                 if (window.Sidebar) {
                     await window.Sidebar.init();
                 } else {
                     console.error('❌ Sidebar non trouvé');
-                }
-
-                // Activer le premier itinéraire créé si nécessaire
-                if (newItinerary && window.Itineraries) {
-                    await window.Itineraries.setActiveItinerary(newItinerary.id, false);
                 }
 
                 // Initialiser ChooseAddress
