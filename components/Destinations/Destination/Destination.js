@@ -47,6 +47,9 @@ const Destination = {
             }
         }
         
+        // Mettre à jour l'icône selon les activités
+        this.updateActivityIcon(destinationId);
+        
         // Fermer les autres formulaires
         document.querySelectorAll('.destination-form.show').forEach(f => {
             f.classList.remove('show');
@@ -457,6 +460,69 @@ const Destination = {
     },
 
     /**
+     * Vérifier si une destination a des activités et mettre à jour l'icône
+     */
+    async updateActivityIcon(destinationId) {
+        const activities = await window.localStorageService.getActivities(destinationId);
+        const expandBtn = document.querySelector(`#destination-${destinationId} .btn-expand span`);
+        
+        if (!expandBtn) return;
+        
+        if (activities.length === 0) {
+            // Pas d'activités : afficher l'icône add avec tooltip
+            expandBtn.textContent = 'add';
+            expandBtn.title = 'Ajouter une activité';
+            expandBtn.parentElement.title = 'Ajouter une activité';
+        } else {
+            // Des activités existent : afficher l'icône flèche
+            expandBtn.textContent = 'keyboard_arrow_down';
+            expandBtn.title = 'Déplier';
+            expandBtn.parentElement.title = 'Déplier';
+        }
+    },
+
+    /**
+     * Déplier la section des activités (sans vérifier l'icône)
+     */
+    expandActivitiesSection(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        // Forcer le dépliage
+        activitiesSection.style.display = 'block';
+        expandBtn.textContent = 'keyboard_arrow_up';
+        expandBtn.title = 'Masquer les activités';
+        expandBtn.parentElement.title = 'Masquer les activités';
+        card.classList.add('expanded');
+        
+        // Charger les activités si pas encore chargées
+        if (activitiesSection.querySelector('.activities-list').children.length === 0) {
+            Activities.loadActivities(destinationId);
+        }
+    },
+
+    /**
+     * Replier la section des activités (sans vérifier l'icône)
+     */
+    collapseActivitiesSection(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        // Forcer le repli
+        activitiesSection.style.display = 'none';
+        card.classList.remove('expanded');
+        
+        // Mettre à jour l'icône selon les activités
+        this.updateActivityIcon(destinationId);
+    },
+
+    /**
      * Toggle l'affichage des activités d'une destination
      */
     toggleDestinationCard(destinationId) {
@@ -466,23 +532,20 @@ const Destination = {
         
         if (!card || !activitiesSection || !expandBtn) return;
         
+        // Si l'icône est "add", appeler Activities.addActivity
+        if (expandBtn.textContent === 'add') {
+            Activities.addActivity(destinationId);
+            return;
+        }
+        
         const isExpanded = activitiesSection.style.display !== 'none';
         
         if (isExpanded) {
             // Replier
-            activitiesSection.style.display = 'none';
-            expandBtn.textContent = 'keyboard_arrow_down';
-            card.classList.remove('expanded');
+            this.collapseActivitiesSection(destinationId);
         } else {
             // Déplier
-            activitiesSection.style.display = 'block';
-            expandBtn.textContent = 'keyboard_arrow_up';
-            card.classList.add('expanded');
-            
-            // Charger les activités si pas encore chargées
-            if (activitiesSection.querySelector('.activities-list').children.length === 0) {
-                Activities.loadActivities(destinationId);
-            }
+            this.expandActivitiesSection(destinationId);
         }
     },
 

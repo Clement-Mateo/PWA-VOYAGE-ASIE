@@ -498,6 +498,17 @@ const Activity = {
         // Recharger les activités pour la destination actuelle
         if (this.currentDestination && this.currentDestination.id) {
             await window.Activities.displayActivitiesOfDestination(this.currentDestination.id);
+            
+            // Déplier automatiquement la liste des activités si ce n'est pas déjà le cas
+            const activitiesSection = document.getElementById(`activities-${this.currentDestination.id}`);
+            if (activitiesSection && activitiesSection.style.display === 'none') {
+                window.Destination.expandActivitiesSection(this.currentDestination.id);
+            }
+        }
+        
+        // Mettre à jour l'icône d'activité selon les activités existantes
+        if (window.Destination && window.Destination.updateActivityIcon) {
+            await window.Destination.updateActivityIcon(this.currentDestination.id);
         }
         
         // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel

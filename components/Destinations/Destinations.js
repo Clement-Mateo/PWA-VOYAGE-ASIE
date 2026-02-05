@@ -513,6 +513,11 @@ const Destinations = {
                 const card = this.createDestinationCard(destination);
                 container.appendChild(card);
                 
+                // Mettre à jour l'icône d'activité selon les activités existantes
+                if (window.Destination && window.Destination.updateActivityIcon) {
+                    await window.Destination.updateActivityIcon(destination.id);
+                }
+                
                 // Réactiver le drag & drop sur les cartes existantes (si la dernière destination a un ID)
                 const lastDestination = destinations[destinations.length - 1];
                 if (!lastDestination || lastDestination.id) {
