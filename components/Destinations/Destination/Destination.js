@@ -373,8 +373,8 @@ const Destination = {
         const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const destination = destinations.find(d => d.id === destinationId);
         
-        // Si la destination n'existe pas ou n'a pas d'ID, supprimer simplement la card
-        if (!destination || !destination.id) {
+        // Si la destination n'existe pas, n'a pas d'ID, ou est temporaire, supprimer simplement la card
+        if (!destination || !destination.id || destination.id === 'temp_destination') {
             this.cancelCreation();
         } else {
             // Destination existante : restaurer les valeurs et masquer le formulaire
