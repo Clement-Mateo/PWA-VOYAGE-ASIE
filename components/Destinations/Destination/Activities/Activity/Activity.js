@@ -202,6 +202,14 @@ const Activity = {
                 if (priceAmount) priceAmount.value = '';
                 if (localCurrencyField) localCurrencyField.value = '';
                 if (typeField) typeField.value = '';
+                
+                // Focus automatique sur le champ nom pour la création
+                setTimeout(() => {
+                    if (nameField) {
+                        nameField.focus();
+                        nameField.select();
+                    }
+                }, 100);
             }
             // En mode édition, les champs seront pré-remplis dans editActivity
             
@@ -498,6 +506,17 @@ const Activity = {
         // Recharger les activités pour la destination actuelle
         if (this.currentDestination && this.currentDestination.id) {
             await window.Activities.displayActivitiesOfDestination(this.currentDestination.id);
+            
+            // Déplier automatiquement la liste des activités si ce n'est pas déjà le cas
+            const activitiesSection = document.getElementById(`activities-${this.currentDestination.id}`);
+            if (activitiesSection && activitiesSection.style.display === 'none') {
+                window.Destination.expandActivitiesSection(this.currentDestination.id);
+            }
+        }
+        
+        // Mettre à jour l'icône d'activité selon les activités existantes
+        if (window.Destination && window.Destination.updateActivityIcon) {
+            await window.Destination.updateActivityIcon(this.currentDestination.id);
         }
         
         // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
@@ -664,7 +683,11 @@ const Activity = {
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
-                if (nameField) nameField.value = this.currentActivity.name || '';
+                if (nameField) {
+                    nameField.value = this.currentActivity.name || '';
+                    nameField.focus();
+                    nameField.select();
+                }
                 
                 // Utiliser les inputs custom pour les temps
                 this.setTimeFromValue('startTime', this.currentActivity.startTime || '');

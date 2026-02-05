@@ -513,6 +513,11 @@ const Destinations = {
                 const card = this.createDestinationCard(destination);
                 container.appendChild(card);
                 
+                // Mettre à jour l'icône d'activité selon les activités existantes
+                if (window.Destination && window.Destination.updateActivityIcon) {
+                    await window.Destination.updateActivityIcon(destination.id);
+                }
+                
                 // Réactiver le drag & drop sur les cartes existantes (si la dernière destination a un ID)
                 const lastDestination = destinations[destinations.length - 1];
                 if (!lastDestination || lastDestination.id) {
@@ -590,6 +595,15 @@ const Destinations = {
         const form = document.getElementById(`form-${newDestination.id}`);
         if (form) {
             form.classList.add('show');
+            
+            // Focus automatique sur le champ nom
+            setTimeout(() => {
+                const nameInput = document.getElementById(`name-${newDestination.id}`);
+                if (nameInput) {
+                    nameInput.focus();
+                    nameInput.select();
+                }
+            }, 100);
         }
 
         // Mettre à jour la visibilité du bouton "Ajouter"

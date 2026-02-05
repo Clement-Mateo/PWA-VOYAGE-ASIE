@@ -52,6 +52,18 @@
     transform: scale(1) translateY(0);
 }
 
+/* Modale de transport - plus petite */
+.modal-content.transport-modal {
+    width: 60%;
+    max-width: 400px;
+}
+
+/* Modale de type de transport - encore plus petite */
+.modal-content.transport-type-modal {
+    width: 50%;
+    max-width: 320px;
+}
+
 /* Header modal */
 .modal-header {
     display: flex;
