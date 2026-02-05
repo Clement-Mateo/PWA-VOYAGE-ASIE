@@ -50,7 +50,9 @@
 .menu-btn {
     background: var(--background-light);
     border: none;
-    border-radius: 6px;
+    box-shadow: var(--box-shadow-1);
+    margin: 10px 0;
+    border-radius: 20px;
     padding: 8px;
     cursor: pointer;
     transition: all 0.2s ease;

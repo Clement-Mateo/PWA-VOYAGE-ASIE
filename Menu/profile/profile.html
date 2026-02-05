@@ -1,0 +1,61 @@
+<!-- Section Profile -->
+<div class="menu-section-content">
+    <h4 class="section-title">
+        <span class="material-icons">person</span>
+        Profile
+    </h4>
+    
+    <div class="profile-section">
+        <div class="profile-avatar">
+            <img src="https://picsum.photos/seed/user-profile/120/120.jpg" alt="Photo de profil" class="avatar-large" id="profileAvatar">
+            <button class="btn-change-photo" onclick="changeAvatar()">
+                <span class="material-icons">camera_alt</span>
+            </button>
+        </div>
+        
+        <div class="profile-form">
+            <div class="form-group">
+                <label for="profileFirstName">Prénom</label>
+                <input type="text" id="profileFirstName" class="form-input" value="Jean" oninput="validateProfileForm()">
+            </div>
+            
+            <div class="form-group">
+                <label for="profileLastName">Nom</label>
+                <input type="text" id="profileLastName" class="form-input" value="Dupont" oninput="validateProfileForm()">
+            </div>
+            
+            <div class="form-group">
+                <label for="profilePseudo">Pseudo</label>
+                <input type="text" id="profilePseudo" class="form-input" value="JeanD24" oninput="validateProfileForm()">
+            </div>
+            
+            <div class="form-group">
+                <label for="profileEmail">Email</label>
+                <input type="email" id="profileEmail" class="form-input" value="jean.dupont@email.com" oninput="validateProfileForm()">
+            </div>
+            
+            <div class="form-group">
+                <label for="profilePassword">Mot de passe</label>
+                <div class="password-input">
+                    <input type="password" id="profilePassword" class="form-input" value="password123" oninput="validateProfileForm()">
+                    <button class="btn-toggle-password" onclick="togglePasswordVisibility()">
+                        <span class="material-icons" id="passwordIcon">visibility</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-actions">
+        <button class="btn-save" onclick="saveProfile()" id="saveProfileBtn">
+            <span class="material-icons">save</span>
+            Enregistrer le profil
+        </button>
+        <button class="btn-cancel" onclick="cancelProfile()">
+            <span class="material-icons">close</span>
+            Annuler
+        </button>
+    </div>
+    
+    <div class="profile-status" id="profileStatus"></div>
+</div>
