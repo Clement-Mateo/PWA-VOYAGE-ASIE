@@ -130,6 +130,15 @@ const Transportation = {
         
         document.body.appendChild(modal);
         
+        // Focus automatique sur le champ coût
+        setTimeout(() => {
+            const costInput = document.getElementById('transportCost');
+            if (costInput) {
+                costInput.focus();
+                costInput.select();
+            }
+        }, 100);
+        
         // La modale est déjà ouverte avec la classe 'open'
     },
 
