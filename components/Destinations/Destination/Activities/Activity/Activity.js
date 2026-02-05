@@ -202,6 +202,14 @@ const Activity = {
                 if (priceAmount) priceAmount.value = '';
                 if (localCurrencyField) localCurrencyField.value = '';
                 if (typeField) typeField.value = '';
+                
+                // Focus automatique sur le champ nom pour la création
+                setTimeout(() => {
+                    if (nameField) {
+                        nameField.focus();
+                        nameField.select();
+                    }
+                }, 100);
             }
             // En mode édition, les champs seront pré-remplis dans editActivity
             
@@ -675,7 +683,11 @@ const Activity = {
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 
-                if (nameField) nameField.value = this.currentActivity.name || '';
+                if (nameField) {
+                    nameField.value = this.currentActivity.name || '';
+                    nameField.focus();
+                    nameField.select();
+                }
                 
                 // Utiliser les inputs custom pour les temps
                 this.setTimeFromValue('startTime', this.currentActivity.startTime || '');
