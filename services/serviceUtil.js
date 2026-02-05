@@ -235,3 +235,73 @@ function restoreButton(target, text = 'Bouton', icon = 'save') {
 // Exporter les fonctions utilitaires
 window.showButtonLoading = showButtonLoading;
 window.restoreButton = restoreButton;
+
+/**
+ * Échapper les caractères HTML pour éviter les attaques XSS
+ * @param {string} text - Texte à échapper
+ * @returns {string} - Texte échappé
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Exporter la fonction escapeHtml
+window.escapeHtml = escapeHtml;
+
+/**
+ * Valider une adresse email
+ * @param {string} email - Email à valider
+ * @returns {boolean} - True si l'email est valide
+ */
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Exporter la fonction validateEmail
+window.validateEmail = validateEmail;
+
+/**
+ * Formater une durée pour l'affichage
+ * @param {Object} duration - Objet durée avec days, hours, minutes
+ * @param {boolean} includeDays - Inclure les jours dans le formatage (défaut: true)
+ * @returns {string} - Durée formatée
+ */
+function formatDuration(duration, includeDays = true) {
+    if (!duration) return 'Aucune durée';
+    
+    const parts = [];
+    if (includeDays && duration.days > 0) parts.push(`${duration.days}j`);
+    if (duration.hours > 0) parts.push(`${duration.hours}h`);
+    if (duration.minutes > 0) parts.push(`${duration.minutes}min`);
+    
+    return parts.length > 0 ? parts.join(' ') : 'Aucune durée';
+}
+
+// Exporter la fonction formatDuration
+window.formatDuration = formatDuration;
+
+/**
+ * Parser une durée au format "2h30" en heures et minutes
+ * @param {string} duration - Durée au format texte
+ * @returns {Object} - Objet { hours, minutes }
+ */
+function parseDuration(duration) {
+    if (!duration || typeof duration !== 'string') {
+        return { hours: 0, minutes: 0 };
+    }
+    
+    // Chercher le format "XhY" ou "Xh" ou "Y"
+    const hoursMatch = duration.match(/(\d+)h/);
+    const minutesMatch = duration.match(/h(\d+)|(\d+)$/);
+    
+    const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1] || minutesMatch[2], 10) : 0;
+    
+    return { hours, minutes };
+}
+
+// Exporter la fonction parseDuration
+window.parseDuration = parseDuration;

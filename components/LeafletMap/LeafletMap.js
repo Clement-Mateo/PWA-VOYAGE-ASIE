@@ -289,7 +289,8 @@ class LeafletMap {
         // Attendre un peu pour s'assurer que les données sont synchronisées
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        let destinations = window.firebaseService.getDestinationsOfCurrentItinerary();
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        let destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         console.log('🔍 Destinations récupérées:', destinations.length, destinations);
         
         if (destinations.length > 0) {

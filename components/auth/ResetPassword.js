@@ -113,7 +113,7 @@ const ResetPassword = {
             return;
         }
         
-        if (!this.validateEmail(email)) {
+        if (!window.validateEmail(email)) {
             showErrorSnackBar('Veuillez entrer une adresse email valide');
             return;
         }
@@ -188,12 +188,7 @@ const ResetPassword = {
         }
     },
 
-    // Valider un email
-    validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    },
-
+    
     // Réinitialiser le formulaire
     resetForm() {
         document.getElementById('resetEmail').value = '';

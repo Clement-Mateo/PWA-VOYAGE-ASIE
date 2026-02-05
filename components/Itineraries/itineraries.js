@@ -16,6 +16,24 @@ class Itineraries {
     }
 
     /**
+     * Mettre à jour la visibilité du bouton d'ajout d'itinéraire
+     */
+    updateAddItineraryButtonVisibility() {
+        const addButton = document.getElementById('add-itinerary-btn');
+        if (addButton) {
+            const isOnline = navigator.onLine;
+            if (isOnline) {
+                addButton.style.display = 'block';
+                addButton.title = "Ajouter un itinéraire";
+            } else {
+                addButton.style.display = 'none';
+            }
+        } else {
+            console.log('erreur updateAddItineraryButtonVisibility -> addButton non trouvé');
+        }
+    }
+
+    /**
      * Ouvrir la modal des itinéraires
      */
     open() {
@@ -25,7 +43,8 @@ class Itineraries {
         this.isOpen = true;
         
         this.createModal();
-        this.loadItineraries();
+        this.renderItineraries();
+        this.updateAddItineraryButtonVisibility();
         // Attacher les événements à chaque ouverture pour s'assurer qu'ils fonctionnent
         this.bindEvents();
     }
@@ -67,7 +86,7 @@ class Itineraries {
                         </div>
                         
                         <!-- Bouton Ajouter un itinéraire -->
-                        <button class="btn-add" onclick="window.Itineraries.addItinerary()">
+                        <button class="btn-add" id="add-itinerary-btn" onclick="window.Itineraries.addItinerary()">
                             <span class="material-icons">add</span>
                             Ajouter un itinéraire
                         </button>
@@ -85,34 +104,17 @@ class Itineraries {
     }
 
     /**
-     * Charger les itinéraires
-     */
-    loadItineraries() {
-        try {
-            // Utiliser les itinéraires directement depuis firebaseService
-            if (window.firebaseService && window.firebaseService.getItineraries) {
-                this.renderItineraries();
-            } else {
-                console.error('Itineraries: firebaseService non disponible');
-                this.renderEmptyState();
-            }
-        } catch (error) {
-            console.error('Itineraries: Erreur lors du chargement des itinéraires:', error);
-            this.renderEmptyState();
-        }
-    }
-
-    /**
      * Afficher les itinéraires
      */
-    renderItineraries() {
+    async renderItineraries() {
         const listContainer = document.getElementById('itinerariesList');
         
         if (!listContainer) {
             return;
         }
         
-        const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+        // Utiliser les itinéraires depuis IndexedDB
+        const itineraries = await window.localStorageService.getItineraries();
         
         if (!itineraries || itineraries.length === 0) {
             this.renderEmptyState();
@@ -126,7 +128,9 @@ class Itineraries {
             return 0;
         });
 
-        listContainer.innerHTML = sortedItineraries.map(itinerary => this.createItineraryCard(itinerary)).join('');
+        // Créer toutes les cartes en parallèle
+        const cards = await Promise.all(sortedItineraries.map(itinerary => this.createItineraryCard(itinerary)));
+        listContainer.innerHTML = cards.join('');
     }
 
     /**
@@ -151,19 +155,19 @@ class Itineraries {
     /**
      * Créer une carte d'itinéraire
      */
-    createItineraryCard(itinerary) {
-        const currentItinerary = window.firebaseService ? window.firebaseService.getCurrentItinerary() : null;
+    async createItineraryCard(itinerary) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary(window.firebaseService.getCurrentUser().uid);
         const isActive = currentItinerary && currentItinerary.id === itinerary.id;
         
         // Vérifier s'il y a plus d'un itinéraire
-        const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+        const itineraries = currentItinerary ? await window.localStorageService.getItineraries(currentItinerary.userId) : [];
         const hasMultipleItineraries = itineraries.length > 1;
         
         return `
             <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="window.Itineraries.setActiveItinerary('${itinerary.id}')">
                 <div class="card-content">
                     <div class="card-header">
-                        <h4 class="card-title" id="itinerary-name-${itinerary.id}" onclick="event.stopPropagation(); window.Itineraries.editItineraryName('${itinerary.id}')" title="Modifier le nom">${this.escapeHtml(itinerary.name)}</h4>
+                        <h4 class="card-title" id="itinerary-name-${itinerary.id}" onclick="event.stopPropagation(); window.Itineraries.editItineraryName('${itinerary.id}')" title="Modifier le nom">${window.escapeHtml(itinerary.name)}</h4>
                         <div class="card-actions">
                             <button class="btn-edit" onclick="event.stopPropagation(); window.Itineraries.editItineraryName('${itinerary.id}')" title="Modifier le nom">
                                 <span class="material-icons">edit</span>
@@ -203,15 +207,6 @@ class Itineraries {
     }
 
     /**
-     * Échapper le HTML pour éviter les injections
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    /**
      * Ajouter un itinéraire
      */
     async addItinerary() {
@@ -227,17 +222,21 @@ class Itineraries {
             let counter = 1;
             
             // Vérifier si un itinéraire avec ce nom existe déjà
-            const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            const itineraries = currentItinerary ? await window.localStorageService.getItineraries() : [];
             while (itineraries.some(i => i.name === itineraryName)) {
                 counter++;
                 itineraryName = `${baseName} ${counter}`;
             }
             
-            // Créer l'itinéraire via firebaseService
-            if (window.firebaseService && window.firebaseService.createItinerary) {
-                const newItinerary = await window.firebaseService.createItinerary(itineraryName);
+            // Créer l'itinéraire via localStorage
+            if (window.localStorageService && window.localStorageService.createItinerary) {
+                const newItinerary = await window.localStorageService.createItinerary(itineraryName);
                     
                 if (newItinerary) {
+                    // Petit délai pour laisser le temps à IndexedDB de se mettre à jour
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
                     // Utiliser setActiveItinerary pour une mise à jour complète avec loading
                     await this.setActiveItinerary(newItinerary.id);
                     
@@ -246,7 +245,7 @@ class Itineraries {
                     showErrorSnackBar('Erreur lors de la création de l\'itinéraire');
                 }
             } else {
-                console.error('Itineraries: firebaseService non disponible');
+                console.error('Itineraries: localStorage non disponible');
                 showErrorSnackBar('Service non disponible');
             }
         } catch (error) {
@@ -261,8 +260,9 @@ class Itineraries {
     /**
      * Éditer le nom d'un itinéraire (inline)
      */
-    editItineraryName(itineraryId) {
-        const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+    async editItineraryName(itineraryId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary(window.firebaseService.getCurrentUser().uid);
+        const itineraries = currentItinerary ? await window.localStorageService.getItineraries(currentItinerary.userId) : [];
         const itinerary = itineraries.find(i => i.id === itineraryId);
         if (!itinerary) return;
 
@@ -278,7 +278,7 @@ class Itineraries {
         this.editingItineraryId = itineraryId;
         let cancelled = false; // Flag pour empêcher la sauvegarde après Échap
 
-        const currentName = this.escapeHtml(itinerary.name);
+        const currentName = window.escapeHtml(itinerary.name);
         
         // Créer le conteneur pour l'input (position relative pour l'icône)
         const inputContainer = document.createElement('div');
@@ -324,21 +324,9 @@ class Itineraries {
             background: transparent;
         `;
 
-        // Créer le spinner (utilise le service centralisé)
-        const spinner = document.createElement('div');
-        spinner.innerHTML = `<svg class="loading-spinner-small" viewBox="0 0 24 24" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-dasharray="31.416 31.416" stroke-dashoffset="31.416"><animate attributeName="stroke-dashoffset" from="31.416" to="0" dur="1s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></circle></svg>`;
-        spinner.style.cssText = `
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-        `;
-
         // Ajouter les éléments au conteneur
         inputContainer.appendChild(input);
         inputContainer.appendChild(validationIcon);
-        inputContainer.appendChild(spinner);
 
         // Remplacer le titre par le conteneur d'input
         titleElement.innerHTML = '';
@@ -352,7 +340,7 @@ class Itineraries {
             const newTitle = document.createElement('h4');
             newTitle.className = 'card-title';
             newTitle.id = `itinerary-name-${itineraryId}`;
-            newTitle.textContent = this.escapeHtml(finalName);
+            newTitle.textContent = window.escapeHtml(finalName);
             newTitle.onclick = () => this.editItineraryName(itineraryId);
             newTitle.title = 'Modifier le nom';
             newTitle.style.cursor = 'pointer';
@@ -381,23 +369,13 @@ class Itineraries {
                 return;
             }
 
-            // Afficher le spinner et masquer l'icône de validation
-            validationIcon.style.display = 'none';
-            spinner.style.display = 'block';
-            input.readOnly = true;
-            input.style.cursor = 'wait';
-
             try {
-                // Mettre à jour le nom
+                // Mettre à jour le nom (instantané dans IndexedDB)
                 itinerary.name = newName;
                 await this.updateItineraryName(itineraryId, newName);
                 restoreTitle(newName);
             } catch (error) {
                 // En cas d'erreur, restaurer l'état d'édition
-                spinner.style.display = 'none';
-                validationIcon.style.display = 'block';
-                input.readOnly = false;
-                input.style.cursor = 'text';
                 input.focus();
                 console.error('Erreur sauvegarde nom:', error);
             }
@@ -448,19 +426,22 @@ class Itineraries {
      */
     async updateItineraryName(itineraryId, newName) {
         try {
-            const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            const itineraries = currentItinerary ? await window.localStorageService.getItineraries() : [];
             const itinerary = itineraries.find(i => i.id === itineraryId);
             if (!itinerary) return;
 
-            // Mettre à jour en base via firebaseService
-            if (window.firebaseService && window.firebaseService.updateItinerary) {
-                await window.firebaseService.updateItinerary(itinerary);
-                showSuccessSnackBar('Nom de l\'itinéraire mis à jour');
-                
-                // Mettre à jour le nom dans le sidebar si c'est l'itinéraire actuel
-                if (window.Sidebar && window.Sidebar.updateItineraryName) {
-                    window.Sidebar.updateItineraryName();
-                }
+            // Mettre à jour le nom
+            itinerary.name = newName;
+            
+            // Mettre à jour via localStorage
+            await window.localStorageService.updateItinerary(itineraryId, itinerary);
+            
+            showSuccessSnackBar('Nom de l\'itinéraire mis à jour');
+            
+            // Mettre à jour le nom dans le sidebar si c'est l'itinéraire actuel
+            if (window.Sidebar && window.Sidebar.updateItineraryName) {
+                window.Sidebar.updateItineraryName();
             }
         } catch (error) {
             console.error('Erreur mise à jour nom itinéraire:', error);
@@ -484,14 +465,19 @@ class Itineraries {
                 window.showLoading();
             }
 
-            const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+            const itineraries = await window.localStorageService.getItineraries();
             const targetItinerary = itineraries.find(i => i.id === itineraryId);
             
             if (!targetItinerary) {
                 console.error('setActiveItinerary: Itinéraire non trouvé:', itineraryId);
+                console.log('📋 Nombre total d\'itinéraires:', itineraries.length);
+                console.log('📋 IDs des itinéraires disponibles:', itineraries.map(i => i.id));
+                console.log('📋 Noms des itinéraires disponibles:', itineraries.map(i => i.name));
                 if (manageLoading) {
                     window.hideLoading();
                 }
+                // Rafraîchir l'affichage pour corriger les IDs invalides
+                await this.renderItineraries();
                 return;
             }
 
@@ -503,22 +489,19 @@ class Itineraries {
                 return;
             }
 
-            // Désactiver tous les itinéraires en local
-            itineraries.forEach(item => {
-                item.active = false;
-            });
+            // Désactiver tous les itinéraires en local ET dans IndexedDB
+            for (const item of itineraries) {
+                if (item.id !== targetItinerary.id) {
+                    item.active = false;
+                    await window.localStorageService.updateItinerary(item.id, item);
+                }
+            }
 
             // Activer l'itinéraire cible en local
             targetItinerary.active = true;
 
-            // Mettre à jour en base de données
-            if (window.firebaseService) {
-                // Mettre à jour tous les itinéraires pour synchroniser l'état active
-                for (const item of itineraries) {
-                    const itemRef = window.firebase.doc(window.firebaseService.db, 'itineraries', item.id);
-                    await window.firebase.updateDoc(itemRef, { active: item.active });
-                }
-            }
+            // Mettre à jour l'itinéraire cible via localStorage
+            await window.localStorageService.updateItinerary(targetItinerary.id, targetItinerary);
 
             // Mettre à jour l'affichage
             this.renderItineraries();
@@ -545,23 +528,21 @@ class Itineraries {
         }
     }
 
-    /**
-     * Modifier un itinéraire
-     */
-    editItinerary(itineraryId) {
-        console.log('Itineraries: Modification de l\'itinéraire', itineraryId);
-        showInfoSnackBar('Fonctionnalité de modification d\'itinéraire à implémenter');
-        // TODO: Implémenter la logique de modification
-    }
-
+    
     /**
      * Supprimer un itinéraire
      */
     async deleteItinerary(itineraryId) {
-        const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+        console.log('🗑️ deleteItinerary appelé avec ID:', itineraryId);
+        const itineraries = await window.localStorageService.getItineraries();
         const itinerary = itineraries.find(i => i.id === itineraryId);
-        if (!itinerary) return;
+        if (!itinerary) {
+            console.log('❌ Itinéraire non trouvé pour la suppression');
+            console.log('📋 Itinéraires disponibles:', itineraries.map(i => ({ id: i.id, name: i.name })));
+            return;
+        }
 
+        console.log('✅ Itinéraire trouvé pour suppression:', itinerary.name);
         // Afficher la popup de confirmation
         this.showDeleteConfirmation(itineraryId, itinerary.name);
     }
@@ -588,7 +569,7 @@ class Itineraries {
                 <div class="modal-body">
                     <div class="modal-section">
                         <p style="margin-bottom: 20px; line-height: 1.5;">
-                            Êtes-vous sûr de vouloir supprimer l'itinéraire <strong>"${this.escapeHtml(itineraryName)}"</strong> ?
+                            Êtes-vous sûr de vouloir supprimer l'itinéraire <strong>"${window.escapeHtml(itineraryName)}"</strong> ?
                         </p>
                         <p style="margin-bottom: 24px; color: var(--gray-darker); font-size: 14px;">
                             Cette action est irréversible et toutes les destinations associées seront perdues.
@@ -643,26 +624,28 @@ class Itineraries {
             // Fermer la popup de confirmation
             this.cancelDelete();
             
-            // Supprimer via firebaseService
-            if (window.firebaseService && window.firebaseService.deleteItinerary) {
-                const itineraries = window.firebaseService && window.firebaseService.itineraries ? window.firebaseService.itineraries : [];
+            // Supprimer via localStorage
+            if (window.localStorageService && window.localStorageService.deleteItinerary) {
+                const itineraries = await window.localStorageService.getItineraries();
                 const itineraryToDelete = itineraries.find(i => i.id === itineraryId);
                 if (itineraryToDelete) {
                     // Vérifier si l'itinéraire à supprimer est l'itinéraire actif
                     const wasActive = itineraryToDelete.active;
                     
-                    await window.firebaseService.deleteItinerary(itineraryToDelete);
+                    await window.localStorageService.deleteItinerary(itineraryId);
                     
                     // Si l'itinéraire supprimé était l'itinéraire actif, activer le premier itinéraire restant
                     if (wasActive) {
-                        const remainingItineraries = window.firebaseService.itineraries;
-                        if (remainingItineraries.length > 0) {                            
+                        const remainingItineraries = await window.localStorageService.getItineraries();
+                        if (remainingItineraries.length > 0) {                             
+                            console.log('🔄 Activation du premier itinéraire restant:', remainingItineraries[0].id);
                             // Utiliser setActiveItinerary pour une mise à jour complète avec loading
                             await this.setActiveItinerary(remainingItineraries[0].id);
                         }
                     } else {
                         // Mettre à jour l'affichage si l'itinéraire supprimé n'était pas actif
-                        this.renderItineraries();
+                        console.log('🔄 Appel de renderItineraries depuis confirmDelete (itinéraire non actif)');
+                        await this.renderItineraries();
                         
                         // Mettre à jour le sidebar si nécessaire
                         if (window.Sidebar && window.Sidebar.updateItineraryName) {

@@ -4,24 +4,23 @@ const Sidebar = {
     /**
      * Initialiser le composant Sidebar
      */
-    init() {
-        console.log('Sidebar: Initialisation...');
-        this.render();
+    async init() {
+        await this.render();
     },
     
     /**
      * Rendre le composant Sidebar
      */
-    render() {
+    async render() {
         // Créer le conteneur principal
         let sidebarContainer = document.getElementById('sidebarContainer');
         if (!sidebarContainer) {
-            sidebarContainer = this.createContainer();
+            sidebarContainer = await this.createContainer();
             document.body.appendChild(sidebarContainer);
         }
         
         // Mettre à jour le nom de l'itinéraire
-        this.updateItineraryName();
+        await this.updateItineraryName();
         
         // Charger le contenu de tous les onglets une seule fois
         this.loadDestinationsContent();
@@ -34,8 +33,8 @@ const Sidebar = {
     /**
      * Créer le conteneur principal
      */
-    createContainer() {
-        const currentItinerary = window.firebaseService?.getCurrentItinerary();
+    async createContainer() {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
         const itineraryName = currentItinerary?.name || 'Mon Itinéraire';
         
         const container = document.createElement('div');
@@ -45,7 +44,7 @@ const Sidebar = {
             <!-- En-tête Settings intégré -->
             <div class="sidebar-header">
                 <button class="settings-left settings-btn" onclick="Sidebar.showMoreOptions()" title="Plus d'options">
-                    <h2 class="itinerary-name" id="sidebar-itinerary-name">${this.escapeHtml(itineraryName)}</h2>
+                    <h2 class="itinerary-name" id="sidebar-itinerary-name">${window.escapeHtml(itineraryName)}</h2>
                     <span class="material-icons">more_vert</span>
                 </button>
                 <div class="settings-right">
@@ -82,8 +81,6 @@ const Sidebar = {
      * Changer d'onglet avec animation one tap directe
      */
     switchTab(tabName) {
-        console.log('Sidebar: Changement d\'onglet vers', tabName);
-        
         // Récupérer tous les boutons
         const allTabs = document.querySelectorAll('.tab-btn');
         const previousActiveTab = document.querySelector('.tab-btn.active');
@@ -135,8 +132,6 @@ const Sidebar = {
             destinationsContainer.appendChild(destinationsList);
             
             container.appendChild(destinationsContainer);
-            
-            // Destinations.js s'initialisera automatiquement quand getPanel() sera appelé
         } else {
             container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Chargement des destinations...</p>';
         }
@@ -170,12 +165,12 @@ const Sidebar = {
     /**
      * Mettre à jour le nom de l'itinéraire
      */
-    updateItineraryName() {
+    async updateItineraryName() {
         const nameElement = document.getElementById('sidebar-itinerary-name');
-        if (nameElement && window.firebaseService) {
-            const currentItinerary = window.firebaseService.getCurrentItinerary();
+        if (nameElement && window.localStorageService) {
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
             const itineraryName = currentItinerary?.name || 'Nouvel Itinéraire';
-            nameElement.textContent = this.escapeHtml(itineraryName);
+            nameElement.textContent = window.escapeHtml(itineraryName);
         }
     },
     
@@ -201,15 +196,6 @@ const Sidebar = {
             showInfoSnackBar('Paramètres en cours de chargement...');
         }
     },
-    
-    /**
-     * Échapper les caractères HTML
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
 };
 
 // Exporter globalement

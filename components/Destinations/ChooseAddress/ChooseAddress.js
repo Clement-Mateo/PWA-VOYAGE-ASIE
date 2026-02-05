@@ -44,6 +44,16 @@ const ChooseAddress = {
      * Afficher la popup
      */
     show(callback) {
+        // Vérifier si on est en ligne
+        if (!navigator.onLine) {
+            if (typeof window.showErrorSnackBar === 'function') {
+                window.showErrorSnackBar('Impossible sans connexion');
+            } else {
+                console.warn('⚠️ ChooseAddress non disponible hors ligne');
+            }
+            return;
+        }
+
         this.currentCallback = callback;
         this.isVisible = true;
         
@@ -241,9 +251,6 @@ const ChooseAddress = {
             return [];
         }
     },
-    
-    // Importer les traductions depuis le fichier séparé
-// Note: placeTypesTranslations.js doit être chargé avant ce fichier
 
     // Fonction pour obtenir la traduction française du type
     getFrenchType(type) {

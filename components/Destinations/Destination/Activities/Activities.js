@@ -1,6 +1,5 @@
 /**
  * Activities Module - Gère la liste des activités, suppression et ouverture Activity.js
- * Méthodes extraites de Destinations.js
  */
 
 const Activities = {
@@ -8,15 +7,16 @@ const Activities = {
     /**
      * Ajouter une activité à une destination
      */
-    addActivity(index) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[index];
+    async addActivity(destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         if (!destination || !destination.id) {
             console.error('❌ Destination invalide pour ajouter une activité');
             return;
         }
         
-        console.log('✅ Ajout d\'une activité à la destination:', destination.name);
-        
+                
         // Ouvrir le composant Activity pour créer une nouvelle activité
         if (window.Activity && window.Activity.showActivityPopup) {
             // Préparer les données pour une nouvelle activité
@@ -31,12 +31,13 @@ const Activities = {
     /**
      * Supprimer une activité
      */
-    async deleteActivity(activityId, destinationIndex, buttonElement) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[destinationIndex];
+    async deleteActivity(activityId, destinationId, buttonElement) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         if (!destination || !destination.id) return;
 
         try {
-            console.log('🗑️ Suppression de l\'activité:', activityId);
 
             // Désactiver le bouton et afficher le loading
             if (buttonElement) {
@@ -48,21 +49,18 @@ const Activities = {
             const activityToDelete = { id: activityId };
             
             // Utiliser le service pour supprimer l'activité
-            const success = await window.firebaseService.deleteActivity(activityToDelete, destination);
+            await window.localStorageService.deleteActivity(destination.id, activityId);
             
-            if (success) {
-                console.log('✅ Activité supprimée:', activityId);
-                if (window.showSuccessSnackBar) {
-                    window.showSuccessSnackBar('Activité supprimée avec succès');
-                }
-                
-                // Recharger la liste des activités
-                this.displayActivitiesOfDestination(destinationIndex);
-            } else {
-                console.error('❌ Échec de la suppression de l\'activité');
-                if (window.showErrorSnackBar) {
-                    window.showErrorSnackBar('Échec de la suppression de l\'activité');
-                }
+            if (window.showSuccessSnackBar) {
+                window.showSuccessSnackBar('Activité supprimée avec succès');
+            }
+            
+            // Recharger la liste des activités
+            await this.displayActivitiesOfDestination(destinationId);
+            
+            // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
+            if (window.Synthèse && window.Synthèse.refresh) {
+                await window.Synthèse.refresh();
             }
             
         } catch (error) {
@@ -82,7 +80,7 @@ const Activities = {
     /**
      * Créer le HTML pour une activité
      */
-    createActivityHTML(activity, destinationIndex) {
+    createActivityHTML(activity, destinationId) {
         const time = activity.time || '';
         const price = activity.price ? `${activity.price}€` : '';
         
@@ -97,10 +95,10 @@ const Activities = {
                         ${time ? `<div class="activity-time"><span class="material-icons">schedule</span> ${time}</div>` : ''}
                     </div>
                     <div class="activity-actions">
-                        <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${destinationIndex})" title="Modifier l'activité">
+                        <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier l'activité">
                             <span class="material-icons">edit</span>
                         </button>
-                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', ${destinationIndex}, this)" title="Supprimer l'activité">
+                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}', this)" title="Supprimer l'activité">
                             <span class="material-icons">delete</span>
                         </button>
                     </div>
@@ -114,25 +112,26 @@ const Activities = {
     /**
      * Charger et afficher les activités d'une destination
      */
-    loadActivities(destinationIndex) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[destinationIndex];
+    async loadActivities(destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         if (!destination || !destination.id) {
             console.warn('⚠️ Destination invalide pour charger les activités');
             return;
         }
 
-        const activitiesList = document.getElementById(`activities-list-${destinationIndex}`);
+        const activitiesList = document.getElementById(`activities-list-${destinationId}`);
         if (!activitiesList) {
-            console.warn('⚠️ Conteneur d\'activités non trouvé');
+            console.warn('⚠️ Liste des activités non trouvée pour la destination:', destinationId);
             return;
         }
 
         // Vider la liste actuelle
         activitiesList.innerHTML = '';
 
-        // Charger les activités depuis Firebase
-        const activities = window.firebaseService.getActivities(destination);
-        console.log(`📋 ${activities.length} activités chargées pour la destination ${destination.name}`);
+        // Charger les activités depuis localStorage
+        const activities = await window.localStorageService.getActivities(destination.id);
         
         if (activities.length === 0) {
             activitiesList.innerHTML = '<div class="no-activities">Aucune activité pour cette destination</div>';
@@ -144,7 +143,7 @@ const Activities = {
 
         // Créer le HTML pour chaque activité
         activities.forEach(activity => {
-            const activityHTML = this.createActivityHTML(activity, destinationIndex);
+            const activityHTML = this.createActivityHTML(activity, destinationId);
             activitiesList.innerHTML += activityHTML;
         });
     },
@@ -152,17 +151,17 @@ const Activities = {
     /**
      * Afficher les activités d'une destination spécifique
      */
-    displayActivitiesOfDestination(index) {
-        const destination = window.firebaseService.getDestinationsOfCurrentItinerary()[index];
+    async displayActivitiesOfDestination(destinationId) {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        const destination = destinations.find(d => d.id === destinationId);
         if (!destination || !destination.id) return;
         
         try {
             // Utiliser le nouveau service pour charger les activités
-            const activities = window.firebaseService.getActivities(destination);
+            const activities = await window.localStorageService.getActivities(destination.id);
             
-            console.log('🔍 Activités chargées depuis la mémoire:', activities);
-            
-            const activitiesList = document.getElementById(`activities-list-${index}`);
+            const activitiesList = document.getElementById(`activities-list-${destinationId}`);
             activitiesList.innerHTML = '';
             
             if (activities.length === 0) {
@@ -174,7 +173,6 @@ const Activities = {
             activities.sort((a, b) => (a.order || 0) - (b.order || 0));
             
             activities.forEach(activity => {
-                console.log('🔍 Activité trouvée:', { id: activity.id, name: activity.name });
                 
                 const activityElement = document.createElement('div');
                 activityElement.className = 'activity-item';
@@ -213,10 +211,10 @@ const Activities = {
                         activityHTML += `
                             </div> <!-- Fin activity-name-and-price -->
                             <div class="activity-actions">
-                                <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', ${index})" title="Modifier l'activité">
+                                <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier l'activité">
                                     <span class="material-icons">edit</span>
                                 </button>
-                                <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', ${index}, this)" title="Supprimer l'activité">
+                                <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}', this)" title="Supprimer l'activité">
                                     <span class="material-icons">delete</span>
                                 </button>
                             </div>
@@ -244,7 +242,7 @@ const Activities = {
             
         } catch (error) {
             console.error('Erreur lors du chargement des activités:', error);
-            const activitiesList = document.getElementById(`activities-list-${index}`);
+            const activitiesList = document.getElementById(`activities-list-${destinationId}`);
             if (activitiesList) {
                 activitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des activités</p>';
             }
