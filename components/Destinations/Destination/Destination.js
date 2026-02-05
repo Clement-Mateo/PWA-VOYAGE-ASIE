@@ -89,6 +89,14 @@ const Destination = {
             if (hoursInput) hoursInput.value = destination.duration.hours || 0;
             if (minutesInput) minutesInput.value = destination.duration.minutes || 0;
         }
+        
+        // Focus automatique sur le champ nom pour l'édition
+        setTimeout(() => {
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.select();
+            }
+        }, 100);
     },
 
     /**

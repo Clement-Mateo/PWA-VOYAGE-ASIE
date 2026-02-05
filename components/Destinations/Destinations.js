@@ -595,6 +595,15 @@ const Destinations = {
         const form = document.getElementById(`form-${newDestination.id}`);
         if (form) {
             form.classList.add('show');
+            
+            // Focus automatique sur le champ nom
+            setTimeout(() => {
+                const nameInput = document.getElementById(`name-${newDestination.id}`);
+                if (nameInput) {
+                    nameInput.focus();
+                    nameInput.select();
+                }
+            }, 100);
         }
 
         // Mettre à jour la visibilité du bouton "Ajouter"
