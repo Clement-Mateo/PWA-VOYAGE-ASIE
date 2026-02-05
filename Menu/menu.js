@@ -369,7 +369,29 @@ function updateRightContent(itemType) {
             
         case 'profile':
             console.log('Chargement du profil...');
-            // Charger le contenu HTML depuis le fichier profile
+            
+            // Charger l'avatar dans la section haute
+            fetch('menu/profile/avatar.html')
+                .then(response => {
+                    console.log('Réponse avatar:', response.status, response.statusText);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log('HTML avatar chargé avec succès');
+                    const avatarSection = document.getElementById('profile-avatar-section');
+                    if (avatarSection) {
+                        avatarSection.innerHTML = html;
+                        loadCSS('menu/profile/avatar.css');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur chargement avatar:', error);
+                });
+            
+            // Charger le formulaire dans la section basse
             fetch('menu/profile/profile.html')
                 .then(response => {
                     console.log('Réponse profile:', response.status, response.statusText);

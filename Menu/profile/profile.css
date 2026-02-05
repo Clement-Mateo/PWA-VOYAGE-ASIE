@@ -8,14 +8,17 @@
 .section-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 25px 0;
-    font-size: 18px;
+    gap: 8px;
+    margin: 0 0 15px 0;
+    font-size: 16px;
     font-weight: 600;
     color: var(--primary-darker);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-light);
 }
 
 .section-title .material-icons {
+    font-size: 18px;
     color: var(--primary-blue);
 }
 
@@ -23,46 +26,6 @@
     display: flex;
     gap: 25px;
     margin-bottom: 30px;
-}
-
-/* Image de profil */
-.profile-avatar {
-    flex-shrink: 0;
-    position: relative;
-}
-
-.avatar-large {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid var(--primary-blue);
-    box-shadow: 0 4px 12px var(--shadow-light);
-}
-
-.btn-change-photo {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid var(--white);
-    background: var(--primary-blue);
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-change-photo:hover {
-    background: var(--primary-darker);
-}
-
-.btn-change-photo .material-icons {
-    font-size: 16px;
 }
 
 /* Formulaire - Nom, Prénom, Pseudo, Email, Mot de passe */
