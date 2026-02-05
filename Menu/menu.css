@@ -1,0 +1,350 @@
+/* ========================================
+   STYLES SPÉCIFIQUES AU MENU MODAL
+   ======================================== */
+
+/* Conteneur principal */
+.menu-container {
+    position: relative;
+    width: 75vw;
+    height: 90vh;
+    max-width: 1200px;
+    max-height: 800px;
+    background: var(--background-light);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px var(--box-shadow-1);
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal.open .menu-container {
+    transform: scale(1) translateY(0);
+}
+
+/* Contenu principal */
+.menu-content {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    gap: 25px;
+    background: var(--background-light);
+    height: 100%;
+}
+
+/* Section gauche */
+.menu-left {
+    width: 150px;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+/* Colonne de droite pour 2 sections */
+.menu-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Sections du menu */
+.menu-section {
+    background: transparent;
+    box-shadow: var(--box-shadow-1);
+    border-radius: 20px;
+    padding: 15px;
+}
+
+/* Section gauche (toute hauteur) */
+.menu-left .menu-section {
+    width: 100%;
+    height: 100%;
+    flex-shrink: 0;
+}
+
+/* Section droite haute */
+.menu-right .menu-section:first-child {
+    box-shadow: none;
+    width: 100%;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+/* Section droite basse */
+.menu-right .menu-section:last-child {
+    width: 100%;
+    height: calc(100% - 170px);
+    flex-shrink: 0;
+}
+
+/* Contenu des sections */
+.section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Boutons du menu gauche - Alignement à gauche */
+.menu-left .menu-btn {
+    padding: 12px 16px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 20px;
+    background: var(--white);
+    box-shadow: var(--box-shadow-1);
+    color: var(--primary-darker);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.menu-left .menu-btn .material-icons {
+    font-size: 18px;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.menu-left .menu-btn:hover {
+    background: var(--glass-bg);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow-2);
+}
+
+.menu-left .menu-btn:active {
+    transform: translateY(0);
+    border: var(--glass-border);
+    box-shadow: var(--box-shadow-2);
+}
+
+.menu-left .menu-btn.active {
+    background: var(--primary-blue);
+    color: var(--white);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow-2);
+}
+
+.menu-left .menu-btn.active .material-icons {
+    color: var(--white);
+}
+
+/* Éléments du menu indépendants */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: var(--primary-blue);
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.menu-item:last-child {
+    margin-bottom: 0;
+}
+
+.menu-item:hover {
+    background: var(--glass-bg);
+    border-color: var(--primary-blue);
+    transform: translateX(4px);
+}
+
+.menu-item:active {
+    transform: translateX(2px);
+}
+
+.menu-item .material-icons:first-child {
+    font-size: 20px;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--font-color-gray-dark);
+}
+
+.item-info p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--font-color-gray);
+}
+
+.menu-item .arrow {
+    font-size: 18px;
+    color: var(--gray-darker);
+    transition: transform 0.2s ease;
+}
+
+.menu-item:hover .arrow {
+    transform: translateX(6px);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .menu-content {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 24px;
+    }
+    
+    .menu-section {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .menu-container {
+        width: 85vw;
+        height: 92vh;
+        max-height: none;
+    }
+    
+    .menu-header {
+        padding: 20px 24px;
+    }
+    
+    .menu-title {
+        font-size: 20px;
+    }
+    
+    .menu-title .material-icons {
+        font-size: 24px;
+    }
+    
+    .menu-content {
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .menu-section {
+        padding: 16px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .menu-item {
+        padding: 14px 16px;
+        gap: 12px;
+    }
+    
+    .item-info h4 {
+        font-size: 15px;
+    }
+    
+    .item-info p {
+        font-size: 13px;
+    }
+    
+    .menu-footer {
+        padding: 16px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-container {
+        width: 92vw;
+        height: 95vh;
+        border-radius: 12px;
+    }
+    
+    .menu-content {
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .menu-section {
+        padding: 12px;
+    }
+    
+    .section-title {
+        font-size: 15px;
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+    
+    .section-title .material-icons {
+        font-size: 18px;
+    }
+    
+    .menu-item {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    
+    .menu-item .material-icons:first-child {
+        font-size: 18px;
+    }
+    
+    .item-info h4 {
+        font-size: 14px;
+    }
+    
+    .item-info p {
+        font-size: 12px;
+    }
+}
+
+/* ========================================
+   ANIMATIONS SPÉCIFIQUES
+   ======================================== */
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.menu-section {
+    animation: slideInFromRight 0.4s ease-out;
+}
+
+/* Scrollbar personnalisée */
+.menu-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.menu-content::-webkit-scrollbar-track {
+    background: var(--background-gray);
+    border-radius: 4px;
+}
+
+.menu-content::-webkit-scrollbar-thumb {
+    background: var(--gray-darker);
+    border-radius: 4px;
+}
+
+.menu-content::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-darker);
+}

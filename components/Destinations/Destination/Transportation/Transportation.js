@@ -38,7 +38,7 @@ const Transportation = {
                         <span>${this.getTransportLabel(transportation.type)}</span>
                     </div>
                     <div class="transportation-details">
-                        ${transportation.cost ? `${transportation.cost}€` : 'Non défini'} • ${durationText}
+                        ${transportation.cost ? `${transportation.cost}€` : 'Non défini'} - ${durationText}
                     </div>
                 </div>
                 <div class="transportation-actions">
@@ -76,7 +76,7 @@ const Transportation = {
         modal.className = 'modal open';
         modal.innerHTML = `
             <div class="modal-backdrop" onclick="this.closest('.modal.open').remove()"></div>
-            <div class="modal-content">
+            <div class="modal-content transport-modal">
                 <div class="modal-header">
                     <h3>Modifier le transport</h3>
                     <button class="btn-close" onclick="this.closest('.modal.open').remove()">
@@ -129,6 +129,15 @@ const Transportation = {
         `;
         
         document.body.appendChild(modal);
+        
+        // Focus automatique sur le champ coût
+        setTimeout(() => {
+            const costInput = document.getElementById('transportCost');
+            if (costInput) {
+                costInput.focus();
+                costInput.select();
+            }
+        }, 100);
         
         // La modale est déjà ouverte avec la classe 'open'
     },
@@ -230,7 +239,7 @@ const Transportation = {
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-backdrop"></div>
-            <div class="modal-content">
+            <div class="modal-content transport-type-modal">
                 <div class="modal-header">
                     <h4>Type de transport</h4>
                     <button class="btn-close" onclick="Transportation.closeTransportModal()">

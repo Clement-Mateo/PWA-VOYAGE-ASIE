@@ -58,6 +58,21 @@ const Activities = {
             // Recharger la liste des activités
             await this.displayActivitiesOfDestination(destinationId);
             
+            // Mettre à jour l'icône d'activité selon les activités existantes
+            if (window.Destination && window.Destination.updateActivityIcon) {
+                await window.Destination.updateActivityIcon(destinationId);
+            }
+            
+            // Vérifier s'il reste des activités après suppression
+            const activities = await window.localStorageService.getActivities(destinationId);
+            if (activities.length === 0) {
+                // Plus d'activités : replier la section si elle est dépliée
+                const activitiesSection = document.getElementById(`activities-${destinationId}`);
+                if (activitiesSection && activitiesSection.style.display !== 'none') {
+                    window.Destination.collapseActivitiesSection(destinationId);
+                }
+            }
+            
             // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
             if (window.Synthèse && window.Synthèse.refresh) {
                 await window.Synthèse.refresh();

@@ -1,20 +1,19 @@
 /* ========================================
+
    TRANSPORTATION STYLES
+
    ======================================== */
 
 /* Cartes de transport */
 .transportation-card {
-    background: var(--primary-blue);
-    border-radius: 8px;
-    padding: 10px 16px;
+    background: var(--glass-white-light);
+    backdrop-filter: var(--glass-backdrop-light);
+    border: var(--glass-border);
+    border-radius: 32px;
+    width: 100%;
+    padding: 10px 25px;
+    margin-left: 60px;
     box-shadow: var(--box-shadow-1);
-    transition: all 0.3s ease;
-    border: 1px solid var(--primary-dark);
-}
-
-.transportation-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--box-shadow-2);
 }
 
 .transportation-header {
@@ -34,7 +33,7 @@
 .transportation-type {
     font-size: 14px;
     font-weight: 600;
-    color: var(--white);
+    color: var(--primary-blue);
     display: flex;
     align-items: center;
 }
@@ -46,25 +45,20 @@
 
 .transportation-details {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--primary-blue);
 }
 
 .transportation-actions .btn-edit {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
     border-radius: 4px;
     padding: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.transportation-actions .btn-edit:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
 .transportation-actions .btn-edit .material-icons {
     font-size: 16px;
-    color: var(--white);
+    color: var(--primary-blue);
 }
 
 /* Custom Select pour le transport */
@@ -147,14 +141,6 @@
     border: 1px solid var(--gray);
 }
 
-.transport-option:first-child {
-    border-top: none;
-}
-
-.transport-option:last-child {
-    border-bottom: none;
-}
-
 .transport-option:hover {
     background: var(--gray-dark);
 }
@@ -164,3 +150,4 @@
     font-size: 20px;
     flex-shrink: 0;
 }
+

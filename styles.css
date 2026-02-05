@@ -43,6 +43,7 @@
     
     /* Couleurs spécifiques */
     --background-light: #ffffff;
+    --background-gray: #efefef;
     
     /* Ombres et transparences */
     --shadow-light: rgba(0, 0, 0, 0.1);
@@ -52,19 +53,31 @@
     --shadow-accent: rgba(220, 53, 69, 0.4);
 
     /*========== Variables Glassmorphism ==========*/
-    --glass-backdrop: blur(20px);
+    
+    /* Les Ombres */
     --box-shadow-1: 3px 3px 5px rgba(0, 0, 0, 0.3),
         -3px -3px 5px rgba(255, 255, 255, 0.1),
         inset 1px 1px 2px rgba(255, 255, 255, 0.3);
     --box-shadow-2: inset 3px 3px 5px rgba(0, 0, 0, 0.3),
         inset -3px -3px 5px rgba(255, 255, 255, 0.1),
         inset 1px 1px 2px rgba(0, 0, 0, 0.2);
-    --glass-bg: rgba(255, 255, 255, 0.25);
+  
+    /* Variables de bordure */
     --glass-border: rgba(255, 255, 255, 0.18);
+
+    /* Variables de input */
     --glass-input-bg: rgba(255, 255, 255, 0.1);
     --glass-input-border: rgba(255, 255, 255, 0.3);
+
+    /* Variables fond Glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.25);
     --glass-medium: rgba(58, 55, 55, 0.793);
     --glass-dark: rgba(0, 0, 0, 0.9);
+    --glass-white-light:rgba(255, 255, 255, 0.3);
+
+    /* Variables backdrop Glassmorphism */
+    --glass-backdrop-light: blur(10px) saturate(180%);
+    --glass-backdrop: blur(20px);
 }
 
 /* ========================================
@@ -168,9 +181,96 @@
     }
 }
 
+/* Bouton Menu en haut à gauche */
+.menu-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 4px 20px var(--shadow-medium);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-border);
+}
+
+.menu-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px var(--shadow-dark);
+    background: var(--glass-bg);
+}
+
+.menu-toggle-btn:active {
+    transform: translateY(0);
+}
+
+.menu-toggle-btn .material-icons {
+    font-size: 24px;
+    color: var(--primary-blue);
+    transition: color 0.2s ease;
+}
+
+.menu-toggle-btn:hover .material-icons {
+    color: var(--primary-dark);
+}
+
+/* Responsive pour le bouton menu */
+@media (max-width: 768px) {
+    .menu-toggle-btn {
+        top: 15px;
+        left: 15px;
+        width: 48px;
+        height: 48px;
+    }
+    
+    .menu-toggle-btn .material-icons {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-toggle-btn {
+        top: 10px;
+        left: 10px;
+        width: 44px;
+        height: 44px;
+    }
+    
+    .menu-toggle-btn .material-icons {
+        font-size: 18px;
+    }
+}
+
 /* ========================================
    STYLES GLOBAUX DE L'APPLICATION
    ======================================== */
+
+/* Exemple d'utilisation du glassmorphism blanc */
+.glass-white-card {
+    background: var(--glass-white-light);
+    backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-white-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-white-shadow);
+    color: var(--font-color-black);
+}
+
+.glass-white-medium {
+    background: var(--glass-white-medium);
+    backdrop-filter: var(--glass-backdrop);
+    border: 1px solid var(--glass-white-border);
+    border-radius: 12px;
+    box-shadow: var(--glass-white-shadow);
+    color: var(--font-color-black);
+}
 
 * {
     margin: 0;

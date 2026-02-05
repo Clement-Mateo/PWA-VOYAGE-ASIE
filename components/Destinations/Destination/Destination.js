@@ -5,6 +5,20 @@
 const Destination = {
     
     /**
+     * Mettre à jour le style des champs adresse selon l'état de connexion
+     */
+    updateAddressInputStyle(isOnline) {
+        const addressContainers = document.querySelectorAll('.address-input-container');
+        addressContainers.forEach(container => {
+            if (isOnline) {
+                container.classList.remove('offline');
+            } else {
+                container.classList.add('offline');
+            }
+        });
+    },
+    
+    /**
      * Éditer une destination
      */
     async editDestination(destinationId) {
@@ -29,9 +43,12 @@ const Destination = {
         if (activitiesSection && activitiesSection.style.display !== 'none') {
             activitiesSection.style.display = 'none';
             if (expandBtn) {
-                expandBtn.textContent = 'expand_more';
+                expandBtn.textContent = 'keyboard_arrow_down';
             }
         }
+        
+        // Mettre à jour l'icône selon les activités
+        this.updateActivityIcon(destinationId);
         
         // Fermer les autres formulaires
         document.querySelectorAll('.destination-form.show').forEach(f => {
@@ -62,8 +79,8 @@ const Destination = {
         if (addressInput) {
             addressInput.value = destination.address ? destination.address.address : '';
             
-            // Ajouter le comportement hover pour le mode hors ligne
-            this.setupAddressInputHover(addressInput);
+            // Mettre à jour le style selon l'état de connexion
+            this.updateAddressInputStyle(navigator.onLine);
         }
         
         // Remplir les champs de durée
@@ -72,6 +89,14 @@ const Destination = {
             if (hoursInput) hoursInput.value = destination.duration.hours || 0;
             if (minutesInput) minutesInput.value = destination.duration.minutes || 0;
         }
+        
+        // Focus automatique sur le champ nom pour l'édition
+        setTimeout(() => {
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.select();
+            }
+        }, 100);
     },
 
     /**
@@ -341,69 +366,6 @@ const Destination = {
         }
     },
 
-    
-    /**
-     * Configurer le comportement hover pour les champs d'adresse en mode hors ligne
-     */
-    setupAddressInputHover(addressInput) {
-        // Créer l'élément tooltip s'il n'existe pas déjà
-        let tooltip = document.getElementById('offline-tooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'offline-tooltip';
-            tooltip.style.cssText = `
-                position: absolute;
-                background-color: #333;
-                color: white;
-                padding: 5px 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                z-index: 1000;
-                pointer-events: none;
-                display: none;
-                white-space: nowrap;
-            `;
-            document.body.appendChild(tooltip);
-        }
-
-        // Gestionnaires d'événements pour le hover
-        const showTooltip = (e) => {
-            if (!navigator.onLine) {
-                tooltip.textContent = 'Impossible sans connexion';
-                tooltip.style.display = 'block';
-                
-                const rect = e.target.getBoundingClientRect();
-                tooltip.style.left = rect.left + 'px';
-                tooltip.style.top = (rect.top - 30) + 'px';
-            }
-        };
-
-        const hideTooltip = () => {
-            tooltip.style.display = 'none';
-        };
-
-        const handleFocus = (e) => {
-            if (!navigator.onLine) {
-                e.target.blur();
-                if (typeof window.showErrorSnackBar === 'function') {
-                    window.showErrorSnackBar('Impossible sans connexion');
-                }
-            }
-        };
-
-        // Ajouter les écouteurs d'événements
-        addressInput.addEventListener('mouseenter', showTooltip);
-        addressInput.addEventListener('mouseleave', hideTooltip);
-        addressInput.addEventListener('focus', handleFocus);
-
-        // Nettoyer les écouteurs lors de la destruction de l'élément
-        addressInput.addEventListener('DOMNodeRemoved', () => {
-            addressInput.removeEventListener('mouseenter', showTooltip);
-            addressInput.removeEventListener('mouseleave', hideTooltip);
-            addressInput.removeEventListener('focus', handleFocus);
-        });
-    },
-
     /**
      * Annuler l'édition
      */
@@ -411,8 +373,8 @@ const Destination = {
         const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
         const destination = destinations.find(d => d.id === destinationId);
         
-        // Si la destination n'existe pas ou n'a pas d'ID, supprimer simplement la card
-        if (!destination || !destination.id) {
+        // Si la destination n'existe pas, n'a pas d'ID, ou est temporaire, supprimer simplement la card
+        if (!destination || !destination.id || destination.id === 'temp_destination') {
             this.cancelCreation();
         } else {
             // Destination existante : restaurer les valeurs et masquer le formulaire
@@ -506,6 +468,69 @@ const Destination = {
     },
 
     /**
+     * Vérifier si une destination a des activités et mettre à jour l'icône
+     */
+    async updateActivityIcon(destinationId) {
+        const activities = await window.localStorageService.getActivities(destinationId);
+        const expandBtn = document.querySelector(`#destination-${destinationId} .btn-expand span`);
+        
+        if (!expandBtn) return;
+        
+        if (activities.length === 0) {
+            // Pas d'activités : afficher l'icône add avec tooltip
+            expandBtn.textContent = 'add';
+            expandBtn.title = 'Ajouter une activité';
+            expandBtn.parentElement.title = 'Ajouter une activité';
+        } else {
+            // Des activités existent : afficher l'icône flèche
+            expandBtn.textContent = 'keyboard_arrow_down';
+            expandBtn.title = 'Déplier';
+            expandBtn.parentElement.title = 'Déplier';
+        }
+    },
+
+    /**
+     * Déplier la section des activités (sans vérifier l'icône)
+     */
+    expandActivitiesSection(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        // Forcer le dépliage
+        activitiesSection.style.display = 'block';
+        expandBtn.textContent = 'keyboard_arrow_up';
+        expandBtn.title = 'Masquer les activités';
+        expandBtn.parentElement.title = 'Masquer les activités';
+        card.classList.add('expanded');
+        
+        // Charger les activités si pas encore chargées
+        if (activitiesSection.querySelector('.activities-list').children.length === 0) {
+            Activities.loadActivities(destinationId);
+        }
+    },
+
+    /**
+     * Replier la section des activités (sans vérifier l'icône)
+     */
+    collapseActivitiesSection(destinationId) {
+        const card = document.getElementById(`destination-${destinationId}`);
+        const activitiesSection = document.getElementById(`activities-${destinationId}`);
+        const expandBtn = card.querySelector('.btn-expand span');
+        
+        if (!card || !activitiesSection || !expandBtn) return;
+        
+        // Forcer le repli
+        activitiesSection.style.display = 'none';
+        card.classList.remove('expanded');
+        
+        // Mettre à jour l'icône selon les activités
+        this.updateActivityIcon(destinationId);
+    },
+
+    /**
      * Toggle l'affichage des activités d'une destination
      */
     toggleDestinationCard(destinationId) {
@@ -515,23 +540,20 @@ const Destination = {
         
         if (!card || !activitiesSection || !expandBtn) return;
         
+        // Si l'icône est "add", appeler Activities.addActivity
+        if (expandBtn.textContent === 'add') {
+            Activities.addActivity(destinationId);
+            return;
+        }
+        
         const isExpanded = activitiesSection.style.display !== 'none';
         
         if (isExpanded) {
             // Replier
-            activitiesSection.style.display = 'none';
-            expandBtn.textContent = 'expand_more';
-            card.classList.remove('expanded');
+            this.collapseActivitiesSection(destinationId);
         } else {
             // Déplier
-            activitiesSection.style.display = 'block';
-            expandBtn.textContent = 'expand_less';
-            card.classList.add('expanded');
-            
-            // Charger les activités si pas encore chargées
-            if (activitiesSection.querySelector('.activities-list').children.length === 0) {
-                Activities.loadActivities(destinationId);
-            }
+            this.expandActivitiesSection(destinationId);
         }
     },
 
