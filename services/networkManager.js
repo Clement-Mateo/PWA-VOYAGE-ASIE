@@ -38,6 +38,11 @@ class NetworkManager {
             if (window.Itineraries && window.Itineraries.updateAddItineraryButtonVisibility) {
                 window.Itineraries.updateAddItineraryButtonVisibility();
             }
+            
+            // Mettre à jour le style des champs adresse
+            if (window.Destination && window.Destination.updateAddressInputStyle) {
+                window.Destination.updateAddressInputStyle(true);
+            }
         });
 
         window.addEventListener('offline', () => {
@@ -52,6 +57,11 @@ class NetworkManager {
             }
             if (window.Itineraries && window.Itineraries.updateAddItineraryButtonVisibility) {
                 window.Itineraries.updateAddItineraryButtonVisibility();
+            }
+            
+            // Mettre à jour le style des champs adresse
+            if (window.Destination && window.Destination.updateAddressInputStyle) {
+                window.Destination.updateAddressInputStyle(false);
             }
         });
     }

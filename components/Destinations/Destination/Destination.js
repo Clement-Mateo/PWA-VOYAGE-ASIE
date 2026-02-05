@@ -5,6 +5,20 @@
 const Destination = {
     
     /**
+     * Mettre à jour le style des champs adresse selon l'état de connexion
+     */
+    updateAddressInputStyle(isOnline) {
+        const addressContainers = document.querySelectorAll('.address-input-container');
+        addressContainers.forEach(container => {
+            if (isOnline) {
+                container.classList.remove('offline');
+            } else {
+                container.classList.add('offline');
+            }
+        });
+    },
+    
+    /**
      * Éditer une destination
      */
     async editDestination(destinationId) {
@@ -62,8 +76,8 @@ const Destination = {
         if (addressInput) {
             addressInput.value = destination.address ? destination.address.address : '';
             
-            // Ajouter le comportement hover pour le mode hors ligne
-            this.setupAddressInputHover(addressInput);
+            // Mettre à jour le style selon l'état de connexion
+            this.updateAddressInputStyle(navigator.onLine);
         }
         
         // Remplir les champs de durée
@@ -339,69 +353,6 @@ const Destination = {
             console.error('Erreur lors du géocodage inverse:', error);
             return null;
         }
-    },
-
-    
-    /**
-     * Configurer le comportement hover pour les champs d'adresse en mode hors ligne
-     */
-    setupAddressInputHover(addressInput) {
-        // Créer l'élément tooltip s'il n'existe pas déjà
-        let tooltip = document.getElementById('offline-tooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'offline-tooltip';
-            tooltip.style.cssText = `
-                position: absolute;
-                background-color: #333;
-                color: white;
-                padding: 5px 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                z-index: 1000;
-                pointer-events: none;
-                display: none;
-                white-space: nowrap;
-            `;
-            document.body.appendChild(tooltip);
-        }
-
-        // Gestionnaires d'événements pour le hover
-        const showTooltip = (e) => {
-            if (!navigator.onLine) {
-                tooltip.textContent = 'Impossible sans connexion';
-                tooltip.style.display = 'block';
-                
-                const rect = e.target.getBoundingClientRect();
-                tooltip.style.left = rect.left + 'px';
-                tooltip.style.top = (rect.top - 30) + 'px';
-            }
-        };
-
-        const hideTooltip = () => {
-            tooltip.style.display = 'none';
-        };
-
-        const handleFocus = (e) => {
-            if (!navigator.onLine) {
-                e.target.blur();
-                if (typeof window.showErrorSnackBar === 'function') {
-                    window.showErrorSnackBar('Impossible sans connexion');
-                }
-            }
-        };
-
-        // Ajouter les écouteurs d'événements
-        addressInput.addEventListener('mouseenter', showTooltip);
-        addressInput.addEventListener('mouseleave', hideTooltip);
-        addressInput.addEventListener('focus', handleFocus);
-
-        // Nettoyer les écouteurs lors de la destruction de l'élément
-        addressInput.addEventListener('DOMNodeRemoved', () => {
-            addressInput.removeEventListener('mouseenter', showTooltip);
-            addressInput.removeEventListener('mouseleave', hideTooltip);
-            addressInput.removeEventListener('focus', handleFocus);
-        });
     },
 
     /**
