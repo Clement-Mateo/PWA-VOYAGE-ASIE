@@ -5,105 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu Principal</title>
     <link rel="stylesheet" href="../styles/modals.css">
-    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="menu/menu.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    <!-- Modal principal -->
+    <!-- Menu Modal -->
     <div id="menuModal" class="modal">
-        <!-- Arrière-plan modal -->
-        <div class="modal-backdrop" onclick="closeMenu()"></div>
-        
-        <!-- Conteneur principal (90% de l'écran) -->
+        <div class="modal-backdrop"></div>
         <div class="menu-container">
-            <!-- Header du menu -->
-            <div class="menu-header">
-                <h2 class="menu-title">
-                    <span class="material-icons">menu</span>
-                    Menu Principal
-                </h2>
-                <button class="btn-close" onclick="closeMenu()" aria-label="Fermer">
-                    <span class="material-icons">close</span>
-                </button>
-            </div>
+            <button class="btn-close" aria-label="Fermer">
+                <span class="material-icons">close</span>
+            </button>
             
-            <!-- Contenu principal avec deux sections -->
             <div class="menu-content">
-                <!-- Premier contenu -->
-                <div class="menu-section">
-                    <h3 class="section-title">
-                        <span class="material-icons">explore</span>
-                        Navigation
-                    </h3>
-                    <div class="section-content">
-                        <div class="menu-item" onclick="handleMenuAction('map')">
-                            <span class="material-icons">map</span>
-                            <div class="item-info">
-                                <h4>Carte</h4>
-                                <p>Afficher la carte interactive</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                        <div class="menu-item" onclick="handleMenuAction('search')">
-                            <span class="material-icons">search</span>
-                            <div class="item-info">
-                                <h4>Rechercher</h4>
-                                <p>Rechercher des destinations</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                        <div class="menu-item" onclick="handleMenuAction('itinerary')">
-                            <span class="material-icons">directions</span>
-                            <div class="item-info">
-                                <h4>Itinéraires</h4>
-                                <p>Gérer mes itinéraires</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Deuxième contenu -->
-                <div class="menu-section">
-                    <h3 class="section-title">
+                <div class="menu-left">
+                    <button class="menu-btn" data-action="itineraries">
+                        <span class="material-icons">route</span>
+                        Mes Itinéraires
+                    </button>
+                    <button class="menu-btn" data-action="synthese">
+                        <span class="material-icons">analytics</span>
+                        Synthèse
+                    </button>
+                    <button class="menu-btn" data-action="calendar">
+                        <span class="material-icons">calendar_today</span>
+                        Calendrier
+                    </button>
+                    <button class="menu-btn" data-action="notifications">
+                        <span class="material-icons">notifications</span>
+                        Notifications
+                    </button>
+                    <button class="menu-btn" data-action="profile">
+                        <span class="material-icons">person</span>
+                        Profile
+                    </button>
+                    <button class="menu-btn" data-action="settings">
                         <span class="material-icons">settings</span>
                         Paramètres
-                    </h3>
-                    <div class="section-content">
-                        <div class="menu-item" onclick="handleMenuAction('profile')">
-                            <span class="material-icons">person</span>
-                            <div class="item-info">
-                                <h4>Profil</h4>
-                                <p>Gérer mon profil</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                        <div class="menu-item" onclick="handleMenuAction('preferences')">
-                            <span class="material-icons">tune</span>
-                            <div class="item-info">
-                                <h4>Préférences</h4>
-                                <p>Personnaliser l'application</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                        <div class="menu-item" onclick="handleMenuAction('help')">
-                            <span class="material-icons">help</span>
-                            <div class="item-info">
-                                <h4>Aide</h4>
-                                <p>Obtenir de l'aide</p>
-                            </div>
-                            <span class="material-icons arrow">chevron_right</span>
-                        </div>
-                    </div>
+                    </button>
+                    <button class="logout-btn" data-action="logout">
+                        <span class="material-icons">logout</span>
+                        Se déconnecter
+                    </button>
                 </div>
-            </div>
-            
-            <!-- Footer du menu -->
-            <div class="menu-footer">
-                <button class="btn-secondary" onclick="closeMenu()">
-                    <span class="material-icons">close</span>
-                    Fermer
-                </button>
+                
+                <div class="menu-right">
+                    <!-- Contenu dynamique -->
+                </div>
             </div>
         </div>
     </div>
