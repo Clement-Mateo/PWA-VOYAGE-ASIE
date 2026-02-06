@@ -7,6 +7,18 @@
    ITINERARIES LIST
    ======================================== */
 
+.itineraries-title {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 10px;
+    font-size: 25px;
+}
+
+.itineraries-title .material-icons {
+    font-size: 28px;
+}
+
 .itineraries-list {
     display: flex;
     flex-direction: column;

@@ -4,7 +4,7 @@
 
 .menu-container {
     position: relative;
-    width: 75vw;
+    width: 80vw;
     height: 90vh;
     max-width: 1200px;
     max-height: 800px;
@@ -31,7 +31,7 @@
 }
 
 .menu-left {
-    width: 150px;
+    width: 175px;
     flex-shrink: 0;
     background: white;
     border-radius: 20px;
@@ -51,34 +51,34 @@
 }
 
 /* Boutons */
-.menu-btn, .logout-btn {
+.menu-option-btn, .logout-btn {
     width: 100%;
     padding: 12px;
     margin-bottom: 8px;
     border: none;
     border-radius: 12px;
-    background: var(--light-gray);
-    color: var(--dark-text);
+    background: var(--background-gray);
+    color: var(--font-color-black);
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     font-size: 14px;
     transition: all 0.2s ease;
 }
 
-.menu-btn:hover, .logout-btn:hover {
-    background: var(--primary-color);
-    color: white;
+.menu-option-btn:hover {
+    box-shadow: var(--box-shadow-1);
     transform: translateX(5px);
 }
 
-.menu-btn.active {
-    background: var(--primary-color);
+.menu-option-btn.active {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
     color: white;
 }
 
-.logout-btn {
+.menu-option-btn.logout-btn {
     background: var(--accent-red);
     color: white;
 }
@@ -87,29 +87,8 @@
     background: #d32f2f;
 }
 
-.menu-btn .material-icons, .logout-btn .material-icons {
+.menu-option-btn .material-icons, .logout-btn .material-icons {
     font-size: 18px;
-}
-
-.btn-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: var(--light-gray);
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.btn-close:hover {
-    background: var(--accent-red);
-    color: white;
 }
 
 /* Contenu */
@@ -123,7 +102,7 @@
 
 .section-content h4 {
     margin: 0 0 10px 0;
-    color: var(--dark-text);
+    color: var(--font-color-black);
 }
 
 .section-content p {

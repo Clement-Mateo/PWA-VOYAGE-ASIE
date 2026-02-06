@@ -3,7 +3,6 @@
  */
 class Itineraries {
     constructor() {
-        this.isOpen = false;
         this.editingItineraryId = null; // Suivre l'itinéraire en cours d'édition
         this.init();
     }
@@ -13,6 +12,27 @@ class Itineraries {
      */
     init() {
         console.log('Itineraries: Initialisation');
+    }
+
+    /**
+     * Rendre le contenu HTML des itinéraires (pour affichage dans le menu)
+     */
+    render() {
+        return `
+            <h3 class="itineraries-title">
+                <span class="material-icons">list</span>
+                Mes itinéraires
+            </h3>
+            <div class="itineraries-list" id="itinerariesList">
+                <!-- Les itinéraires seront chargés dynamiquement -->
+            </div>
+            
+            <!-- Bouton Ajouter un itinéraire -->
+            <button class="btn-add" id="add-itinerary-btn" onclick="window.Itineraries.addItinerary()">
+                <span class="material-icons">add</span>
+                Ajouter un itinéraire
+            </button>
+        `;
     }
 
     /**
@@ -31,76 +51,6 @@ class Itineraries {
         } else {
             console.log('erreur updateAddItineraryButtonVisibility -> addButton non trouvé');
         }
-    }
-
-    /**
-     * Ouvrir la modal des itinéraires
-     */
-    open() {
-        if (this.isOpen) return;
-        
-        console.log('Itineraries: Ouverture de la modal');
-        this.isOpen = true;
-        
-        this.createModal();
-        this.renderItineraries();
-        this.updateAddItineraryButtonVisibility();
-        // Attacher les événements à chaque ouverture pour s'assurer qu'ils fonctionnent
-        this.bindEvents();
-    }
-
-    /**
-     * Créer la modal HTML
-     */
-    createModal() {
-        // Vérifier si la modal existe déjà
-        if (document.getElementById('itinerariesModal')) {
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.id = 'itinerariesModal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-backdrop"></div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title">
-                        <span class="material-icons">route</span>
-                        Gestion des itinéraires
-                    </h2>
-                    <button class="btn-close" onclick="window.Itineraries.close()">
-                        <span class="material-icons">close</span>
-                    </button>
-                </div>
-                
-                <div class="modal-body">
-                    <!-- Section Liste des itinéraires -->
-                    <div class="modal-section">
-                        <h3 class="modal-section-title">
-                            <span class="material-icons">list</span>
-                            Mes itinéraires
-                        </h3>
-                        <div class="itineraries-list" id="itinerariesList">
-                            <!-- Les itinéraires seront chargés dynamiquement -->
-                        </div>
-                        
-                        <!-- Bouton Ajouter un itinéraire -->
-                        <button class="btn-add" id="add-itinerary-btn" onclick="window.Itineraries.addItinerary()">
-                            <span class="material-icons">add</span>
-                            Ajouter un itinéraire
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Animation d'ouverture
-        setTimeout(() => {
-            modal.classList.add('open');
-        }, 10);
     }
 
     /**
@@ -666,71 +616,6 @@ class Itineraries {
         } finally {
             // Masquer le loading global dans tous les cas
             window.hideLoading();
-        }
-    }
-
-    /**
-     * Lier les événements
-     */
-    bindEvents() {
-        // Écouteur pour la touche Échap (un seul listener global)
-        if (!this.escapeHandler) {
-            this.escapeHandler = (e) => {
-                if (e.key === 'Escape' && this.isOpen) {
-                    this.close();
-                }
-            };
-            document.addEventListener('keydown', this.escapeHandler);
-        }
-
-        // Écouteur pour le clic sur le backdrop (spécifique à ce modal)
-        const modal = document.getElementById('itinerariesModal');
-        if (modal) {
-            // Retirer l'ancien listener s'il existe
-            if (this.backdropHandler) {
-                const backdrop = modal.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.removeEventListener('click', this.backdropHandler);
-                }
-            }
-            
-            // Ajouter le nouveau listener
-            const backdrop = modal.querySelector('.modal-backdrop');
-            if (backdrop) {
-                this.backdropHandler = () => {
-                    this.close();
-                };
-                backdrop.addEventListener('click', this.backdropHandler);
-            }
-        }
-    }
-
-    /**
-     * Fermer la modal
-     */
-    close() {
-        if (!this.isOpen) return;
-        
-        console.log('Itineraries: Fermeture de la modal');
-        this.isOpen = false;
-        
-        const modal = document.getElementById('itinerariesModal');
-        if (modal) {
-            modal.classList.remove('open');
-            
-            // Nettoyer les événements du backdrop
-            if (this.backdropHandler) {
-                const backdrop = modal.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.removeEventListener('click', this.backdropHandler);
-                }
-                this.backdropHandler = null;
-            }
-            
-            // Supprimer la modal après l'animation
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
         }
     }
 }

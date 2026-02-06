@@ -46,6 +46,16 @@ class Menu {
             document.body.style.overflow = 'hidden';
             this.isOpen = true;
             console.log('Menu ouvert');
+            
+            // Activer le bouton synthèse par défaut si aucun bouton n'est actif
+            const activeBtn = this.element.querySelector('.menu-option-btn.active');
+            if (!activeBtn) {
+                const syntheseBtn = this.element.querySelector('[data-action="synthese"]');
+                if (syntheseBtn) {
+                    syntheseBtn.classList.add('active');
+                    this.handleAction('synthese', syntheseBtn);
+                }
+            }
         }
     }
 
@@ -62,15 +72,12 @@ class Menu {
         this.isOpen ? this.close() : this.open();
     }
 
-    bindEvents() {
-        // Bouton fermeture
-        this.element.querySelector('.btn-close').addEventListener('click', () => this.close());
-        
+    bindEvents() {        
         // Arrière-plan
         this.element.querySelector('.modal-backdrop').addEventListener('click', () => this.close());
         
         // Boutons du menu
-        this.element.querySelectorAll('.menu-btn, .logout-btn').forEach(btn => {
+        this.element.querySelectorAll('.menu-option-btn, .logout-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.handleAction(btn.dataset.action, btn);
@@ -88,8 +95,8 @@ class Menu {
 
     handleAction(action, button) {
         // Gérer les classes actives
-        this.element.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-        if (button && button.classList.contains('menu-btn')) button.classList.add('active');
+        this.element.querySelectorAll('.menu-option-btn').forEach(btn => btn.classList.remove('active'));
+        if (button && button.classList.contains('menu-option-btn')) button.classList.add('active');
 
         switch(action) {
             case 'itineraries':
@@ -115,22 +122,21 @@ class Menu {
 
     loadItineraries() {
         const rightContent = this.element.querySelector('.menu-right');
-        rightContent.innerHTML = `
-            <div class="menu-section">
-                <div class="section-content" id="itineraries-container">
-                    <!-- Chargement... -->
-                </div>
-            </div>
-        `;
         
-        setTimeout(() => {
-            const container = document.getElementById('itineraries-container');
-            if (container && window.Itineraries) {
-                window.Itineraries.open();
-            } else {
-                container.innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }, 100);
+        // Utiliser Itineraries.render() pour obtenir le HTML directement
+        if (window.Itineraries && window.Itineraries.render) {
+            rightContent.innerHTML = window.Itineraries.render();
+            
+            // Charger les données des itinéraires après l'affichage
+            setTimeout(() => {
+                if (window.Itineraries && window.Itineraries.renderItineraries) {
+                    window.Itineraries.renderItineraries();
+                    this.updateAddItineraryButtonVisibility();
+                }
+            }, 100);
+        } else {
+            rightContent.innerHTML = '<p>Erreur de chargement du composant Itineraries</p>';
+        }
     }
 
     loadProfile() {

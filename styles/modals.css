@@ -95,30 +95,6 @@
     max-height: calc(80vh - 80px);
 }
 
-/* Sections modal */
-.modal-section {
-    margin-bottom: 32px;
-}
-
-.modal-section:last-child {
-    margin-bottom: 0;
-}
-
-.modal-section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 10px 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--font-color-gray-dark);
-}
-
-.modal-section-title .material-icons {
-    font-size: 20px;
-    color: var(--primary-blue);
-}
-
 /* Positionnement universel bouton fermeture */
 .modal .btn-close {
     position: absolute;
