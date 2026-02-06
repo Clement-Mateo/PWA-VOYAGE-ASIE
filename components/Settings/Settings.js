@@ -248,14 +248,6 @@ const Settings = {
 
                         </div>
 
-                        <button class="logout-btn" onclick="Settings.handleLogout()">
-
-                            <span class="material-icons">logout</span>
-
-                            Se déconnecter
-
-                        </button>
-
                     </div>
 
                 </div>

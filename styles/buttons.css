@@ -158,13 +158,13 @@
    ======================================== */
 
 .btn-add {
+    width: 100%;
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
     color: var(--font-color-white);
     border: none;
-    width: 100%;
-    border-radius: 32px;
-    padding: 45px;
-    font-size: 48px;
+    border-radius: 20px;
+    padding: 15px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
