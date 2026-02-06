@@ -1,4 +1,17 @@
 /* Section droite basse - Profile */
+#profile-content {
+    background: var(--background-light);
+    border-radius: 0 0 12px 12px;
+}
+
+#profile-content .menu-section-content {
+    padding: 25px;
+    background: var(--white);
+    margin: 15px;
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-1);
+}
+
 .menu-section-content {
     padding: 20px;
     height: 100%;
