@@ -43,7 +43,7 @@ const Sidebar = {
                     <h2 class="itinerary-name" id="sidebar-itinerary-name">${window.escapeHtml(itineraryName)}</h2>
                 </div>
                 <div class="settings-right">
-                    <button class="menu-btn" onclick="Sidebar.openSettings()" title="Paramètres">
+                    <button class="menu-btn" onclick="window.Menu.open()" title="Menu">
                         <span class="material-icons">menu</span>
                     </button>
                 </div>

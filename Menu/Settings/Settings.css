@@ -1,7 +1,15 @@
-/* ========================================
-   SETTINGS STYLES
-   Utilise les classes génériques de modals.css
-   ======================================== */
+.settings-title {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 10px;
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+
+.settings-title .material-icons {
+    font-size: 28px;
+}
 
 /* ========================================
    MAP STYLES SECTION

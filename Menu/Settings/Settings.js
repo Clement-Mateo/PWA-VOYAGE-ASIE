@@ -1,0 +1,184 @@
+const Settings = {
+    /**
+     * Initialiser le composant Settings
+     */
+    init() {
+        // Plus besoin de créer de modal
+    },
+
+    /**
+     * Retourner le HTML des paramètres pour le menu
+     */
+    render() {
+        return `
+            <h3 class="settings-title">
+                <span class="material-icons">map</span>
+                Style de carte
+            </h3>
+            <div class="settings-map-styles">
+                <div class="map-style-option" data-style="maptiler">
+                    <input type="radio" id="style-maptiler" name="mapStyle" value="maptiler" checked>
+                    <label for="style-maptiler">
+                        <span class="map-style-preview maptiler-preview"></span>
+                        <span class="map-style-name">MapTiler Streets</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="osm">
+                    <input type="radio" id="style-osm" name="mapStyle" value="osm">
+                    <label for="style-osm">
+                        <span class="map-style-preview osm-preview"></span>
+                        <span class="map-style-name">OpenStreetMap</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="humanitarian">
+                    <input type="radio" id="style-humanitarian" name="mapStyle" value="humanitarian">
+                    <label for="style-humanitarian">
+                        <span class="map-style-preview humanitarian-preview"></span>
+                        <span class="map-style-name">Humanitarian</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="dark">
+                    <input type="radio" id="style-dark" name="mapStyle" value="dark">
+                    <label for="style-dark">
+                        <span class="map-style-preview dark-preview"></span>
+                        <span class="map-style-name">Dark</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="satellite">
+                    <input type="radio" id="style-satellite" name="mapStyle" value="satellite">
+                    <label for="style-satellite">
+                        <span class="map-style-preview satellite-preview"></span>
+                        <span class="map-style-name">Satellite</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="terrain">
+                    <input type="radio" id="style-terrain" name="mapStyle" value="terrain">
+                    <label for="style-terrain">
+                        <span class="map-style-preview terrain-preview"></span>
+                        <span class="map-style-name">Topo</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="relief">
+                    <input type="radio" id="style-relief" name="mapStyle" value="relief">
+                    <label for="style-relief">
+                        <span class="map-style-preview relief-preview"></span>
+                        <span class="map-style-name">Relief</span>
+                    </label>
+                </div>
+                <div class="map-style-option" data-style="watercolor">
+                    <input type="radio" id="style-watercolor" name="mapStyle" value="watercolor">
+                    <label for="style-watercolor">
+                        <span class="map-style-preview watercolor-preview"></span>
+                        <span class="map-style-name">Aquarelle</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-warning">
+                <span class="material-icons warning-icon">warning</span>
+                <div class="warning-text">
+                    <strong>Performance :</strong> Certaines cartes peuvent être plus lentes ou occasionnellement indisponibles selon la charge des serveurs.
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Initialiser les écouteurs d'événements
+     */
+    initEventListeners() {
+        document.querySelectorAll('input[name="mapStyle"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.changeMapStyle(e.target.value);
+            });
+        });
+    },
+
+    /**
+     * Charger les informations utilisateur
+     */
+    loadUserInfo() {
+        if (window.firebaseService && window.firebaseService.isAuthenticated()) {
+            const user = window.firebaseService.auth.currentUser;
+            if (user) {
+                const emailElement = document.getElementById('settingsUserEmail');
+                if (emailElement) {
+                    emailElement.textContent = user.email;
+                }
+            }
+        }
+    },
+
+    /**
+     * Charger le style de carte actuel
+     */
+    loadCurrentMapStyle() {
+        if (window.MapInstance && window.MapInstance.currentLayer) {
+            const currentStyle = this.getCurrentMapStyle();
+            const radio = document.querySelector(`input[name="mapStyle"][value="${currentStyle}"]`);
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+    },
+
+    /**
+     * Obtenir le style de carte actuel
+     */
+    getCurrentMapStyle() {
+        if (!window.MapInstance || !window.MapInstance.currentLayer) {
+            return 'osm';
+        }
+
+        const currentLayer = window.MapInstance.currentLayer;
+        const mapStyles = window.MapInstance.mapStyles;
+
+        for (const [styleName, layer] of Object.entries(mapStyles)) {
+            if (layer === currentLayer) {
+                return styleName;
+            }
+        }
+
+        return 'osm';
+    },
+
+    /**
+     * Changer le style de carte
+     */
+    changeMapStyle(styleName) {
+        if (window.MapInstance && window.MapInstance.changeMapStyle) {
+            window.MapInstance.changeMapStyle(styleName);
+        }
+    },
+
+    /**
+     * Obtenir le nom d'affichage du style
+     */
+    getStyleDisplayName(styleName) {
+        if (window.MapInstance && window.MapInstance.getStyleDisplayName) {
+            return window.MapInstance.getStyleDisplayName(styleName);
+        }
+
+        // Fallback si LeafletMap n'est pas disponible
+        const displayNames = {
+            'maptiler': 'MapTiler Streets',
+            'osm': 'OpenStreetMap',
+
+            'humanitarian': 'Humanitarian',
+
+            'dark': 'Dark',
+
+            'satellite': 'Satellite',
+
+            'terrain': 'Topo',
+
+            'relief': 'Relief',
+            'watercolor': 'Aquarelle'
+        };
+
+        return displayNames[styleName] || styleName;
+    }
+};
+
+// Exporter globalement
+window.Settings = Settings;

@@ -102,6 +102,9 @@ class Menu {
             case 'itineraries':
                 this.loadItineraries();
                 break;
+            case 'settings':
+                this.loadSettings();
+                break;
             case 'profile':
                 this.loadProfile();
                 break;
@@ -136,6 +139,26 @@ class Menu {
             }, 100);
         } else {
             rightContent.innerHTML = '<p>Erreur de chargement du composant Itineraries</p>';
+        }
+    }
+
+    loadSettings() {
+        const rightContent = this.element.querySelector('.menu-right');
+        
+        // Utiliser Settings.render() pour obtenir le HTML directement
+        if (window.Settings && window.Settings.render) {
+            rightContent.innerHTML = window.Settings.render();
+            
+            // Initialiser les événements et charger les données après l'affichage
+            setTimeout(() => {
+                if (window.Settings) {
+                    window.Settings.initEventListeners();
+                    window.Settings.loadUserInfo();
+                    window.Settings.loadCurrentMapStyle();
+                }
+            }, 100);
+        } else {
+            rightContent.innerHTML = '<p>Erreur de chargement du composant Settings</p>';
         }
     }
 
