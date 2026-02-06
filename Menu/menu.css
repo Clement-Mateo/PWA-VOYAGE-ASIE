@@ -1,15 +1,14 @@
 /* ========================================
-   STYLES SPÉCIFIQUES AU MENU MODAL
+   STYLES DU MENU MODAL
    ======================================== */
 
-/* Conteneur principal */
 .menu-container {
     position: relative;
     width: 75vw;
     height: 90vh;
     max-width: 1200px;
     max-height: 800px;
-    background: var(--background-light);
+    background: var(--glass-bg);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 20px 60px var(--box-shadow-1);
@@ -23,181 +22,114 @@
     transform: scale(1) translateY(0);
 }
 
-/* Contenu principal */
 .menu-content {
     flex: 1;
     padding: 25px;
-    overflow-y: auto;
     display: flex;
     gap: 25px;
-    background: var(--background-light);
     height: 100%;
 }
 
-/* Section gauche */
 .menu-left {
     width: 150px;
     flex-shrink: 0;
-    height: 100%;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow-1);
+    padding: 15px;
+    box-sizing: border-box;
 }
 
-/* Colonne de droite pour 2 sections */
 .menu-right {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow-1);
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
-/* Sections du menu */
+/* Boutons */
+.menu-btn, .logout-btn {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 12px;
+    background: var(--light-gray);
+    color: var(--dark-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.menu-btn:hover, .logout-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateX(5px);
+}
+
+.menu-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.logout-btn {
+    background: var(--accent-red);
+    color: white;
+}
+
+.logout-btn:hover {
+    background: #d32f2f;
+}
+
+.menu-btn .material-icons, .logout-btn .material-icons {
+    font-size: 18px;
+}
+
+.btn-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--light-gray);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+    background: var(--accent-red);
+    color: white;
+}
+
+/* Contenu */
 .menu-section {
-    background: transparent;
-    box-shadow: var(--box-shadow-1);
-    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.section-content {
     padding: 15px;
 }
 
-/* Section gauche (toute hauteur) */
-.menu-left .menu-section {
-    width: 100%;
-    height: 100%;
-    flex-shrink: 0;
+.section-content h4 {
+    margin: 0 0 10px 0;
+    color: var(--dark-text);
 }
 
-/* Section droite haute */
-.menu-right .menu-section:first-child {
-    box-shadow: none;
-    width: 100%;
-    height: 140px;
-    flex-shrink: 0;
-}
-
-/* Section droite basse */
-.menu-right .menu-section:last-child {
-    width: 100%;
-    height: calc(100% - 170px);
-    flex-shrink: 0;
-}
-
-/* Contenu des sections */
-.section-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* Boutons du menu gauche - Alignement à gauche */
-.menu-left .menu-btn {
-    padding: 12px 16px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 20px;
-    background: var(--white);
-    box-shadow: var(--box-shadow-1);
-    color: var(--primary-darker);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-    flex-shrink: 0;
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-start;
-}
-
-.menu-left .menu-btn .material-icons {
-    font-size: 18px;
-    color: var(--primary-blue);
-    flex-shrink: 0;
-}
-
-.menu-left .menu-btn:hover {
-    background: var(--glass-bg);
-    transform: translateY(-1px);
-    box-shadow: var(--box-shadow-2);
-}
-
-.menu-left .menu-btn:active {
-    transform: translateY(0);
-    border: var(--glass-border);
-    box-shadow: var(--box-shadow-2);
-}
-
-.menu-left .menu-btn.active {
-    background: var(--primary-blue);
-    color: var(--white);
-    transform: translateY(-1px);
-    box-shadow: var(--box-shadow-2);
-}
-
-.menu-left .menu-btn.active .material-icons {
-    color: var(--white);
-}
-
-/* Éléments du menu indépendants */
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-    background: var(--primary-blue);
-    margin-bottom: 8px;
-    flex-shrink: 0;
-}
-
-.menu-item:last-child {
-    margin-bottom: 0;
-}
-
-.menu-item:hover {
-    background: var(--glass-bg);
-    border-color: var(--primary-blue);
-    transform: translateX(4px);
-}
-
-.menu-item:active {
-    transform: translateX(2px);
-}
-
-.menu-item .material-icons:first-child {
-    font-size: 20px;
-    color: var(--primary-blue);
-    flex-shrink: 0;
-}
-
-.item-info {
-    flex: 1;
-}
-
-.item-info h4 {
-    margin: 0 0 4px 0;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--font-color-gray-dark);
-}
-
-.item-info p {
+.section-content p {
     margin: 0;
+    color: var(--medium-gray);
     font-size: 14px;
-    color: var(--font-color-gray);
-}
-
-.menu-item .arrow {
-    font-size: 18px;
-    color: var(--gray-darker);
-    transition: transform 0.2s ease;
-}
-
-.menu-item:hover .arrow {
-    transform: translateX(6px);
 }
 
 /* ========================================
