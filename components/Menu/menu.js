@@ -11,7 +11,6 @@ class Menu {
             synthese: '<h4>Synthèse</h4><p>Analyse et statistiques de vos voyages</p>',
             calendar: '<h4>Calendrier</h4><p>Planification et gestion de votre emploi du temps</p>',
             notifications: '<h4>Notifications</h4><p>Alertes et messages importants</p>',
-            settings: '<h4>Paramètres</h4><p>Configuration de l\'application</p>'
         };
     }
 
@@ -19,7 +18,7 @@ class Menu {
         if (this.isLoaded) return this.element;
 
         try {
-            const response = await fetch('menu/menu.html');
+            const response = await fetch('components/Menu/menu.html');
             const html = await response.text();
             
             const container = document.createElement('div');
@@ -99,6 +98,9 @@ class Menu {
         if (button && button.classList.contains('menu-option-btn')) button.classList.add('active');
 
         switch(action) {
+            case 'synthese':
+                this.loadSynthese();
+                break;
             case 'itineraries':
                 this.loadItineraries();
                 break;
@@ -123,6 +125,51 @@ class Menu {
         }
     }
 
+    loadSynthese() {
+        const rightContent = this.element.querySelector('.menu-right');
+        
+        // Utiliser Synthèse.render() pour obtenir le HTML directement
+        if (window.Synthèse && window.Synthèse.render) {
+            // Afficher un loading pendant le calcul
+            rightContent.innerHTML = `
+                <div class="menu-section">
+                    <div class="section-content">
+                        <div class="synthese-loading">
+                            <div class="loading-spinner"></div>
+                            <p>Calcul de la synthèse...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Charger le contenu de la synthèse de manière asynchrone
+            window.Synthèse.render().then(content => {
+                rightContent.innerHTML = `<div class="menu-section"><div class="section-content">${content}</div></div>`;
+                
+                // Initialiser les graphiques après l'affichage
+                setTimeout(() => {
+                    if (window.Synthèse && window.Synthèse.initCharts) {
+                        window.Synthèse.initCharts();
+                    }
+                }, 100);
+            }).catch(error => {
+                console.error('Erreur lors du chargement de la synthèse:', error);
+                rightContent.innerHTML = `
+                    <div class="menu-section">
+                        <div class="section-content">
+                            <div class="synthese-error">
+                                <span class="material-icons">error</span>
+                                <p>Erreur lors du chargement de la synthèse</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            rightContent.innerHTML = '<p>Erreur de chargement du composant Synthèse</p>';
+        }
+    }
+
     loadItineraries() {
         const rightContent = this.element.querySelector('.menu-right');
         
@@ -134,7 +181,7 @@ class Menu {
             setTimeout(() => {
                 if (window.Itineraries && window.Itineraries.renderItineraries) {
                     window.Itineraries.renderItineraries();
-                    this.updateAddItineraryButtonVisibility();
+                    window.Itineraries.updateAddItineraryButtonVisibility();
                 }
             }, 100);
         } else {
@@ -170,7 +217,7 @@ class Menu {
         `;
         
         // Charger avatar
-        fetch('menu/profile/avatar.html')
+        fetch('components/Menu/profile/avatar.html')
             .then(r => r.ok ? r.text() : Promise.reject('Avatar non trouvé'))
             .then(html => {
                 document.getElementById('profile-avatar-section').innerHTML = html;
@@ -178,7 +225,7 @@ class Menu {
             .catch(console.error);
             
         // Charger profil
-        fetch('menu/profile/profile.html')
+        fetch('components/Menu/profile/profile.html')
             .then(r => r.ok ? r.text() : Promise.reject('Profil non trouvé'))
             .then(html => {
                 document.getElementById('profile-content').innerHTML = html;
