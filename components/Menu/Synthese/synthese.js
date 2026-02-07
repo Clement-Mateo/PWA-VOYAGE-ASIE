@@ -8,8 +8,6 @@ const Synthèse = {
      * Initialiser le composant Synthèse
      */
     init() {
-        // Initialisation silencieuse
-        this.render();
     },
     
     /**
@@ -390,7 +388,7 @@ const Synthèse = {
                 <div class="synthese-details">
                     <div class="details-section">
                         <h3>Détail par type d'activité</h3>
-                        <div class="activities-breakdown" id="activitiesBreakdown">
+                        <div class="activities-breakdown">
                             <!-- Détail des activités par type -->
                         </div>
                     </div>
@@ -600,47 +598,44 @@ const Synthèse = {
      * Rendre le composant Synthèse
      */
     async render() {
-        const container = document.querySelector('#sidebar-synthese-content .synthese-container');
-        
-        if (!container) {
-            console.error('Synthèse: Conteneur non trouvé');
-            return;
-        }
-        
         try {
-            // Afficher le loading pendant le calcul
-            container.innerHTML = `
-                <div class="synthese-loading">
-                    <div class="loading-spinner"></div>
-                    <p>Calcul de la synthèse...</p>
-                </div>
-            `;
-            
-            // Générer le contenu
-            const content = await this.createSyntheseContent();
-            container.innerHTML = content;
+            let content = await this.createSyntheseContent();
             
             // Générer le détail des activités
             const costData = await this.calculateTotalCost();
-            const breakdownContainer = document.getElementById('activitiesBreakdown');
-            if (breakdownContainer) {
-                breakdownContainer.innerHTML = this.generateActivitiesBreakdown(costData.activitiesByType);
-            }
+            const activitiesBreakdown = this.generateActivitiesBreakdown(costData.activitiesByType);
             
-            // Créer les graphiques
-            setTimeout(() => {
-                this.createBudgetChart(costData.activitiesByType);
-                this.createDurationChart(costData.activitiesByType);
-            }, 100); // Petit délai pour s'assurer que le DOM est prêt
+            // Remplacer le placeholder par le contenu réel de manière plus robuste
+            const placeholderRegex = /<div class="activities-breakdown">\s*<!-- Détail des activités par type -->\s*<\/div>/gs;
+            content = content.replace(placeholderRegex, `<div class="activities-breakdown">${activitiesBreakdown}</div>`);
+            
+            return content;
             
         } catch (error) {
             console.error('Erreur lors du rendu de la synthèse:', error);
-            container.innerHTML = `
+            return `
                 <div class="synthese-error">
                     <span class="material-icons">error</span>
                     <p>Erreur lors du chargement de la synthèse</p>
                 </div>
             `;
+        }
+    },
+    
+    /**
+     * Initialiser les graphiques après l'affichage
+     */
+    async initCharts() {
+        try {
+            const costData = await this.calculateTotalCost();
+            
+            // Créer les graphiques avec un petit délai pour s'assurer que le DOM est prêt
+            setTimeout(() => {
+                this.createBudgetChart(costData.activitiesByType);
+                this.createDurationChart(costData.activitiesByType);
+            }, 100);
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation des graphiques:', error);
         }
     },
     
