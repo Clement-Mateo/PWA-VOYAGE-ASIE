@@ -216,7 +216,7 @@ const Destination = {
                 
                 // Géocoder l'adresse pour obtenir les coordonnées
                 try {
-                    const coords = await this.geocodeAddress(address);
+                    const coords = await window.LocationService.geocodeAddress(address);
                     if (coords) {
                         updatedDestination.address.location = {
                             lat: coords.lat,
@@ -225,7 +225,7 @@ const Destination = {
                         
                         // Obtenir le pays depuis les coordonnées
                         try {
-                            const country = await this.getCountryFromCoordinates(coords.lat, coords.lng);
+                            const country = await window.LocationService.getCountryFromCoordinates(coords.lat, coords.lng);
                             if (country) {
                                 updatedDestination.address.country = country;
                             }
@@ -239,66 +239,38 @@ const Destination = {
                                 
                 // Générer un ID aléatoire pour la destination sauvegardée
                 updatedDestination.id = `destination_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                
-                if (currentItinerary) {
-                    // Mettre à jour la destination via localStorage (avec l'ID temporaire)
-                    await window.localStorageService.updateDestination('temp_destination', updatedDestination);
-                    
-                    window.showSuccessSnackBar('Destination créée avec succès');
-                    
-                    // Réactiver le hover sur les autres destinations
-                    this.enableOtherCardsHover();
-                    
-                    await Destinations.loadDestinations();
-                    
-                    // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
-                    if (window.Synthèse && window.Synthèse.refresh) {
-                        await window.Synthèse.refresh();
-                    }
-                } else {
-                    throw new Error('Aucun itinéraire courant trouvé');
+
+            }
+
+            // Obtenir et stocker la devise locale
+            try {
+                if (updatedDestination.address.country && !updatedDestination.address.countryCurrency) {
+                    const currency = await window.LocationService.getCountryCurrency(updatedDestination.address.country);
+                    updatedDestination.address.countryCurrency = currency;
                 }
-            } else {
-                // Mettre à jour la destination existante
-                
-                // Géocoder la nouvelle adresse pour obtenir les coordonnées
-                try {
-                    const coords = await this.geocodeAddress(address);
-                    if (coords) {
-                        updatedDestination.address.location = {
-                            lat: coords.lat,
-                            lng: coords.lng
-                        };
-                        
-                        // Obtenir le pays depuis les coordonnées
-                        try {
-                            const country = await this.getCountryFromCoordinates(coords.lat, coords.lng);
-                            if (country) {
-                                updatedDestination.address.country = country;
-                            }
-                        } catch (error) {
-                            console.warn('⚠️ Impossible d\'obtenir le pays depuis les coordonnées:', error);
-                        }
-                    }
-                } catch (error) {
-                    console.warn('⚠️ Impossible de géocoder l\'adresse lors de la mise à jour:', error);
-                }
-                
-                // Mettre à jour la destination existante via localStorage
-                await window.localStorageService.updateDestination(destination.id, updatedDestination);
-                
+            } catch (error) {
+                console.warn('⚠️ Impossible d\'obtenir la devise:', error);
+                // Fallback sur EUR
+                updatedDestination.address.countryCurrency = { code: 'EUR', name: 'Euro', symbol: '€' };
+            }
+            
+            // Mettre à jour la destination via localStorage (avec l'ID temporaire)
+            await window.localStorageService.updateDestination('temp_destination', updatedDestination);
+            
+            if(destinationId === 'temp_destination') {
                 window.showSuccessSnackBar('Destination mise à jour avec succès');
-                
-                // Réactiver le hover sur les autres destinations
-                this.enableOtherCardsHover();
-                
-                // Mettre à jour l'affichage
-                await Destinations.loadDestinations();
-                
-                // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
-                if (window.Synthèse && window.Synthèse.refresh) {
-                    await window.Synthèse.refresh();
-                }
+            } else {
+                window.showSuccessSnackBar('Destination créée avec succès');
+            }
+            
+            // Réactiver le hover sur les autres destinations
+            this.enableOtherCardsHover();
+            
+            await Destinations.loadDestinations();
+            
+            // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
+            if (window.Synthèse && window.Synthèse.refresh) {
+                await window.Synthèse.refresh();
             }
             
         } catch (error) {
@@ -307,62 +279,6 @@ const Destination = {
         } finally {
             this.isSaving = false;
             window.restoreButton(`#form-${destinationId} .btn-save`, 'Enregistrer', 'save');
-        }
-    },
-
-    /**
-     * Géocoder une adresse pour obtenir les coordonnées
-     */
-    async geocodeAddress(address) {
-        return new Promise((resolve, reject) => {
-            if (!window.L || !window.L.Control.Geocoder) {
-                reject(new Error('Geocoder non disponible'));
-                return;
-            }
-            
-            const geocoder = window.L.Control.Geocoder.nominatim();
-            
-            geocoder.geocode(address, (results) => {
-                if (results && results.length > 0) {
-                    const result = results[0];
-                    resolve({
-                        lat: result.center.lat,
-                        lng: result.center.lng
-                    });
-                } else {
-                    reject(new Error('Adresse non trouvée'));
-                }
-            });
-        });
-    },
-
-    
-    /**
-     * Obtenir le pays depuis les coordonnées (API Nominatim)
-     */
-    async getCountryFromCoordinates(lat, lng) {
-        try {
-            // Utiliser l'API Nominatim en anglais (standard et fiable)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en` 
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.address && data.address.country) {
-                const countryName = data.address.country;
-                console.log(`🌍 Pays retourné par l'API (anglais): ${countryName}`);
-                return countryName;
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('Erreur lors du géocodage inverse:', error);
-            return null;
         }
     },
 

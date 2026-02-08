@@ -4,13 +4,9 @@ const Activity = {
     currentDestination: null,
     currentActivity: null,
 
-    // Cache pour les taux de change (valide 1 heure)
-    exchangeRatesCache: null,
-    exchangeRatesCacheTime: null,
-
     // Initialiser le composant
     init() {
-        this.loadExchangeRates();
+        // Les taux de change seront chargés via LocationService
     },
 
     // Définir la destination actuelle
@@ -18,157 +14,9 @@ const Activity = {
         this.currentDestination = destination;
     },
 
-    // Charger les taux de change depuis l'API
-    async loadExchangeRates() {
-        // Pas de cache - charger les taux à chaque fois
-        const now = Date.now();
-        
-        try {
-            const response = await fetch('https://api.exchangerate-api.com/v4/latest/eur');
-            
-            if (!response.ok) {
-                throw new Error('Erreur API taux de change');
-            }
-            
-            const data = await response.json();
-            
-            if (data.rates) {
-                this.exchangeRatesCache = data.rates;
-                this.exchangeRatesCacheTime = now;
-            } else if (data.conversion_rates) {
-                this.exchangeRatesCache = data.conversion_rates;
-                this.exchangeRatesCacheTime = now;
-            } else {
-                this.exchangeRatesCache = data;
-                this.exchangeRatesCacheTime = now;
-            }
-        } catch (error) {
-            console.error('Erreur lors du chargement des taux de change:', error);
-            // En cas d'erreur, utiliser des taux de secours basiques
-            this.exchangeRatesCache = {
-                'USD': 1.08,
-                'JPY': 160,
-                'KRW': 1450,
-                'CNY': 7.8,
-                'THB': 37,
-                'VND': 27000
-            };
-        }
-    },
-
-    // Obtenir la devise locale en fonction du pays de la destination
-    async getLocalCurrency() {
-        if (this.currentDestination.address && this.currentDestination.address.country) {
-            const country = this.currentDestination.address.country;
-            return this.getCountryCurrency(country);
-        }
-        
-        return { code: 'EUR', name: 'EUR' };
-    },
-
-    // Obtenir la devise pour un pays donné (via API REST Countries)
-    async getCountryCurrency(country) {
-        const fallbackMapping = {
-            'North Korea': 'KPW',
-            'South Korea': 'KRW',
-            'Taiwan': 'TWD',
-            'Palestine': 'ILS',
-            'Western Sahara': 'MAD',
-            'Kosovo': 'EUR'
-        };
-        
-        try {
-            // Utiliser l'API REST Countries pour obtenir la devise
-            const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fullText=false`);
-            
-            if (!response.ok) {
-                console.log(`❌ Pays non trouvé dans REST Countries: ${country}, utilisation de EUR`);
-                return { code: 'EUR', name: 'EUR' };
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.length > 0 && data[0].currencies) {
-                const currencies = data[0].currencies;
-                
-                const currencyCodes = Object.keys(currencies);
-                if (currencyCodes.length > 0) {
-                    const firstCode = currencyCodes[0];
-                    return { 
-                        code: firstCode,
-                        name: currencies[firstCode].name || firstCode
-                    };
-                }
-            }
-            
-            if (fallbackMapping[country]) {
-                const currencyCode = fallbackMapping[country];
-                return { 
-                    code: currencyCode, 
-                    name: currencyCode 
-                };
-            }
-            
-            return { code: 'EUR', name: 'EUR' };
-            
-        } catch (error) {
-            console.error('❌ Erreur lors de la recherche de devise:', error);
-            
-            if (fallbackMapping[country]) {
-                const currencyCode = fallbackMapping[country];
-                return { 
-                    code: currencyCode, 
-                    name: currencyCode 
-                };
-            }
-            
-            return { code: 'EUR', name: 'EUR' };
-        }
-    },
-
-    // Obtenir le pays depuis les coordonnées (API Nominatim)
-    async getCountryFromCoordinates(lat, lng) {
-        try {
-            // Forcer l'API Nominatim à retourner l'anglais
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en`
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.address && data.address.country) {
-                return data.address.country;
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('Erreur lors du géocodage inverse:', error);
-            return null;
-        }
-    },
-
-    // Convertir les euros en devise locale
-    async convertEurToLocalCurrency(eurAmount) {
-        if (!this.exchangeRatesCache) {
-            console.warn('Taux de change pas encore chargés');
-            return eurAmount;
-        }
-
-        const localCurrency = await this.getLocalCurrency();
-        const rate = this.exchangeRatesCache[localCurrency.code] || 1;
-        return eurAmount * rate;
-    },
-
     // Afficher le popup d'activité
     async showActivityPopup() {
         try {
-            // S'assurer que les taux de change sont chargés avant d'ouvrir le popup
-            await this.loadExchangeRates();
-            
             // Vérifier si le popup existe déjà
             let popup = document.getElementById('activityPopup');
             
@@ -226,11 +74,12 @@ const Activity = {
                 title.textContent = 'Modifier une activité';
             }
             
-            // Récupérer la devise locale et valider à chaque ouverture
-            const localCurrency = await this.getLocalCurrency();
+            // Récupérer la devise locale
+            const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
             
-            // Vérifier si on a le taux de change pour cette devise spécifique
-            const hasExchangeRate = this.exchangeRatesCache && this.exchangeRatesCache[localCurrency.code];
+            // Charger les taux de change et vérifier si on a le taux pour cette devise spécifique
+            const rates = await window.LocationService.loadExchangeRates();
+            const hasExchangeRate = rates && rates[localCurrency.code];
             const hasCurrencyName = localCurrency.name && localCurrency.name !== localCurrency.code;
             const isNotEuro = localCurrency.code !== 'EUR'; // Masquer si c'est EUR
             const showCurrencyField = hasExchangeRate && hasCurrencyName && isNotEuro;
@@ -238,12 +87,20 @@ const Activity = {
             // Mettre à jour le label de la devise locale
             const label = popup.querySelector('label[for="localCurrency"]');
             if (label) {
-                label.textContent = `Prix (${localCurrency.name})`;
+                label.textContent = `Prix (${localCurrency.symbol} - ${localCurrency.name})`;
             }
             
             // Masquer uniquement le champ de devise locale, garder le champ €
             const currencyRow = popup.querySelector('#currencyRow');
             const localCurrencyLabel = popup.querySelector('label[for="localCurrency"]');
+
+            console.log('localCurrencyField : ' + localCurrencyField);
+            console.log('currencyRow : ' + currencyRow);
+            console.log('localCurrencyLabel : ' + localCurrencyLabel);
+            console.log('hasExchangeRate : ' + hasExchangeRate);
+            console.log('hasCurrencyName : ' + hasCurrencyName);
+            console.log('localCurrency.code : ' + localCurrency.code);
+            console.log('showCurrencyField : ' + showCurrencyField);
             
             if (localCurrencyField && currencyRow && localCurrencyLabel) {
                 if (showCurrencyField) {
@@ -278,8 +135,7 @@ const Activity = {
         }
 
         // S'assurer que les taux de change sont chargés
-        await this.loadExchangeRates();
-        const localCurrency = await this.getLocalCurrency();
+        const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
         
         const popup = document.createElement('div');
         popup.id = 'activityPopup';
@@ -323,8 +179,8 @@ const Activity = {
                             <input type="number" class="form-input" id="priceAmount" placeholder="0" min="0" step="1" oninput="Activity.updateLocalCurrency()" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="localCurrency">Prix (${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="Activity.updateEurFromLocalCurrency()" style="display: none;" />
+                            <label class="form-label" for="localCurrency">Prix (${localCurrency.symbol} - ${localCurrency.name})</label>
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="LocationService.updateEurFromLocalCurrency(this.value, localCurrency.code)" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -363,26 +219,11 @@ const Activity = {
         
         if (priceAmount && !isNaN(priceAmount.value) && priceAmount.value) {
             const eurAmount = parseFloat(priceAmount.value) || 0;
-            const localAmount = await this.convertEurToLocalCurrency(eurAmount);
+            const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
+            const localAmount = await window.LocationService.convertEurToLocalCurrency(eurAmount, localCurrency.code);
             localCurrencyField.value = localAmount.toFixed(2);
         } else {
             localCurrencyField.value = '';
-        }
-    },
-
-    // Mettre à jour le champ en euros à partir de la devise locale
-    async updateEurFromLocalCurrency() {
-        const localCurrencyField = document.getElementById('localCurrency');
-        const priceAmount = document.getElementById('priceAmount');
-        
-        if (localCurrencyField && !isNaN(localCurrencyField.value) && localCurrencyField.value) {
-            const localAmount = parseFloat(localCurrencyField.value) || 0;
-            const localCurrencyInfo = await this.getLocalCurrency();
-            const rate = this.exchangeRatesCache[localCurrencyInfo.code] || 1;
-            const eurAmount = localAmount / rate;
-            priceAmount.value = eurAmount.toFixed(2);
-        } else {
-            priceAmount.value = '';
         }
     },
 
@@ -425,9 +266,6 @@ const Activity = {
         window.showButtonLoading('.modal-footer .btn-save', 'Enregistrement...');
 
         try {
-            // S'assurer que les taux de change sont chargés
-            await this.loadExchangeRates();
-
         const name = document.getElementById('activityName').value;
         
         // Récupérer les valeurs depuis les inputs custom
@@ -448,10 +286,10 @@ const Activity = {
         // Si le champ devise locale est vide, le calculer automatiquement
         if (!localCurrency && priceAmount) {
             const eurAmount = parseFloat(priceAmount) || 0;
-            localCurrency = (await this.convertEurToLocalCurrency(eurAmount)).toFixed(2);
+            localCurrency = (window.LocationService.convertEurToLocalCurrency(eurAmount, localCurrency.code)).toFixed(2);
         }
 
-        const localCurrencyInfo = await this.getLocalCurrency();
+        const localCurrencyInfo = await window.LocationService.getLocalCurrency(this.currentDestination.id);
         const activity = {
             id: this.currentActivity?.id || `activity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: name.trim(),
