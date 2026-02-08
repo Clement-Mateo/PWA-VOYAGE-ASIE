@@ -157,6 +157,7 @@
     
     <!-- Services Utilitaires -->
     <script src="services/serviceUtil.js"></script>
+    <script src="services/LocationService.js"></script>
     
     <!-- Loading Animation -->
     <script src="components/LoadingAnimation/LoadingAnimation.js"></script>
@@ -268,6 +269,16 @@
                 console.log('✅ LeafletMap initialisée');
             } else {
                 console.error('❌ LeafletMap non trouvé');
+            }
+            
+            // Vérifier les taux de change au chargement de l'application
+            if (window.LocationService && navigator.onLine) {
+                try {
+                    await window.LocationService.loadExchangeRates();
+                    console.log('✅ Taux de change vérifiés au démarrage');
+                } catch (error) {
+                    console.warn('⚠️ Impossible de vérifier les taux de change au démarrage:', error);
+                }
             }
             
             await ComponentManager.initAll();

@@ -26,7 +26,8 @@ class LocalStorageService {
             // Définition des schémas
             this.db.version(3).stores({
                 itineraries: 'id, userId, name, active, isSync, createdAt, updatedAt, [userId+active]',
-                toDelete: 'id, type, firebaseId, userId, createdAt'
+                toDelete: 'id, type, firebaseId, userId, createdAt',
+                exchangeRates: 'id, lastUpdated, base'
             });
 
             this.isInitialized = true;
@@ -393,6 +394,45 @@ class LocalStorageService {
             // En cas d'erreur grave, retourner un tableau vide pour ne pas bloquer l'application
             console.warn('⚠️ Retour d\'un tableau vide pour éviter le blocage');
             return [];
+        }
+    }
+
+    /**
+     * Sauvegarder les taux de change globaux
+     */
+    async saveExchangeRates(exchangeRates) {
+        if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
+
+        try {
+            const ratesData = {
+                id: 'global_rates',
+                base: 'EUR',
+                rates: exchangeRates.rates,
+                lastUpdated: exchangeRates.lastUpdated || Date.now()
+            };
+
+            await this.db.exchangeRates.put(ratesData);
+            console.log('✅ Taux de change globaux sauvegardés');
+            return ratesData;
+        } catch (error) {
+            console.error('❌ Erreur saveExchangeRates:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Récupérer les taux de change globaux
+     */
+    async getExchangeRates() {
+        if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
+
+        try {
+            const rates = await this.db.exchangeRates.get('global_rates');
+            console.log('📊 Taux de change globaux récupérés:', rates ? 'trouvés' : 'non trouvés');
+            return rates;
+        } catch (error) {
+            console.error('❌ Erreur getExchangeRates:', error);
+            return null;
         }
     }
 }

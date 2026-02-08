@@ -652,35 +652,6 @@ const Destinations = {
     },
 
     /**
-     * Obtenir le pays depuis les coordonnées (API Nominatim)
-     */
-    async getCountryFromCoordinates(lat, lng) {
-        try {
-            // Utiliser l'API Nominatim en anglais (standard et fiable)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en` 
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.address && data.address.country) {
-                const countryName = data.address.country;
-                console.log(`🌍 Pays retourné par l'API (anglais): ${countryName}`);
-                return countryName;
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('Erreur lors du géocodage inverse:', error);
-            return null;
-        }
-    },
-
-    /**
      * Mettre à jour la visibilité du panneau
      */
     updatePanelVisibility() {
