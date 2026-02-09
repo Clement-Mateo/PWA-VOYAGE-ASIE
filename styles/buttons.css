@@ -78,9 +78,8 @@
     color: var(--primary-blue);
 }
 
-.btn-edit:hover {
+.btn-edit:hover, .btn-location:hover {
     background: var(--gray);
-    color: var(--primary-blue-dark);
 }
 
 .btn-delete {

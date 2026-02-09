@@ -41,6 +41,7 @@ const Activity = {
             const priceAmount = document.getElementById('priceAmount');
             const localCurrencyField = document.getElementById('localCurrency');
             const typeField = document.getElementById('activityType');
+            const notesField = document.getElementById('activityNotes');
             
             // En mode ajout, réinitialiser tout
             if (!this.currentActivity) {
@@ -50,6 +51,7 @@ const Activity = {
                 if (priceAmount) priceAmount.value = '';
                 if (localCurrencyField) localCurrencyField.value = '';
                 if (typeField) typeField.value = '';
+                if (notesField) notesField.value = '';
                 
                 // Focus automatique sur le champ nom pour la création
                 setTimeout(() => {
@@ -60,11 +62,6 @@ const Activity = {
                 }, 100);
             }
             // En mode édition, les champs seront pré-remplis dans editActivity
-            
-            // Réinitialiser l'activité actuelle si on n'est pas en mode édition
-            if (!this.currentActivity) {
-                this.currentActivity = null;
-            }
             
             // Mettre à jour le titre
             const title = popup.querySelector('.modal-title');
@@ -196,6 +193,10 @@ const Activity = {
                             <option value="autre">Autre</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="activityNotes">Notes</label>
+                        <textarea class="form-input" id="activityNotes" placeholder="Ajouter des notes ou remarques..." rows="3"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-cancel" onclick="Activity.hideActivityPopup()">Annuler</button>
@@ -274,6 +275,7 @@ const Activity = {
         const priceAmount = document.getElementById('priceAmount').value;
         let localCurrency = document.getElementById('localCurrency').value;
         const activityType = document.getElementById('activityType').value;
+        const notes = document.getElementById('activityNotes').value;
 
         if (!name.trim()) {
             showErrorSnackBar('Veuillez saisir un nom d\'activité');
@@ -296,7 +298,8 @@ const Activity = {
             startTime: formattedStart,
             endTime: formattedEnd,
             price: parseFloat(priceAmount) || 0, // TOUJOURS une simple valeur
-            type: activityType
+            type: activityType || '',
+            notes: notes.trim() || ''
         };
         
         // Ajouter les champs de devise locale seulement si ce n'est pas EUR
@@ -507,19 +510,14 @@ const Activity = {
                 console.error('❌ Activité non trouvée dans la destination:', activityId);
                 return;
             }
-            
-            // Stocker l'activité actuelle
-            this.currentActivity = activity;
-            
-            // Afficher le popup
-            await this.showActivityPopup();
-            
+
             // Pré-remplir le formulaire avec les données de l'activité (après que le popup soit créé)
             setTimeout(() => {
                 const nameField = document.getElementById('activityName');
                 const priceField = document.getElementById('priceAmount');
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
+                const notesField = document.getElementById('activityNotes');
                 
                 if (nameField) {
                     nameField.value = this.currentActivity.name || '';
@@ -544,8 +542,15 @@ const Activity = {
                 }
                 
                 if (typeField) typeField.value = this.currentActivity.type || '';
+                if (notesField) notesField.value = this.currentActivity.notes || '';
                 
             }, 100);
+
+            // Stocker l'activité actuelle
+            this.currentActivity = activity;
+            
+            // Afficher le popup
+            await this.showActivityPopup();
             
         } catch (error) {
             console.error('❌ Erreur chargement activité pour modification:', error);
@@ -566,6 +571,7 @@ const Activity = {
         document.getElementById('priceAmount').value = '';
         document.getElementById('localCurrency').value = '';
         document.getElementById('activityType').value = '';
+        document.getElementById('activityNotes').value = '';
     },
 };
 
