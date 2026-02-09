@@ -162,6 +162,7 @@ const Destination = {
             const name = document.getElementById(`name-${destinationId}`).value.trim();
             const addressInput = document.getElementById(`address-${destinationId}`);
             const address = addressInput ? addressInput.value.trim() : '';
+            const notes = document.getElementById(`notes-${destinationId}`).value.trim();
             
             // Récupérer les valeurs de durée
             const days = parseInt(document.getElementById(`days-${destinationId}`).value) || 0;
@@ -185,6 +186,7 @@ const Destination = {
             const updatedDestination = {
                 ...destination,
                 name: name,
+                notes: notes || '',
                 address: {
                     address: address,
                     country: destination.address?.country || null,
@@ -254,8 +256,8 @@ const Destination = {
                 updatedDestination.address.countryCurrency = { code: 'EUR', name: 'Euro', symbol: '€' };
             }
             
-            // Mettre à jour la destination via localStorage (avec l'ID temporaire)
-            await window.localStorageService.updateDestination('temp_destination', updatedDestination);
+            // Mettre à jour la destination via localStorage
+            await window.localStorageService.updateDestination(destinationId, updatedDestination);
             
             if(destinationId === 'temp_destination') {
                 window.showSuccessSnackBar('Destination mise à jour avec succès');
@@ -424,7 +426,7 @@ const Destination = {
         
         // Charger les activités si pas encore chargées
         if (activitiesSection.querySelector('.activities-list').children.length === 0) {
-            Activities.loadActivities(destinationId);
+            Activities.displayActivitiesOfDestination(destinationId);
         }
     },
 

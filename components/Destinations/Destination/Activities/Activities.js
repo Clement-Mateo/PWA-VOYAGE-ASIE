@@ -125,45 +125,6 @@ const Activities = {
     },
 
     /**
-     * Charger et afficher les activités d'une destination
-     */
-    async loadActivities(destinationId) {
-        const currentItinerary = await window.localStorageService.getCurrentItinerary();
-        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
-        const destination = destinations.find(d => d.id === destinationId);
-        if (!destination || !destination.id) {
-            console.warn('⚠️ Destination invalide pour charger les activités');
-            return;
-        }
-
-        const activitiesList = document.getElementById(`activities-list-${destinationId}`);
-        if (!activitiesList) {
-            console.warn('⚠️ Liste des activités non trouvée pour la destination:', destinationId);
-            return;
-        }
-
-        // Vider la liste actuelle
-        activitiesList.innerHTML = '';
-
-        // Charger les activités depuis localStorage
-        const activities = await window.localStorageService.getActivities(destination.id);
-        
-        if (activities.length === 0) {
-            activitiesList.innerHTML = '<div class="no-activities">Aucune activité pour cette destination</div>';
-            return;
-        }
-
-        // Trier les activités par ordre
-        activities.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        // Créer le HTML pour chaque activité
-        activities.forEach(activity => {
-            const activityHTML = this.createActivityHTML(activity, destinationId);
-            activitiesList.innerHTML += activityHTML;
-        });
-    },
-
-    /**
      * Afficher les activités d'une destination spécifique
      */
     async displayActivitiesOfDestination(destinationId) {
@@ -175,6 +136,7 @@ const Activities = {
         try {
             // Utiliser le nouveau service pour charger les activités
             const activities = await window.localStorageService.getActivities(destination.id);
+            console.log('🔍 Activités chargées pour destination', destination.id, ':', activities);
             
             const activitiesList = document.getElementById(`activities-list-${destinationId}`);
             activitiesList.innerHTML = '';
@@ -244,6 +206,13 @@ const Activities = {
                 if (activity.type) {
                     activityHTML += `
                         <span class="activity-type">${activity.type}</span>
+                        `;
+                }
+                
+                // Afficher les notes si présentes
+                if (activity.notes && activity.notes.trim()) {
+                    activityHTML += `
+                        <div class="activity-notes">${activity.notes.replace(/\n/g, '<br>')}</div>
                         `;
                 }
                 

@@ -96,6 +96,11 @@ const Destinations = {
             <div class="destination-address">${destination.address ? destination.address.address : 'Adresse non définie'}</div>
             <div class="destination-duration">${durationText || "Aucune durée"}</div>
             
+            <!-- Afficher les notes si présentes -->
+            ${destination.notes && destination.notes.trim() ? `
+                <div class="destination-notes">${destination.notes.replace(/\n/g, '<br>')}</div>
+            ` : ''}
+            
             <!-- Formulaire d'édition -->
             <div class="destination-form" id="form-${destination.id}">
                 <div class="form-group">
@@ -121,6 +126,10 @@ const Destinations = {
                         <input type="number" class="form-input" id="minutes-${destination.id}" value="${duration.minutes || 0}" min="0" style="flex: 1;" onchange="Destination.validateDurationInput('${destination.id}', 'minutes')">
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-input" id="notes-${destination.id}" placeholder="Ajouter des notes ou remarques..." rows="3">${destination.notes || ''}</textarea>
                 </div>
                 <div class="form-actions flex-center">
                     <button class="btn-save" onclick="Destination.saveDestination('${destination.id}')"><span class="material-icons">save</span> Enregistrer</button>
