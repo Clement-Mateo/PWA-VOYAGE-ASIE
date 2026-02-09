@@ -348,25 +348,35 @@ class Itineraries {
         // Sauvegarder au clic sur l'icône de validation
         validationIcon.addEventListener('click', saveName);
 
-        // Sauvegarder au blur ou à la touche Entrée
-        input.addEventListener('blur', (e) => {
-            // Ne pas sauvegarder si annulé avec Échap
-            if (cancelled) return;
-            
-            // Ne pas sauvegarder au blur si on clique sur l'icône de validation
-            if (e.relatedTarget !== validationIcon) {
-                setTimeout(saveName, 150); // Petit délai pour permettre le clic sur l'icône
+        // Détecter le clic en dehors du champ input
+        let isEditing = true;
+        
+        const handleClickOutside = (e) => {
+            if (!inputContainer.contains(e.target) && !validationIcon.contains(e.target) && isEditing) {
+                restoreTitle(currentName);
+                isEditing = false;
+                document.removeEventListener('mousedown', handleClickOutside);
             }
-        });
+        };
+
+        // Ajouter l'écouteur de clic sur tout le document avec un petit délai
+        setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 100);
 
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 saveName();
+                // Retirer l'écouteur après sauvegarde
+                isEditing = false;
+                document.removeEventListener('mousedown', handleClickOutside);
             } else if (e.key === 'Escape') {
                 e.preventDefault();
-                cancelled = true; // Marquer comme annulé
                 restoreTitle(currentName);
+                // Retirer l'écouteur après annulation
+                isEditing = false;
+                document.removeEventListener('mousedown', handleClickOutside);
             }
         });
     }
