@@ -12,6 +12,12 @@ class Itineraries {
      */
     init() {
         console.log('Itineraries: Initialisation');
+        
+        // Écouter les mises à jour d'itinéraires pour rafraîchir automatiquement
+        window.addEventListener('itinerary:updated', (event) => {
+            console.log('Itineraries: Mise à jour détectée, rafraîchissement de la liste');
+            this.renderItineraries();
+        });
     }
 
     /**
@@ -138,14 +144,14 @@ class Itineraries {
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">calendar_today</span>
-                                Date de création: ${itinerary.createdAt ? (itinerary.createdAt.toDate ? new Date(itinerary.createdAt.toDate()).toLocaleDateString('fr-FR') : new Date(itinerary.createdAt).toLocaleDateString('fr-FR')) : 'Date inconnue'}
+                                Date de création: ${itinerary.createdAt ? (itinerary.createdAt.toDate ? new Date(itinerary.createdAt.toDate()).toLocaleString('fr-FR') : new Date(itinerary.createdAt).toLocaleString('fr-FR')) : 'Date inconnue'}
                             </span>
                         </div>
                         ${itinerary.updatedAt ? `
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">update</span>
-                                Dernière modification: ${itinerary.updatedAt.toDate ? new Date(itinerary.updatedAt.toDate()).toLocaleDateString('fr-FR') : new Date(itinerary.updatedAt).toLocaleDateString('fr-FR')}
+                                Dernière modification: ${itinerary.updatedAt.toDate ? new Date(itinerary.updatedAt.toDate()).toLocaleString('fr-FR') : new Date(itinerary.updatedAt).toLocaleString('fr-FR')}
                             </span>
                         </div>
                         ` : ''}

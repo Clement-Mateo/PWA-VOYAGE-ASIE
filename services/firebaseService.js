@@ -186,8 +186,8 @@ class FirebaseService {
             const itinerary = {
                 name: name,
                 userId: this.user.uid,
-                createdAt: window.firebase.serverTimestamp(),
-                updatedAt: window.firebase.serverTimestamp(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
                 destinations: [],
             };
             
