@@ -84,7 +84,7 @@ const Transportation = {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label">Type de transport</label>
                         <div class="custom-select" id="transportTypeSelect">
                             <div class="select-trigger" onclick="Transportation.openTransportModal()">
@@ -98,7 +98,7 @@ const Transportation = {
                         <input type="hidden" id="transportType" value="${transportation.type || ''}">
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label">Coût (€)</label>
                         <input type="number" class="form-input" id="transportCost" 
                                value="${transportation.cost || ''}" 

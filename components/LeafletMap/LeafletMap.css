@@ -42,6 +42,11 @@
 }
 
 /*===== Les contrôles de zoom (boutons + et -) =====*/
+
+.leaflet-top.leaflet-left {
+    margin: 12px;
+}
+
 .leaflet-control-zoom {
     box-shadow: var(--box-shadow-1) !important;
     border: none !important;

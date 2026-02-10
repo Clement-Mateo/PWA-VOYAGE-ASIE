@@ -58,25 +58,25 @@
 }
 
 .humanitarian-preview {
-    background-image: url(../../Images/Claques/Humanitarian.webp);
+    background-image: url(../../../Images/map-previews/Humanitarian.webp);
     background-size: cover;
     background-position: center;
 }
 
 .osm-preview {
-    background-image: url(../../Images/Claques/OpenStreetMap.webp);
+    background-image: url(../../../Images/map-previews/OpenStreetMap.webp);
     background-size: cover;
     background-position: center;
 }
 
 .maptiler-preview {
-    background-image: url(../../Images/Claques/MapTilerStreets.webp);
+    background-image: url(../../../Images/map-previews/MapTilerStreets.webp);
     background-size: cover;
     background-position: center;
 }
 
 .satellite-preview {
-    background-image: url(../../Images/Claques/Satellite.webp);
+    background-image: url(../../../Images/map-previews/Satellite.webp);
     background-size: cover;
     background-position: center;
 }
@@ -88,27 +88,27 @@
 }
 
 .terrain-preview {
-    background-image: url(../../Images/Claques/Topo.webp);
+    background-image: url(../../../Images/map-previews/Topo.webp);
     background-size: cover;
     background-position: center;
 }
 
 
 .relief-preview {
-    background-image: url(../../Images/Claques/Relief.webp);
+    background-image: url(../../../Images/map-previews/Relief.webp);
     background-size: cover;
     background-position: center;
 }
 
 
 .watercolor-preview {
-    background-image: url(../../Images/Claques/Aquarelle.webp);
+    background-image: url(../../../Images/map-previews/Aquarelle.webp);
     background-size: cover;
     background-position: center;
 }
 
 .dark-preview {
-    background-image: url(../../Images/Claques/Dark.webp);
+    background-image: url(../../../Images/map-previews/Dark.webp);
     background-size: cover;
     background-position: center;
 }

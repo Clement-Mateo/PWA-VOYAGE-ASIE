@@ -7,11 +7,24 @@ class Menu {
         this.isLoaded = false;
         this.isOpen = false;
         this.element = null;
+        this.isMobile = window.innerWidth <= 768;
+        this.currentState = this.isMobile ? 'navigation' : 'content'; // 'navigation' | 'content'
+        this.currentAction = 'synthese';
+        this.touchStartX = 0;
+        this.touchEndX = 0;
         this.content = {
             synthese: '<h4>Synthèse</h4><p>Analyse et statistiques de vos voyages</p>',
             calendar: '<h4>Calendrier</h4><p>Planification et gestion de votre emploi du temps</p>',
             notifications: '<h4>Notifications</h4><p>Alertes et messages importants</p>',
         };
+        
+        // Écouter les changements de taille d'écran
+        window.addEventListener('resize', () => {
+            this.isMobile = window.innerWidth <= 768;
+            if (!this.isMobile) {
+                this.resetDesktopLayout();
+            }
+        });
     }
 
     async load() {
@@ -44,15 +57,21 @@ class Menu {
             this.element.classList.add('open');
             document.body.style.overflow = 'hidden';
             this.isOpen = true;
-            console.log('Menu ouvert');
             
-            // Activer le bouton synthèse par défaut si aucun bouton n'est actif
-            const activeBtn = this.element.querySelector('.menu-option-btn.active');
-            if (!activeBtn) {
-                const syntheseBtn = this.element.querySelector('[data-action="synthese"]');
-                if (syntheseBtn) {
-                    syntheseBtn.classList.add('active');
-                    this.handleAction('synthese', syntheseBtn);
+            if (this.isMobile) {
+                // Mobile : afficher la navigation par défaut SANS bouton actif
+                this.showNavigation();
+                // Réinitialiser tous les boutons comme non-actifs
+                this.element.querySelectorAll('.menu-option-btn').forEach(btn => btn.classList.remove('active'));
+            } else {
+                // Desktop : comportement normal
+                const activeBtn = this.element.querySelector('.menu-option-btn.active');
+                if (!activeBtn) {
+                    const syntheseBtn = this.element.querySelector('[data-action="synthese"]');
+                    if (syntheseBtn) {
+                        syntheseBtn.classList.add('active');
+                        this.handleAction('synthese', syntheseBtn);
+                    }
                 }
             }
         }
@@ -63,7 +82,6 @@ class Menu {
             this.element.classList.remove('open');
             document.body.style.overflow = '';
             this.isOpen = false;
-            console.log('Menu fermé');
         }
     }
 
@@ -75,13 +93,22 @@ class Menu {
         // Arrière-plan
         this.element.querySelector('.modal-backdrop').addEventListener('click', () => this.close());
         
-        // Boutons du menu
+        // Boutons du menu principal
         this.element.querySelectorAll('.menu-option-btn, .logout-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.handleAction(btn.dataset.action, btn);
             });
         });
+
+        // Bouton menu mobile (toujours visible en mobile)
+        const backBtn = document.getElementById('menuBackBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showNavigation();
+            });
+        }
 
         // Empêcher la propagation
         this.element.querySelector('.menu-container').addEventListener('click', e => e.stopPropagation());
@@ -90,13 +117,121 @@ class Menu {
         document.addEventListener('keydown', (e) => {
             if (this.isOpen && e.key === 'Escape') this.close();
         });
+        
+        // Gestes tactiles pour mobile
+        if (this.isMobile) {
+            this.setupTouchGestures();
+        }
+    }
+
+    setupTouchGestures() {
+        const menuRight = this.element.querySelector('.menu-right');
+        
+        menuRight.addEventListener('touchstart', (e) => {
+            this.touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        menuRight.addEventListener('touchend', (e) => {
+            this.touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe();
+        }, { passive: true });
+    }
+
+    showNavigation() {
+        if (!this.isMobile) return;
+        
+        const menuLeft = this.element.querySelector('.menu-left');
+        const menuRight = this.element.querySelector('.menu-right');
+        const breadcrumb = document.getElementById('menuBreadcrumb');
+        
+        // Afficher menu-left avec animation
+        menuLeft.classList.add('visible');
+        menuRight.classList.add('hidden');
+
+        this.element.querySelectorAll('.menu-option-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Cacher le breadcrumb
+        breadcrumb.style.display = 'none';
+        
+        this.currentState = 'navigation';
+    }
+
+    showContentView() {
+        if (!this.isMobile) return;
+        
+        const menuLeft = this.element.querySelector('.menu-left');
+        const menuRight = this.element.querySelector('.menu-right');
+        const breadcrumb = document.getElementById('menuBreadcrumb');
+        const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
+        
+        // Cacher menu-left, afficher menu-right avec animation
+        menuLeft.classList.remove('visible');
+        menuRight.classList.remove('hidden');
+        
+        // Afficher le breadcrumb et mettre à jour le titre
+        breadcrumb.style.display = 'block';
+        breadcrumbCurrent.textContent = this.getActionTitle(this.currentAction);
+        
+        this.currentState = 'content';
+    }
+    
+    handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = this.touchStartX - this.touchEndX;
+        
+        if (Math.abs(diff) < swipeThreshold) return;
+        
+        if (diff > 0) {
+            // Swipe gauche -> fermer le menu
+            if (this.currentState === 'navigation') {
+                this.showContentView();
+            }
+        } else {
+            // Swipe droit -> ouvrir le menu
+            if (this.currentState === 'content') {
+                this.showNavigation();
+            }
+        }
+    }
+
+    resetDesktopLayout() {
+        if (!this.element) return;
+        
+        const menuLeft = this.element.querySelector('.menu-left');
+        const menuRight = this.element.querySelector('.menu-right');
+        const backBtn = document.getElementById('menuBackBtn');
+        const breadcrumb = document.getElementById('menuBreadcrumb');
+        
+        // Réinitialiser les classes et styles
+        menuLeft.classList.remove('visible');
+        menuRight.classList.remove('hidden');
+        backBtn.style.display = 'none';
+        breadcrumb.style.display = 'none';
+        
+        this.currentState = 'content';
+    }
+
+    getActionTitle(action) {
+        const titles = {
+            synthese: 'Synthèse',
+            itineraries: 'Mes Itinéraires',
+            calendar: 'Calendrier',
+            notifications: 'Notifications',
+            profile: 'Profile',
+            settings: 'Paramètres'
+        };
+        return titles[action] || 'Menu';
     }
 
     handleAction(action, button) {
         // Gérer les classes actives
         this.element.querySelectorAll('.menu-option-btn').forEach(btn => btn.classList.remove('active'));
-        if (button && button.classList.contains('menu-option-btn')) button.classList.add('active');
+        if (button && button.classList.contains('menu-option-btn')) {
+            button.classList.add('active');
+        }
+        this.currentAction = action;
 
+        // Forcer le chargement du contenu immédiatement
         switch(action) {
             case 'synthese':
                 this.loadSynthese();
@@ -112,26 +247,35 @@ class Menu {
                 break;
             case 'logout':
                 this.handleLogout();
-                break;
+                return; // Ne pas afficher le contenu pour logout
             default:
-                this.showContent(action);
+                // Pour calendar, notifications, etc.
+                this.loadContent(action);
+                break;
+        }
+        
+        // Mobile : après sélection d'une option (sauf logout), afficher le contenu
+        if (this.isMobile && action !== 'logout') {
+            setTimeout(() => this.showContentView(), 100);
         }
     }
 
-    showContent(type) {
-        const rightContent = this.element.querySelector('.menu-right');
-        if (rightContent && this.content[type]) {
-            rightContent.innerHTML = `<div class="menu-section"><div class="section-content">${this.content[type]}</div></div>`;
+    loadContent(type = null) {
+        const menuContent = this.element.querySelector('#menuContent');
+        const contentType = type || this.currentAction;
+        
+        if (menuContent && this.content[contentType]) {
+            menuContent.innerHTML = `<div class="menu-section"><div class="section-content">${this.content[contentType]}</div></div>`;
         }
     }
 
     loadSynthese() {
-        const rightContent = this.element.querySelector('.menu-right');
+        const menuContent = this.element.querySelector('#menuContent');
         
         // Utiliser Synthèse.render() pour obtenir le HTML directement
         if (window.Synthèse && window.Synthèse.render) {
             // Afficher un loading pendant le calcul
-            rightContent.innerHTML = `
+            menuContent.innerHTML = `
                 <div class="menu-section">
                     <div class="section-content">
                         <div class="synthese-loading">
@@ -144,7 +288,7 @@ class Menu {
             
             // Charger le contenu de la synthèse de manière asynchrone
             window.Synthèse.render().then(content => {
-                rightContent.innerHTML = `<div class="menu-section"><div class="section-content">${content}</div></div>`;
+                menuContent.innerHTML = `<div class="menu-section"><div class="section-content">${content}</div></div>`;
                 
                 // Initialiser les graphiques après l'affichage
                 setTimeout(() => {
@@ -154,7 +298,7 @@ class Menu {
                 }, 100);
             }).catch(error => {
                 console.error('Erreur lors du chargement de la synthèse:', error);
-                rightContent.innerHTML = `
+                menuContent.innerHTML = `
                     <div class="menu-section">
                         <div class="section-content">
                             <div class="synthese-error">
@@ -166,16 +310,16 @@ class Menu {
                 `;
             });
         } else {
-            rightContent.innerHTML = '<p>Erreur de chargement du composant Synthèse</p>';
+            menuContent.innerHTML = '<p>Erreur de chargement du composant Synthèse</p>';
         }
     }
 
     loadItineraries() {
-        const rightContent = this.element.querySelector('.menu-right');
+        const menuContent = this.element.querySelector('#menuContent');
         
         // Utiliser Itineraries.render() pour obtenir le HTML directement
         if (window.Itineraries && window.Itineraries.render) {
-            rightContent.innerHTML = window.Itineraries.render();
+            menuContent.innerHTML = window.Itineraries.render();
             
             // Charger les données des itinéraires après l'affichage
             setTimeout(() => {
@@ -185,16 +329,16 @@ class Menu {
                 }
             }, 100);
         } else {
-            rightContent.innerHTML = '<p>Erreur de chargement du composant Itineraries</p>';
+            menuContent.innerHTML = '<p>Erreur de chargement du composant Itineraries</p>';
         }
     }
 
     loadSettings() {
-        const rightContent = this.element.querySelector('.menu-right');
+        const menuContent = this.element.querySelector('#menuContent');
         
         // Utiliser Settings.render() pour obtenir le HTML directement
         if (window.Settings && window.Settings.render) {
-            rightContent.innerHTML = window.Settings.render();
+            menuContent.innerHTML = window.Settings.render();
             
             // Initialiser les événements et charger les données après l'affichage
             setTimeout(() => {
@@ -205,13 +349,13 @@ class Menu {
                 }
             }, 100);
         } else {
-            rightContent.innerHTML = '<p>Erreur de chargement du composant Settings</p>';
+            menuContent.innerHTML = '<p>Erreur de chargement du composant Settings</p>';
         }
     }
 
     loadProfile() {
-        const rightContent = this.element.querySelector('.menu-right');
-        rightContent.innerHTML = `
+        const menuContent = this.element.querySelector('#menuContent');
+        menuContent.innerHTML = `
             <div class="menu-section" id="profile-avatar-section"></div>
             <div class="menu-section" id="profile-content"></div>
         `;

@@ -103,11 +103,11 @@ const Destinations = {
             
             <!-- Formulaire d'édition -->
             <div class="destination-form" id="form-${destination.id}">
-                <div class="form-group">
+                <div class="form-group full-width">
                     <label class="form-label">Nom de la destination</label>
                     <input type="text" class="form-input" id="name-${destination.id}" value="${destination.name || ''}" placeholder="Nom de la destination">
                 </div>
-                <div class="form-group">
+                <div class="form-group full-width">
                     <label class="form-label">Adresse</label>
                     <div class="address-input-container flex-center" onclick="Destination.openAddressSearch('${destination.id}', event)">
                         <input type="text" class="form-input address-input" id="address-${destination.id}" value="${destination.address ? destination.address.address : ''}" placeholder="Adresse" readonly>
@@ -127,7 +127,7 @@ const Destinations = {
                         <span style="font-size: 12px; color: var(--gray-light); min-width: 12px;">m</span>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group full-width">
                     <label class="form-label">Notes</label>
                     <textarea class="form-input" id="notes-${destination.id}" placeholder="Ajouter des notes ou remarques..." rows="3">${destination.notes || ''}</textarea>
                 </div>
@@ -146,7 +146,6 @@ const Destinations = {
                     <!-- Les activités seront chargées ici -->
                 </div>
                 <button class="btn-add" onclick="Activities.addActivity('${destination.id}')" title="Ajouter une activité">
-                    <span class="material-icons">add_circle</span>
                     Ajouter une activité
                 </button>
             </div>

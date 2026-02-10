@@ -30,21 +30,8 @@
 
 /* Bouton ajouter activité - force la largeur complète */
 .destination-activities .btn-add {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
     padding: 12px;
-    background: var(--primary-blue);
-    color: var(--white);
-    border: none;
-    border-radius: 6px;
     font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-top: 12px;
 }
 
 .destination-activities .btn-add:hover {

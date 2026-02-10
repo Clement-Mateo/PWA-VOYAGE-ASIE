@@ -29,7 +29,6 @@ class Itineraries {
             
             <!-- Bouton Ajouter un itinéraire -->
             <button class="btn-add" id="add-itinerary-btn" onclick="window.Itineraries.addItinerary()">
-                <span class="material-icons">add</span>
                 Ajouter un itinéraire
             </button>
         `;

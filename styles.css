@@ -3,6 +3,8 @@
    ======================================== */
 
 :root {
+    overflow: hidden;
+
     /*couleurs polices*/
     --font-color-black: #000000;
     --font-color-white: #ffffff;

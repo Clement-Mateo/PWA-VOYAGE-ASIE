@@ -61,8 +61,9 @@ class LeafletMap {
         this.currentLayer.addTo(this.leafletMap);
 
         // Ajouter les contrôles de zoom
+        const zoomPosition = window.innerWidth <= 768 ? 'topleft' : 'bottomleft';
         L.control.zoom({
-            position: 'bottomleft'
+            position: zoomPosition
         }).addTo(this.leafletMap);
 
         // Ajouter les écouteurs d'événements
