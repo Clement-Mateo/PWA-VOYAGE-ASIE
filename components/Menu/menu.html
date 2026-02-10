@@ -43,7 +43,27 @@
                 </div>
                 
                 <div class="menu-right">
+                    <!-- Header mobile avec boutons menu/retour -->
+                    <div class="menu-header">
+                        <button class="menu-back-btn" id="menuBackBtn" data-action="show-navigation">
+                            <span class="material-icons">menu</span>
+                        </button>
+                        <div class="menu-breadcrumb" id="menuBreadcrumb" style="display: none;">
+                            <span>Menu</span>
+                            <span class="separator">></span>
+                            <span class="current" id="breadcrumbCurrent">Synthèse</span>
+                        </div>
+                    </div>
+                    
                     <!-- Contenu dynamique -->
+                    <div class="menu-content-wrapper" id="menuContent">
+                        <!-- Le contenu sera chargé ici -->
+                        <div class="menu-section">
+                            <div class="section-content">
+                                <p>Sélectionnez une option dans le menu</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

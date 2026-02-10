@@ -148,7 +148,7 @@ const Activity = {
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label" for="activityName">Nom de l'activité</label>
                         <input type="text" class="form-input" id="activityName" placeholder="Ex: Visite du temple, dégustation..." />
                     </div>
@@ -180,7 +180,7 @@ const Activity = {
                             <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="LocationService.updateEurFromLocalCurrency(this.value, localCurrency.code)" style="display: none;" />
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label" for="activityType">Type d'activité</label>
                         <select class="form-input" id="activityType">
                             <option value="">Sélectionner...</option>
@@ -193,7 +193,7 @@ const Activity = {
                             <option value="autre">Autre</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label" for="activityNotes">Notes</label>
                         <textarea class="form-input" id="activityNotes" placeholder="Ajouter des notes ou remarques..." rows="3"></textarea>
                     </div>

@@ -158,11 +158,11 @@
 
 .btn-add {
     width: 100%;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
+    background: var(--primary-blue);
     color: var(--font-color-white);
     border: none;
-    border-radius: 20px;
-    padding: 15px;
+    border-radius: 10px;
+    padding: 12px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
