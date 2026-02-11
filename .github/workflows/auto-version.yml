@@ -22,7 +22,7 @@ jobs:
         echo "🔄 Début de la mise à jour automatique de version"
         
         # Extraire la version actuelle depuis le service worker
-        CURRENT_VERSION=$(grep "const CACHE_VERSION = " services/service-worker.js | sed "s/const CACHE_VERSION = '\([^']*\)'.*/\1/")
+        CURRENT_VERSION=$(grep "const CACHE_VERSION = " services/service-worker.js | sed 's/const CACHE_VERSION = "\([^"]*\)".*/\1/')
         echo "📋 Version actuelle: $CURRENT_VERSION"
         
         # Incrémenter la version (patch par défaut)
@@ -36,7 +36,7 @@ jobs:
         echo "📦 Nouvelle version: $NEW_VERSION"
         
         # Mettre à jour uniquement service-worker.js
-        sed -i "s/const CACHE_VERSION = '[^']*'/const CACHE_VERSION = \"$NEW_VERSION\"/" services/service-worker.js
+        sed -i 's/const CACHE_VERSION = "[^"]*"/const CACHE_VERSION = "'"$NEW_VERSION"'"/' services/service-worker.js
         echo "✅ Service worker mis à jour"
         
         # Vérifier les changements
