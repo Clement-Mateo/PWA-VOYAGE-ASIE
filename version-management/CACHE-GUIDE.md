@@ -2,7 +2,7 @@
 
 ## 🎯 Comment ça marche ?
 
-Le système gère **automatiquement** la version à chaque merge sur `main` et vérifie le cache **uniquement après la connexion**.
+Le système gère automatiquement la version à chaque merge sur `main` et vérifie le cache au chargement de l'appli.
 
 ## 🔄 Gestion automatique des versions
 
@@ -39,9 +39,9 @@ npm run version:major
 
 ## 🚀 Résultat pour les utilisateurs
 
-- **Version identique** : Connexion normale, cache préservé
-- **Version différente** : Cache vidé → Rechargement automatique après connexion
-- **Navigation privée** : Toujours fonctionne (pas de cache)
+- **Version identique** : cache préservé
+- **Version différente** : Cache vidé → Rechargement automatique
+- **Navigation privée** : Toujours fonctionnel (pas de cache)
 
 ## 🔧 Fonctionnalités
 

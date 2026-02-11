@@ -1,6 +1,6 @@
 /**
  * Gestionnaire de version automatique
- * Vérifie la version seulement après connexion
+ * Vérifie la version au chargement de l'app
  * La version est gérée automatiquement par GitHub Actions
  */
 
@@ -8,7 +8,24 @@ class CacheVersionManager {
     constructor() {
         this.versionKey = 'app_version';
         // La version est mise à jour automatiquement par GitHub Actions
-        this.currentVersion = '1.2.9'; 
+        this.currentVersion = '1.2.7'; 
+    }
+
+    /**
+     * Initialise le gestionnaire de version au chargement de l'app
+     */
+    async init() {
+        console.log('🔍 Vérification de version au chargement de l\'app...');
+        
+        // Vérifier si la version a changé
+        const cacheCleared = await this.checkAndUpdateCache();
+        if (cacheCleared) {
+            console.log('🔄 Cache vidé, rechargement de la page...');
+            // Forcer le rechargement pour prendre les nouveaux fichiers
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        }
     }
 
     /**
