@@ -93,6 +93,14 @@ class Menu {
             });
         });
 
+        // Boutons de fermeture
+        this.element.querySelectorAll('.menu-close-btn, .menu-close-btn-right').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.close();
+            });
+        });
+
         // Bouton menu mobile (toujours visible en mobile)
         const backBtn = document.getElementById('menuBackBtn');
         if (backBtn) {

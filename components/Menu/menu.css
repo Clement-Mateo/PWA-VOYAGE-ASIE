@@ -57,6 +57,18 @@
     padding: 20px;
     box-sizing: border-box;
     overflow-y: auto;
+    position: relative; /* Pour positionner le bouton de fermeture */
+}
+
+/* Bouton de fermeture dans menu-right (coin supérieur droit) */
+.menu-close-btn-right {
+    background: var(--primary-blue);
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 20;
+    width: 30px;
+    height: 30px;
 }
 
 /* Boutons */
@@ -242,6 +254,17 @@
     
     .menu-breadcrumb {
         display: flex;
+    }
+    
+    /* Bouton de fermeture dans menu-left (visible uniquement en mobile) */
+    .menu-close-btn {
+        display: flex !important;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 20;
+        width: 30px;
+        height: 30px;
     }
     
     /* Header mobile avec bouton menu */
