@@ -1,7 +1,7 @@
 // Service Worker avec versionnement automatique synchronisé
 
 // Importer la version depuis le gestionnaire de version
-const CACHE_VERSION = '1.2.0'; // Synchronisé avec cache-version-manager.js
+const CACHE_VERSION = ''; // Synchronisé avec cache-version-manager.js
 const CACHE_NAME = `voyage-asie-v${CACHE_VERSION}`;
 
 // Fichiers essentiels à mettre en cache (uniquement ceux qui existent)
