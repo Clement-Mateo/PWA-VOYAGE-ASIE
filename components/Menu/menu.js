@@ -17,14 +17,6 @@ class Menu {
             calendar: '<h4>Calendrier</h4><p>Planification et gestion de votre emploi du temps</p>',
             notifications: '<h4>Notifications</h4><p>Alertes et messages importants</p>',
         };
-        
-        // Écouter les changements de taille d'écran
-        window.addEventListener('resize', () => {
-            this.isMobile = window.innerWidth <= 768;
-            if (!this.isMobile) {
-                this.resetDesktopLayout();
-            }
-        });
     }
 
     async load() {
@@ -142,16 +134,12 @@ class Menu {
         
         const menuLeft = this.element.querySelector('.menu-left');
         const menuRight = this.element.querySelector('.menu-right');
-        const breadcrumb = document.getElementById('menuBreadcrumb');
         
         // Afficher menu-left avec animation
         menuLeft.classList.add('visible');
         menuRight.classList.add('hidden');
 
         this.element.querySelectorAll('.menu-option-btn').forEach(btn => btn.classList.remove('active'));
-        
-        // Cacher le breadcrumb
-        breadcrumb.style.display = 'none';
         
         this.currentState = 'navigation';
     }
@@ -161,15 +149,13 @@ class Menu {
         
         const menuLeft = this.element.querySelector('.menu-left');
         const menuRight = this.element.querySelector('.menu-right');
-        const breadcrumb = document.getElementById('menuBreadcrumb');
         const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
         
         // Cacher menu-left, afficher menu-right avec animation
         menuLeft.classList.remove('visible');
         menuRight.classList.remove('hidden');
         
-        // Afficher le breadcrumb et mettre à jour le titre
-        breadcrumb.style.display = 'block';
+        // Mettre à jour le titre du breadcrumb
         breadcrumbCurrent.textContent = this.getActionTitle(this.currentAction);
         
         this.currentState = 'content';
@@ -192,23 +178,6 @@ class Menu {
                 this.showNavigation();
             }
         }
-    }
-
-    resetDesktopLayout() {
-        if (!this.element) return;
-        
-        const menuLeft = this.element.querySelector('.menu-left');
-        const menuRight = this.element.querySelector('.menu-right');
-        const backBtn = document.getElementById('menuBackBtn');
-        const breadcrumb = document.getElementById('menuBreadcrumb');
-        
-        // Réinitialiser les classes et styles
-        menuLeft.classList.remove('visible');
-        menuRight.classList.remove('hidden');
-        backBtn.style.display = 'none';
-        breadcrumb.style.display = 'none';
-        
-        this.currentState = 'content';
     }
 
     getActionTitle(action) {
