@@ -8,7 +8,7 @@ class CacheVersionManager {
     constructor() {
         this.versionKey = 'app_version';
         // La version est mise à jour automatiquement par GitHub Actions
-        this.currentVersion = '1.2.10'; 
+        this.currentVersion = '1.2.11'; 
     }
 
     /**
