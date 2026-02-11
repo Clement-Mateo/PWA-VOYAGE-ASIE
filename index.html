@@ -228,10 +228,10 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Démarrage de l\'application...');
             
-            // Vérifier la version au démarrage de l'app
+            // Vérifier la version au chargement de l'app (toujours exécuté)
             if (window.CacheVersionManager) {
-                const cacheManager = new window.CacheVersionManager();
-                await cacheManager.checkAndUpdateCache();
+                const versionManager = new window.CacheVersionManager();
+                await versionManager.init();
             }
             
             // Initialiser l'architecture offline-first
