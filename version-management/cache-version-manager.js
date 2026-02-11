@@ -18,8 +18,18 @@ class CacheVersionManager {
         sessionStorage.setItem('version_check_in_progress', 'true');
         
         try {
+            // Timeout global pour éviter le blocage (2 secondes max)
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Timeout version check - connexion lente ?')), 2000);
+            });
+            
+            console.log('⏱️ Démarrage vérification (timeout: 2s)...');
+            
             // Vérifier si le service worker doit être mis à jour
-            const serviceWorkerUpdated = await this.checkServiceWorkerUpdate();
+            const serviceWorkerUpdated = await Promise.race([
+                this.checkServiceWorkerUpdate(),
+                timeoutPromise
+            ]);
             
             // Si mise à jour détectée, vider le cache et recharger
             if (serviceWorkerUpdated) {
@@ -29,7 +39,11 @@ class CacheVersionManager {
                     sessionStorage.removeItem('version_check_in_progress');
                     window.location.reload(true);
                 }, 1000);
+            } else {
+                console.log('✅ Aucune mise à jour nécessaire');
             }
+        } catch (error) {
+            console.error('❌ Erreur lors de la vérification de version:', error);
         } finally {
             sessionStorage.removeItem('version_check_in_progress');
         }
@@ -62,13 +76,13 @@ class CacheVersionManager {
                         resolve(true);
                     });
                     
-                    // Timeout au cas où aucune mise à jour n'est trouvée
+                    // Timeout au cas où aucune mise à jour n'est trouvée (1.5s)
                     setTimeout(() => {
                         if (!updateFound) {
                             console.log('✅ Aucune mise à jour détectée');
                             resolve(false);
                         }
-                    }, 2000);
+                    }, 1500);
                 });
                 
             } catch (error) {
