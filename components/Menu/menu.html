@@ -12,6 +12,11 @@
         <div class="menu-container">
             <div class="menu-content">
                 <div class="menu-left">
+                    <!-- Bouton de fermeture (visible uniquement en mobile) -->
+                    <button class="btn-close menu-close-btn" id="menuCloseBtn" style="display: none;">
+                        <span class="material-icons">close</span>
+                    </button>
+                    
                     <button class="menu-option-btn" data-action="synthese">
                         <span class="material-icons">analytics</span>
                         Synthèse
@@ -43,6 +48,11 @@
                 </div>
                 
                 <div class="menu-right">
+                    <!-- Bouton de fermeture (coin supérieur droit) -->
+                    <button class="btn-close menu-close-btn-right" id="menuCloseBtnRight">
+                        <span class="material-icons">close</span>
+                    </button>
+                    
                     <!-- Header mobile avec boutons menu/retour -->
                     <div class="menu-header">
                         <button class="menu-back-btn" id="menuBackBtn" data-action="show-navigation">
