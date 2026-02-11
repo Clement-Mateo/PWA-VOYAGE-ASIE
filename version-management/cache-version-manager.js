@@ -46,16 +46,31 @@ class CacheVersionManager {
                 // Forcer la vérification de mise à jour
                 registration.update();
                 
-                // Écouter les mises à jour
+                // Vérifier si une mise à jour est déjà en cours
+                if (registration.installing) {
+                    console.log('🔄 Service worker en cours d\'installation...');
+                    return true;
+                }
+                
+                // Écouter les mises à jour avec timeout
                 return new Promise((resolve) => {
+                    let updateFound = false;
+                    
                     registration.addEventListener('updatefound', () => {
                         console.log('🔄 Nouveau service worker détecté !');
+                        updateFound = true;
                         resolve(true);
                     });
                     
                     // Timeout au cas où aucune mise à jour n'est trouvée
-                    setTimeout(() => resolve(false), 2000);
+                    setTimeout(() => {
+                        if (!updateFound) {
+                            console.log('✅ Aucune mise à jour détectée');
+                            resolve(false);
+                        }
+                    }, 2000);
                 });
+                
             } catch (error) {
                 console.error('❌ Erreur vérification service worker:', error);
                 return false;

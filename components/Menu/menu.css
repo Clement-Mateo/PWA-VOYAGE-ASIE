@@ -30,6 +30,15 @@
     height: 100%;
 }
 
+/* Desktop : cacher le bouton back et breadcrumb */
+.menu-back-btn {
+    display: none;
+}
+
+.menu-breadcrumb {
+    display: none;
+}
+
 .menu-left {
     width: 175px;
     flex-shrink: 0;
@@ -224,6 +233,15 @@
         flex: 1;
         padding: 20px;
         overflow-y: auto;
+    }
+    
+    /* Mobile : réafficher le bouton back et breadcrumb */
+    .menu-back-btn {
+        display: flex;
+    }
+    
+    .menu-breadcrumb {
+        display: flex;
     }
     
     /* Header mobile avec bouton menu */
