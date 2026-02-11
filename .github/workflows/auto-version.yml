@@ -21,8 +21,8 @@ jobs:
       run: |
         echo "🔄 Début de la mise à jour automatique de version"
         
-        # Extraire la version actuelle
-        CURRENT_VERSION=$(grep "this.currentVersion = " version-management/cache-version-manager.js | sed "s/.*'\(.*\)'.*/\1/")
+        # Extraire la version actuelle depuis le service worker
+        CURRENT_VERSION=$(grep "const CACHE_VERSION = " services/service-worker.js | sed "s/const CACHE_VERSION = '\([^']*\)'.*/\1/")
         echo "📋 Version actuelle: $CURRENT_VERSION"
         
         # Incrémenter la version (patch par défaut)
@@ -33,24 +33,20 @@ jobs:
         PATCH=$((PATCH + 1))
         NEW_VERSION="$MAJOR.$MINOR.$PATCH"
         
-        echo " Nouvelle version: $NEW_VERSION"
+        echo "📦 Nouvelle version: $NEW_VERSION"
         
-        # Mettre à jour cache-version-manager.js
-        sed -i "s/this.currentVersion = '$CURRENT_VERSION'/this.currentVersion = '$NEW_VERSION'/" version-management/cache-version-manager.js
-        
-        # Mettre à jour service-worker.js
+        # Mettre à jour uniquement service-worker.js
         sed -i "s/const CACHE_VERSION = '[^']*'/const CACHE_VERSION = \"$NEW_VERSION\"/" services/service-worker.js
-        echo " Fichiers mis à jour"
+        echo "✅ Service worker mis à jour"
         
         # Vérifier les changements
-        echo " Vérification des changements:"
-        grep "this.currentVersion = " version-management/cache-version-manager.js
+        echo "🔍 Vérification des changements:"
         grep "const CACHE_VERSION = " services/service-worker.js
         
         # Commiter les changements
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add version-management/cache-version-manager.js services/service-worker.js
+        git add services/service-worker.js
         git commit -m "🔄 Auto-update version to $NEW_VERSION"
         git push
         
