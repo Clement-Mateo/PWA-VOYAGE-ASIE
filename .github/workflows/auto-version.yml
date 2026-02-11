@@ -39,7 +39,7 @@ jobs:
         sed -i "s/this.currentVersion = '$CURRENT_VERSION'/this.currentVersion = '$NEW_VERSION'/" version-management/cache-version-manager.js
         
         # Mettre à jour service-worker.js (les deux variables)
-        sed -i "s/const CACHE_VERSION = '\$CURRENT_VERSION'/const CACHE_VERSION = '\$NEW_VERSION'/" services/service-worker.js        
+        perl -i -pe "s/const CACHE_VERSION = '[^']+'/const CACHE_VERSION = '\$NEW_VERSION'/" services/service-worker.js        echo "✅ Fichiers mis à jour"
         echo "✅ Fichiers mis à jour"
         
         # Vérifier les changements
