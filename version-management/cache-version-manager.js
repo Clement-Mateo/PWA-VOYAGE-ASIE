@@ -1,52 +1,71 @@
 /**
- * Gestionnaire de version automatique
- * Vérifie la version au chargement de l'app
- * La version est gérée automatiquement par GitHub Actions
+ * Gestionnaire de version simplifié
+ * Se base uniquement sur la détection de mise à jour du service worker
  */
 
 class CacheVersionManager {
-    constructor() {
-        this.versionKey = 'app_version';
-        // La version est mise à jour automatiquement par GitHub Actions
-        this.currentVersion = '1.2.15'; 
-    }
-
     /**
      * Initialise le gestionnaire de version au chargement de l'app
      */
     async init() {
-        console.log('🔍 Vérification de version au chargement de l\'app...');
+        console.log('🔍 Vérification de mise à jour du service worker...');
         
-        // Vérifier si la version a changé
-        const cacheCleared = await this.checkAndUpdateCache();
-        if (cacheCleared) {
-            console.log('🔄 Cache vidé, rechargement de la page...');
-            // Forcer le rechargement pour prendre les nouveaux fichiers
-            setTimeout(() => {
-                window.location.reload(true);
-            }, 1000);
+        // Éviter les rechargements multiples
+        if (sessionStorage.getItem('version_check_in_progress')) {
+            console.log('⏳ Vérification déjà en cours...');
+            return;
+        }
+        sessionStorage.setItem('version_check_in_progress', 'true');
+        
+        try {
+            // Vérifier si le service worker doit être mis à jour
+            const serviceWorkerUpdated = await this.checkServiceWorkerUpdate();
+            
+            // Si mise à jour détectée, vider le cache et recharger
+            if (serviceWorkerUpdated) {
+                console.log('🔄 Mise à jour détectée, vidage du cache...');
+                await this.clearCache();
+                setTimeout(() => {
+                    sessionStorage.removeItem('version_check_in_progress');
+                    window.location.reload(true);
+                }, 1000);
+            }
+        } finally {
+            sessionStorage.removeItem('version_check_in_progress');
         }
     }
 
     /**
-     * Vérifie si une mise à jour du cache est nécessaire
+     * Vérifie et force la mise à jour du service worker
      */
-    async checkAndUpdateCache() {
-        const storedVersion = localStorage.getItem(this.versionKey);
-
-        // Si la version a changé, vider le cache
-        if (storedVersion !== this.currentVersion) {
-            console.log(`🔄 Mise à jour automatique: ${storedVersion} → ${this.currentVersion}`);
-            await this.clearCache();
-            this.updateVersionInfo();
-            return true; // Cache vidé
+    async checkServiceWorkerUpdate() {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                
+                // Forcer la vérification de mise à jour
+                registration.update();
+                
+                // Écouter les mises à jour
+                return new Promise((resolve) => {
+                    registration.addEventListener('updatefound', () => {
+                        console.log('🔄 Nouveau service worker détecté !');
+                        resolve(true);
+                    });
+                    
+                    // Timeout au cas où aucune mise à jour n'est trouvée
+                    setTimeout(() => resolve(false), 2000);
+                });
+            } catch (error) {
+                console.error('❌ Erreur vérification service worker:', error);
+                return false;
+            }
         }
-
-        return false; // Pas de vidage nécessaire
+        return false;
     }
 
     /**
-     * Vide tous les caches de manière sélective
+     * Vide tous les caches
      */
     async clearCache() {
         try {
@@ -68,22 +87,11 @@ class CacheVersionManager {
                 await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
             }
 
-            // 4. Forcer le rechargement une seule fois
-            if (!sessionStorage.getItem('version_reloaded')) {
-                sessionStorage.setItem('version_reloaded', 'true');
-                setTimeout(() => window.location.reload(true), 100);
-            }
+            console.log('✅ Cache vidé avec succès');
 
         } catch (error) {
             console.error('❌ Erreur vidage cache:', error);
         }
-    }
-
-    /**
-     * Met à jour la version en localStorage
-     */
-    updateVersionInfo() {
-        localStorage.setItem(this.versionKey, this.currentVersion);
     }
 }
 
