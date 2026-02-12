@@ -43,6 +43,9 @@ class OfflineFirstApp {
             this.isInitialized = true;
             console.log('✅ Architecture offline-first initialisée avec succès');
             
+            // Déclencher un événement pour indiquer que tout est prêt
+            window.dispatchEvent(new CustomEvent('offlineFirstAppReady'));
+            
         } catch (error) {
             console.error('❌ Erreur initialisation architecture:', error);
             throw error;

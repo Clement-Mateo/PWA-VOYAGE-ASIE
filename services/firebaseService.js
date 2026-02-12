@@ -283,3 +283,6 @@ class FirebaseService {
 
 // Export pour utilisation globale
 window.FirebaseService = FirebaseService;
+
+// Initialiser immédiatement l'instance pour utilisation globale
+window.firebaseService = new FirebaseService();
