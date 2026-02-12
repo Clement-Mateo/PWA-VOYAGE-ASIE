@@ -424,8 +424,17 @@
         window.updateUserPanel = updateUserPanel;
         window.handleLogout = handleLogout;
         
-        // Écouter uniquement quand l'architecture offline-first est prête
-        // (offlineFirstAppReady est déclenché après firebaseAuthReady)
+        // Écouter l'événement d'authentification prête (pour connexions manuelles)
+        window.addEventListener('firebaseAuthReady', async (event) => {
+            console.log('🔥 Événement firebaseAuthReady reçu');
+            
+            // Appeler updateUserPanel quand l'auth est prête
+            if (window.updateUserPanel) {
+                await window.updateUserPanel();
+            }
+        });
+        
+        // Écouter aussi quand l'architecture offline-first est prête (pour F5)
         window.addEventListener('offlineFirstAppReady', async (event) => {
             console.log('🚀 Événement offlineFirstAppReady reçu');
             
