@@ -317,6 +317,11 @@
         
         // Mettre à jour l'affichage des destinations après connexion
         async function updateUserPanel() {
+            if (!window.firebaseService || !window.firebaseService.isReady()) {
+                console.warn('⚠️ FirebaseService non prêt, attente...');
+                return;
+            }
+            
             if (window.firebaseService.isAuthenticated()) {
                 // Utilisateur connecté
                 console.log('✅ Utilisateur connecté');
@@ -419,11 +424,12 @@
         window.updateUserPanel = updateUserPanel;
         window.handleLogout = handleLogout;
         
-        // Écouter l'événement d'authentification prête (après la définition des fonctions)
-        window.addEventListener('firebaseAuthReady', async (event) => {
-            console.log('🔥 Événement firebaseAuthReady reçu');
+        // Écouter uniquement quand l'architecture offline-first est prête
+        // (offlineFirstAppReady est déclenché après firebaseAuthReady)
+        window.addEventListener('offlineFirstAppReady', async (event) => {
+            console.log('🚀 Événement offlineFirstAppReady reçu');
             
-            // Appeler updateUserPanel quand l'auth est prête
+            // Appeler updateUserPanel quand tout est prêt
             if (window.updateUserPanel) {
                 await window.updateUserPanel();
             }
