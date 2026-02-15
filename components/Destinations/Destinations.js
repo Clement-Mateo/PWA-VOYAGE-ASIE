@@ -216,6 +216,9 @@ const Destinations = {
             // Mettre à jour les ordres des destinations suivantes
             await this.updateOrdersAfterDeletion(destination.order);
             
+            // Recalculer les transports après suppression
+            await this.recalculateTransportsAfterDeletion(destination.order);
+            
             // Nettoyer le transport de la nouvelle première destination si nécessaire
             if (window.Destinations && window.Destinations.cleanFirstDestinationTransport) {
                 await window.Destinations.cleanFirstDestinationTransport();
@@ -366,6 +369,9 @@ const Destinations = {
             
             console.log('✅ Destinations réorganisées avec succès');
             
+            // Recalculer les transports affectés par le réorganisation
+            await this.recalculateTransportsAfterReorder(destinations, draggedOrder, targetOrder);
+            
             // Recharger l'affichage
             await this.loadDestinations();
             
@@ -492,18 +498,71 @@ const Destinations = {
                 return orderA - orderB;
             });
             
+            console.log('🔄 Début du traitement des destinations, nombre:', sortedDestinations.length);
             sortedDestinations.forEach(async (destination, sortedIndex) => {
+                console.log(`📍 Traitement destination ${sortedIndex}: ${destination.name}, transport existant:`, !!destination.transportation);
                 // Ajouter un connecteur pointillé si ce n'est pas la première destination
                 if (sortedIndex > 0) {
                     const connector = document.createElement('div');
                     connector.className = 'destination-connector';
                     
                     // Ajouter la carte de transport à l'intérieur du connecteur
-                    const transportation = destination.transportation || {
-                        type: 'avion',
-                        cost: null,
-                        duration: null
-                    };
+                    let transportation = destination.transportation;
+                    
+                    // Si pas de transport, calculer le transport par défaut intelligent
+                    if (!transportation) {
+                        console.log('🚦 Aucun transport existant, calcul du transport par défaut...');
+                        try {
+                            // Récupérer la destination précédente dans la liste triée
+                            const previousDestination = sortedDestinations[sortedIndex - 1];
+                            console.log('📍 Destination précédente:', previousDestination?.name);
+                            console.log('📍 Destination actuelle:', destination.name);
+                            console.log('🔍 Coordonnées destination précédente:', previousDestination?.address?.location);
+                            console.log('🔍 Coordonnées destination actuelle:', destination.address?.location);
+                            
+                            if (previousDestination && (previousDestination.address?.location?.lat && previousDestination.address?.location?.lng)) {
+                                const coords = destination.address?.location ? [destination.address.location.lat, destination.address.location.lng] : [0, 0];
+                                const prevCoords = [previousDestination.address.location.lat, previousDestination.address.location.lng];
+                                
+                                console.log('🌍 Coordonnées précédentes:', prevCoords);
+                                console.log('🌍 Coordonnées actuelles:', coords);
+                                
+                                // Déterminer le transport par défaut
+                                const defaultTransport = await window.distanceService.determineDefaultTransport(
+                                    prevCoords[0], prevCoords[1], // lat, lon précédent
+                                    coords[0], coords[1]           // lat, lon actuel
+                                );
+                                
+                                transportation = {
+                                    type: defaultTransport.type,
+                                    cost: 0,
+                                    duration: defaultTransport.duration,
+                                    distance: defaultTransport.distance,
+                                    isStraightLine: defaultTransport.isStraightLine
+                                };
+                                
+                                console.log(`🚗 Transport par défaut: ${defaultTransport.type} - ${defaultTransport.distance}km`);
+                            } else {
+                                console.log('⚠️ Condition non vérifiée - previousDestination:', !!previousDestination, 'address.location:', !!previousDestination?.address?.location);
+                                // Fallback si pas de destination précédente
+                                transportation = {
+                                    type: 'voiture',
+                                    cost: 0,
+                                    duration: null,
+                                    distance: null
+                                };
+                            }
+                        } catch (error) {
+                            console.error('Erreur calcul transport par défaut:', error);
+                            // Fallback en cas d'erreur
+                            transportation = {
+                                type: 'voiture',
+                                cost: 0,
+                                duration: null,
+                                distance: null
+                            };
+                        }
+                    }
                     
                     // Sauvegarder le transport par défaut dans la base si la destination n'en a pas
                     if (!destination.transportation) {
@@ -766,6 +825,169 @@ const Destinations = {
     handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+    },
+
+    /**
+     * Recalculer les transports affectés par une réorganisation
+     */
+    async recalculateTransportsAfterReorder(destinations, draggedOrder, targetOrder) {
+        console.log('🔄 Recalcul des transports après réorganisation');
+        
+        // Trier les destinations par ordre pour travailler avec la nouvelle séquence
+        const sortedDestinations = [...destinations].sort((a, b) => {
+            const orderA = a.order || 0;
+            const orderB = b.order || 0;
+            return orderA - orderB;
+        });
+
+        // Déterminer quelles destinations ont besoin d'un recalcul
+        const affectedOrders = new Set();
+        
+        // Pour un drag & drop, toutes les destinations dont les voisins changent sont affectées
+        // La destination déplacée affecte sa nouvelle position
+        affectedOrders.add(targetOrder);
+        if (targetOrder > 0) affectedOrders.add(targetOrder - 1);
+        
+        // L'ancienne position affecte aussi les destinations restantes
+        affectedOrders.add(draggedOrder);
+        if (draggedOrder > 0) affectedOrders.add(draggedOrder - 1);
+        
+        // Si on déplace vers le bas, il faut aussi affecter la destination qui suit l'ancienne position
+        if (draggedOrder < targetOrder) {
+            affectedOrders.add(draggedOrder + 1);
+        }
+        // Si on déplace vers le haut, il faut affecter la destination qui suit la nouvelle position
+        else if (targetOrder < draggedOrder) {
+            affectedOrders.add(targetOrder + 1);
+        }
+
+        console.log('🎯 Ordres affectés:', Array.from(affectedOrders));
+
+        // Recalculer les transports pour les destinations affectées
+        for (let i = 0; i < sortedDestinations.length; i++) {
+            const destination = sortedDestinations[i];
+            const currentOrder = destination.order || 0;
+            
+            // Si cette destination est affectée et n'est pas la première
+            if (affectedOrders.has(currentOrder) && i > 0) {
+                const previousDestination = sortedDestinations[i - 1];
+                
+                if (previousDestination && previousDestination.address?.location?.lat && 
+                    previousDestination.address?.location?.lng && 
+                    destination.address?.location?.lat && 
+                    destination.address?.location?.lng) {
+                    
+                    try {
+                        console.log(`🔄 Recalcul transport pour ${destination.name} (ordre ${currentOrder})`);
+                        
+                        const prevCoords = [
+                            previousDestination.address.location.lat, 
+                            previousDestination.address.location.lng
+                        ];
+                        const coords = [
+                            destination.address.location.lat, 
+                            destination.address.location.lng
+                        ];
+                        
+                        // Calculer le nouveau transport
+                        const newTransport = await window.distanceService.determineDefaultTransport(
+                            prevCoords[0], prevCoords[1],
+                            coords[0], coords[1]
+                        );
+                        
+                        // Mettre à jour le transport de la destination
+                        const updatedDestination = {
+                            ...destination,
+                            transportation: {
+                                type: newTransport.type,
+                                cost: destination.transportation?.cost || 0,
+                                duration: newTransport.duration,
+                                distance: newTransport.distance,
+                                isStraightLine: newTransport.isStraightLine
+                            }
+                        };
+                        
+                        await window.localStorageService.updateDestination(destination.id, updatedDestination);
+                        console.log(`✅ Transport mis à jour pour ${destination.name}: ${newTransport.type} - ${newTransport.distance}km`);
+                        
+                    } catch (error) {
+                        console.error(`❌ Erreur recalcul transport pour ${destination.name}:`, error);
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ Recalcul des transports terminé');
+    },
+
+    /**
+     * Recalculer les transports après suppression d'une destination
+     */
+    async recalculateTransportsAfterDeletion(deletedOrder) {
+        console.log('🔄 Recalcul des transports après suppression de la destination d\'ordre', deletedOrder);
+        
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const sortedDestinations = [...destinations].sort((a, b) => {
+            const orderA = a.order || 0;
+            const orderB = b.order || 0;
+            return orderA - orderB;
+        });
+
+        // Les destinations dont l'ordre a changé (celles qui suivaient la destination supprimée)
+        for (let i = 0; i < sortedDestinations.length; i++) {
+            const destination = sortedDestinations[i];
+            const currentOrder = destination.order || 0;
+            
+            // Si cette destination n'est pas la première et que son ordre a changé
+            if (i > 0 && currentOrder >= deletedOrder) {
+                const previousDestination = sortedDestinations[i - 1];
+                
+                if (previousDestination && previousDestination.address?.location?.lat && 
+                    previousDestination.address?.location?.lng && 
+                    destination.address?.location?.lat && 
+                    destination.address?.location?.lng) {
+                    
+                    try {
+                        console.log(`🔄 Recalcul transport pour ${destination.name} (ordre ${currentOrder}) après suppression`);
+                        
+                        const prevCoords = [
+                            previousDestination.address.location.lat, 
+                            previousDestination.address.location.lng
+                        ];
+                        const coords = [
+                            destination.address.location.lat, 
+                            destination.address.location.lng
+                        ];
+                        
+                        // Calculer le nouveau transport
+                        const newTransport = await window.distanceService.determineDefaultTransport(
+                            prevCoords[0], prevCoords[1],
+                            coords[0], coords[1]
+                        );
+                        
+                        // Mettre à jour le transport de la destination
+                        const updatedDestination = {
+                            ...destination,
+                            transportation: {
+                                type: newTransport.type,
+                                cost: destination.transportation?.cost || 0,
+                                duration: newTransport.duration,
+                                distance: newTransport.distance,
+                                isStraightLine: newTransport.isStraightLine
+                            }
+                        };
+                        
+                        await window.localStorageService.updateDestination(destination.id, updatedDestination);
+                        console.log(`✅ Transport mis à jour pour ${destination.name}: ${newTransport.type} - ${newTransport.distance}km`);
+                        
+                    } catch (error) {
+                        console.error(`❌ Erreur recalcul transport pour ${destination.name}:`, error);
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ Recalcul des transports après suppression terminé');
     }
 };
 

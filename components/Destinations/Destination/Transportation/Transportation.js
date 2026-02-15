@@ -25,9 +25,23 @@ const Transportation = {
         // Obtenir le libellé du type de transport
         const typeLabel = transportTypes[transportation.type] || transportation.type;
         
-        // Formater la durée
+        // Formater la distance si disponible
+        let distanceText = '';
+        if (transportation.distance) {
+            // Ajouter ~ si c'est une estimation (vol d'oiseau ou calculé sans API)
+            const isEstimated = transportation.isStraightLine || 
+                               (transportation.type === 'train' || transportation.type === 'bus' || transportation.type === 'avion');
+            const prefix = isEstimated ? '~' : '';
+            distanceText = `${prefix}${transportation.distance} km`;
+        }
+        
+        // Formater la durée si disponible
         const duration = transportation.duration || { hours: 0, minutes: 0 };
-        const durationText = window.formatDuration(duration, false);
+        // Ajouter ~ si c'est une estimation (même logique que pour la distance)
+        const isDurationEstimated = transportation.isStraightLine || 
+                                   (transportation.type === 'train' || transportation.type === 'bus' || transportation.type === 'avion');
+        const durationPrefix = isDurationEstimated ? '~' : '';
+        const durationText = durationPrefix + window.formatDuration(duration, false);
         
         // Créer le contenu de la carte
         card.innerHTML = `
@@ -38,7 +52,7 @@ const Transportation = {
                         <span>${this.getTransportLabel(transportation.type)}</span>
                     </div>
                     <div class="transportation-details">
-                        ${transportation.cost ? `${transportation.cost}€` : 'Non défini'} - ${durationText}
+                        ${transportation.cost}€ - ${distanceText} - ${durationText}
                     </div>
                 </div>
                 <div class="transportation-actions">
@@ -98,27 +112,11 @@ const Transportation = {
                         <input type="hidden" id="transportType" value="${transportation.type || ''}">
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label class="form-label">Coût (€)</label>
                         <input type="number" class="form-input" id="transportCost" 
-                               value="${transportation.cost || ''}" 
+                               value="${transportation.cost || 0}" 
                                placeholder="0.00" step="0.01" min="0">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Durée</label>
-                        <div class="duration-inputs">
-                            <input type="number" class="form-input" id="transportHours" 
-                                   value="${transportation.duration?.hours || 0}" 
-                                   placeholder="0" min="0" max="23" 
-                                   oninput="this.value = Math.max(0, Math.min(23, parseInt(this.value) || 0))">
-                            <span class="duration-separator">h</span>
-                            <input type="number" class="form-input" id="transportMinutes" 
-                                   value="${transportation.duration?.minutes || 0}" 
-                                   placeholder="0" min="0" max="59" 
-                                   oninput="this.value = Math.max(0, Math.min(59, parseInt(this.value) || 0))">
-                            <span class="duration-separator">min</span>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -158,43 +156,79 @@ const Transportation = {
         // Récupérer les valeurs du formulaire
         const type = document.getElementById('transportType').value;
         const cost = document.getElementById('transportCost').value;
-        let hours = document.getElementById('transportHours').value;
-        let minutes = document.getElementById('transportMinutes').value;
         
-        console.log('saveTransportation - Valeurs récupérées:', { type, cost, hours, minutes });
+        console.log('saveTransportation - Valeurs récupérées:', { type, cost });
         
         // Afficher le spinner de chargement
         window.showButtonLoading('.modal-footer .btn-save', 'Enregistrement');
         
         try {
-            // Convertir en nombres
-            hours = parseInt(hours) || 0;
-            minutes = parseInt(minutes) || 0;
+            // Récupérer les coordonnées pour calculer distance et durée
+            let calculatedDistance = null;
+            let calculatedDuration = null;
+            let isStraightLine = true;
             
-            // Validation des contraintes de temps
-            const hoursNum = parseInt(hours) || 0;
-            const minutesNum = parseInt(minutes) || 0;
-            
-            if (hoursNum < 0 || hoursNum > 23) {
-                window.showErrorSnackBar('Les heures doivent être comprises entre 0 et 23');
-                window.restoreButton('.modal-footer .btn-save', 'Enregistrer', 'save');
-                return;
-            }
-            
-            if (minutesNum < 0 || minutesNum > 59) {
-                window.showErrorSnackBar('Les minutes doivent être comprises entre 0 et 59');
-                window.restoreButton('.modal-footer .btn-save', 'Enregistrer', 'save');
-                return;
+            // Ne recalculer que si le type de transport a changé
+            const oldType = destination.transportation?.type;
+            if (type && type !== oldType) {
+                console.log(`🔄 Type de transport changé (${oldType} → ${type}), calcul distance et durée`);
+                
+                // Récupérer la destination précédente
+                const allDestinations = [...destinations].sort((a, b) => {
+                    const orderA = a.order || 0;
+                    const orderB = b.order || 0;
+                    return orderA - orderB;
+                });
+                
+                const currentIndex = allDestinations.findIndex(d => d.id === destinationId);
+                
+                if (currentIndex > 0) {
+                    const previousDestination = allDestinations[currentIndex - 1];
+                    
+                    if (previousDestination?.address?.location?.lat && 
+                        previousDestination?.address?.location?.lng && 
+                        destination?.address?.location?.lat && 
+                        destination?.address?.location?.lng) {
+                        
+                        try {
+                            const prevCoords = [
+                                previousDestination.address.location.lat, 
+                                previousDestination.address.location.lng
+                            ];
+                            const coords = [
+                                destination.address.location.lat, 
+                                destination.address.location.lng
+                            ];
+                            
+                            // Utiliser la méthode centralisée de DistanceService
+                            const transportData = await window.distanceService.calculateDistanceAndDuration(
+                                prevCoords[0], prevCoords[1], coords[0], coords[1], type
+                            );
+                            
+                            calculatedDistance = transportData.distance;
+                            calculatedDuration = transportData.duration;
+                            isStraightLine = transportData.isStraightLine;
+                            
+                        } catch (error) {
+                            console.error('❌ Erreur calcul distance/durée:', error);
+                        }
+                    }
+                }
+            } else {
+                console.log('ℹ️ Type de transport inchangé, conservation des valeurs existantes');
+                // Conserver les valeurs existantes
+                calculatedDistance = destination.transportation?.distance;
+                calculatedDuration = destination.transportation?.duration;
+                isStraightLine = destination.transportation?.isStraightLine;
             }
             
             // Préparer les données du transport
             const transportationData = {
                 type: type || null,
-                cost: cost ? parseFloat(cost) : null,
-                duration: {
-                    hours: hours,
-                    minutes: minutes
-                }
+                cost: cost ? parseFloat(cost) : 0,
+                duration: calculatedDuration || { hours: 0, minutes: 0 },
+                distance: calculatedDistance,
+                isStraightLine: isStraightLine
             };
             
             // Mettre à jour la destination avec le nouveau transport
@@ -351,7 +385,6 @@ const Transportation = {
         return labels[type] || type;
     },
 
-    
     /**
      * Mettre à jour la carte de transport
      */
