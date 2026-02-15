@@ -66,6 +66,9 @@ class LeafletMap {
             position: zoomPosition
         }).addTo(this.leafletMap);
 
+        // Ajouter le contrôle de réinitialisation de vue
+        this.addResetViewControl(zoomPosition);
+
         // Ajouter les écouteurs d'événements
         this.setupEventListeners();
 
@@ -478,6 +481,52 @@ class LeafletMap {
         window.arrowDecorators = this.arrowDecorators;
         window.cleanMap = () => this.cleanMap();
         window.changeMapStyle = (style) => this.changeMapStyle(style);
+    }
+
+    /**
+     * Ajouter le contrôle de réinitialisation de vue
+     */
+    addResetViewControl(position) {
+        const ResetViewControl = L.Control.extend({
+            options: {
+                position: position,
+                className: 'leaflet-control-reset-view'
+            },
+
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                const link = L.DomUtil.create('a', '', container);
+                
+                link.href = '#';
+                link.title = 'Réinitialiser la vue';
+                link.innerHTML = '<span class="material-icons">center_focus_strong</span>';
+                
+                // Empêcher le comportement par défaut du lien
+                L.DomEvent.disableClickPropagation(link);
+                L.DomEvent.on(link, 'click', L.DomEvent.preventDefault);
+                L.DomEvent.on(link, 'click', () => {
+                    window.MapInstance.resetViewToFitItinerary();
+                }, this);
+                
+                return container;
+            }
+        });
+
+        new ResetViewControl().addTo(this.leafletMap);
+    }
+
+    /**
+     * Réinitialiser la vue pour voir tout l'itinéraire
+     */
+    resetViewToFitItinerary() {
+        if (this.destinationMarkers.length > 0) {
+            console.log('🔄 Réinitialisation de la vue sur l\'itinéraire');
+            const group = new L.featureGroup(this.destinationMarkers);
+            this.leafletMap.fitBounds(group.getBounds().pad(0.1), { animate: true });
+        } else {
+            console.log('🔄 Réinitialisation de la vue par défaut');
+            this.leafletMap.setView([20, 0], 2, { animate: true });
+        }
     }
 }
 
