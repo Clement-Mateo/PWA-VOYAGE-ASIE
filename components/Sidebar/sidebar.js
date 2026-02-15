@@ -1,11 +1,22 @@
 const Sidebar = {
     currentTab: 'destinations',
     isOpen: false,
+    isInitialized: false, // Ajout d'un flag d'initialisation
     
     /**
      * Initialiser le composant Sidebar
      */
     async init() {
+        // Vérifier si la sidebar est déjà en cours d'initialisation ou initialisée
+        if (this.isInitialized || document.getElementById('sidebarContainer')) {
+            await this.updateItineraryName();
+            this.loadDestinationsContent();
+            return;
+        }
+        
+        // Marquer comme en cours d'initialisation
+        this.isInitialized = true;
+        
         await this.render();
         this.initMobileToggle();
     },
@@ -79,12 +90,15 @@ const Sidebar = {
      * Rendre le composant Sidebar
      */
     async render() {
-        // Créer le conteneur principal
-        let sidebarContainer = document.getElementById('sidebarContainer');
-        if (!sidebarContainer) {
-            sidebarContainer = await this.createContainer();
-            document.body.appendChild(sidebarContainer);
+        // Supprimer l'ancien conteneur s'il existe
+        const existingContainer = document.getElementById('sidebarContainer');
+        if (existingContainer) {
+            existingContainer.remove();
         }
+        
+        // Créer le nouveau conteneur
+        const sidebarContainer = await this.createContainer();
+        document.body.appendChild(sidebarContainer);
         
         // Mettre à jour le nom de l'itinéraire
         await this.updateItineraryName();

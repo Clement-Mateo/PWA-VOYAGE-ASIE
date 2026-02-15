@@ -349,6 +349,9 @@
                     newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
                 }
                 
+                // Vérifier et supprimer la destination temporaire
+                await window.localStorageService.removeTempDestination();
+                
                 // Vérifier s'il y a un itinéraire actif
                 const currentItinerary = await window.localStorageService.getCurrentItinerary();
                 if (!currentItinerary && itineraries.length > 0 && window.Itineraries) {

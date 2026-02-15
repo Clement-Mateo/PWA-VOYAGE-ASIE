@@ -9,8 +9,6 @@
     width: 420px;
     height: calc(100vh - 24px);
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-backdrop);
-    -webkit-backdrop-filter: var(--glass-backdrop);
     border-left:var(--glass-border);
     border-radius: 20px;
     box-shadow: var(--box-shadow-1);
