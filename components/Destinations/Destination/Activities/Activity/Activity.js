@@ -360,11 +360,6 @@ const Activity = {
             await window.Destination.updateActivityIcon(this.currentDestination.id);
         }
         
-        // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
-        if (window.Synthèse && window.Synthèse.refresh) {
-            await window.Synthèse.refresh();
-        }
-        
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de l\'activité:', error);
             showErrorSnackBar('Erreur lors de la sauvegarde de l\'activité');

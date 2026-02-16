@@ -18,35 +18,49 @@ const Synthèse = {
         const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         let totalMinutes = 0;
         
+        console.log('🧮 Calcul durée totale - destinations:', destinations);
+        
         // Ajouter les durées des destinations
         destinations.forEach(destination => {
+            console.log(`📍 Destination ${destination.name} (order: ${destination.order})`);
+            
             if (destination.duration) {
-                totalMinutes += 
+                const destMinutes = 
                     (destination.duration.days || 0) * 24 * 60 +
                     (destination.duration.hours || 0) * 60 +
                     (destination.duration.minutes || 0);
+                totalMinutes += destMinutes;
+                console.log(`  ⏱️ Durée destination: ${destMinutes}min`);
             }
             
             // Ajouter les durées de transport (sauf pour la première destination)
             if (destination.order > 0 && destination.transportation && destination.transportation.duration) {
                 const transportDuration = destination.transportation.duration;
+                console.log(`  🚗 Transport trouvé:`, transportDuration);
                 
                 // Gérer le format objet {hours, minutes}
                 if (typeof transportDuration === 'object' && transportDuration !== null) {
                     const hours = transportDuration.hours || 0;
                     const minutes = transportDuration.minutes || 0;
-                    totalMinutes += hours * 60 + minutes;
+                    const transportMinutes = hours * 60 + minutes;
+                    totalMinutes += transportMinutes;
+                    console.log(`  ⏱️ Durée transport: ${transportMinutes}min (${hours}h ${minutes}min)`);
                 } else if (typeof transportDuration === 'string') {
                     // Ancien format chaîne
                     const parsed = window.parseDuration(transportDuration);
                     totalMinutes += parsed.hours * 60 + parsed.minutes;
+                    console.log(`  ⏱️ Durée transport (chaîne): ${parsed.hours * 60 + parsed.minutes}min`);
                 }
+            } else {
+                console.log(`  ❌ Pas de transport (order: ${destination.order}, transportation: ${!!destination.transportation})`);
             }
         });
         
         const days = Math.floor(totalMinutes / (24 * 60));
         const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
         const minutes = totalMinutes % 60;
+        
+        console.log(`🎯 Durée totale calculée: ${days}j ${hours}h ${minutes}min (${totalMinutes}min total)`);
         
         return { days, hours, minutes, totalMinutes };
     },
@@ -176,8 +190,8 @@ const Synthèse = {
         let totalMinutes = 0;
         
         for (const destination of destinations) {
-            // Ignorer la première destination (pas de transport)
-            if (destination.transportation && destination.transportation.duration) {
+            // Ignorer la première destination (pas de transport) - CORRECTION
+            if (destination.order > 0 && destination.transportation && destination.transportation.duration) {
                 const duration = destination.transportation.duration;
                 
                 // Gérer le nouveau format objet {hours, minutes} ou l'ancien format chaîne
@@ -643,9 +657,32 @@ const Synthèse = {
      * Rafraîchir la synthèse
      */
     async refresh() {
-        await this.render();
+        if (window.Menu && window.Menu.loadSynthese) {
+            window.Menu.loadSynthese();
+        }
     }
 };
+
+// Écouteur centralisé pour rafraîchir automatiquement la synthèse lors des CRUD d'itinéraires/destinations
+function setupSyntheseEventListener() {
+    console.log('🔧 Mise en place de l écouteur d événements pour la synthèse');
+    window.addEventListener('itinerary:updated', (event) => {
+        console.log('🔄 Événement itinerary:updated reçu - Rafraîchissement de la synthèse', event.detail);
+        if (window.Synthèse && window.Synthèse.render) {
+            // Attendre plus longtemps pour laisser le temps aux recalculs de transports de se terminer
+            setTimeout(() => {
+                window.Synthèse.refresh();
+            }, 100);
+        }
+    });
+}
+
+// Initialiser l'écouteur quand le DOM est prêt
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSyntheseEventListener);
+} else {
+    setupSyntheseEventListener();
+}
 
 // Exporter globalement
 window.Synthèse = Synthèse;

@@ -73,11 +73,6 @@ const Activities = {
                 }
             }
             
-            // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
-            if (window.Synthèse && window.Synthèse.refresh) {
-                await window.Synthèse.refresh();
-            }
-            
         } catch (error) {
             console.error('❌ Erreur lors de la suppression de l\'activité:', error);
             if (window.showErrorSnackBar) {

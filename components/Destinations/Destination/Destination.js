@@ -270,11 +270,6 @@ const Destination = {
             
             await Destinations.loadDestinations();
             
-            // Rafraîchir la synthèse pour mettre à jour les coûts en temps réel
-            if (window.Synthèse && window.Synthèse.refresh) {
-                await window.Synthèse.refresh();
-            }
-            
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de la destination:', error);
             window.showErrorSnackBar('Erreur lors de la sauvegarde: ' + error.message);

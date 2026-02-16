@@ -43,13 +43,6 @@ const Transportation = {
         const durationPrefix = isDurationEstimated ? '~' : '';
         const durationText = durationPrefix + window.formatDuration(duration, false);
         
-        // Formater la distance si disponible
-        let distanceText = '';
-        if (transportation.distance) {
-            const prefix = transportation.isStraightLine ? '~' : '';
-            distanceText = `${prefix}${transportation.distance} km`;
-        }
-        
         // Créer le contenu de la carte
         card.innerHTML = `
             <div class="transportation-header">
@@ -266,11 +259,6 @@ const Transportation = {
             
             // Mettre à jour l'affichage
             this.refreshTransportationCard(destinationId, transportationData);
-            
-            // Rafraîchir la synthèse pour mettre à jour les temps en temps réel
-            if (window.Synthèse && window.Synthèse.refresh) {
-                await window.Synthèse.refresh();
-            }
             
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde du transport:', error);
