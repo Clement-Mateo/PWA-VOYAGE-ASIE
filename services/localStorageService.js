@@ -435,6 +435,40 @@ class LocalStorageService {
             return null;
         }
     }
+
+    /**
+     * Supprimer la destination temporaire si elle existe
+     */
+    async removeTempDestination() {
+        if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
+
+        try {
+            const currentItinerary = await this.getCurrentItinerary();
+            if (!currentItinerary) {
+                return; // Pas d'itinéraire actif, rien à faire
+            }
+
+            // Chercher la destination temporaire
+            const tempDestinationIndex = currentItinerary.destinations.findIndex(
+                dest => dest.id === 'temp_destination'
+            );
+
+            if (tempDestinationIndex !== -1) {
+                // Supprimer la destination temporaire
+                currentItinerary.destinations.splice(tempDestinationIndex, 1);
+                
+                // Mettre à jour l'itinéraire
+                await this.db.itineraries.update(currentItinerary.id, {
+                    destinations: currentItinerary.destinations,
+                    updatedAt: new Date()
+                });
+
+                console.log('🗑️ Destination temporaire supprimée de l\'itinéraire');
+            }
+        } catch (error) {
+            console.error('❌ Erreur removeTempDestination:', error);
+        }
+    }
 }
 
 // Export pour utilisation globale

@@ -155,8 +155,7 @@
     <script src="services/syncService.js"></script>
     <script src="services/networkManager.js"></script>
     <script src="services/offlineFirstApp.js"></script>
-    
-    <!-- Services Utilitaires -->
+    <script src="services/distanceService.js"></script>
     <script src="services/serviceUtil.js"></script>
     <script src="services/LocationService.js"></script>
     
@@ -348,6 +347,9 @@
                 if (itineraries.length === 0) {
                     newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
                 }
+                
+                // Vérifier et supprimer la destination temporaire
+                await window.localStorageService.removeTempDestination();
                 
                 // Vérifier s'il y a un itinéraire actif
                 const currentItinerary = await window.localStorageService.getCurrentItinerary();
