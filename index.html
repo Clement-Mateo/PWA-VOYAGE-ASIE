@@ -345,7 +345,7 @@
                 // Créer un itinéraire si aucun n'existe
                 let newItinerary = null;
                 if (itineraries.length === 0) {
-                    newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
+                    newItinerary = await window.localStorageService.createItinerary();
                 }
                 
                 // Vérifier et supprimer la destination temporaire

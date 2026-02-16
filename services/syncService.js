@@ -139,7 +139,11 @@ class SyncService {
         try {
             // Si c'est un itinéraire temporaire, le créer sur Firebase
             if (itinerary.id.startsWith('itineraryToCreate_')) {
-                const firebaseId = await window.firebaseService.createItinerary(itinerary.name, false);
+                const firebaseId = await window.firebaseService.createItinerary({
+                    name: itinerary.name,
+                    startDate: itinerary.startDate,
+                    notes: itinerary.notes
+                });
                 
                 // Mettre à jour l'ID local et marquer comme synchronisé
                 await window.localStorageService.db.itineraries.update(itinerary.id, {

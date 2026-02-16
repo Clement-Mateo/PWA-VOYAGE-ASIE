@@ -118,13 +118,17 @@ class Itineraries {
         const itineraries = currentItinerary ? await window.localStorageService.getItineraries(currentItinerary.userId) : [];
         const hasMultipleItineraries = itineraries.length > 1;
         
+        // Formater la date de début pour l'affichage
+        const startDate = itinerary.startDate ? (itinerary.startDate.toDate ? new Date(itinerary.startDate.toDate()) : new Date(itinerary.startDate)) : null;
+        const startDateText = startDate ? startDate.toLocaleDateString('fr-FR') : 'Non définie';
+        
         return `
             <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="window.Itineraries.setActiveItinerary('${itinerary.id}')">
                 <div class="card-content">
                     <div class="card-header">
-                        <h4 class="card-title" id="itinerary-name-${itinerary.id}" onclick="event.stopPropagation(); window.Itineraries.editItineraryName('${itinerary.id}')" title="Modifier le nom">${window.escapeHtml(itinerary.name)}</h4>
+                        <h4 class="card-title" id="itinerary-name-${itinerary.id}" onclick="event.stopPropagation(); window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier l'itinéraire">${window.escapeHtml(itinerary.name)}</h4>
                         <div class="card-actions">
-                            <button class="btn-edit" onclick="event.stopPropagation(); window.Itineraries.editItineraryName('${itinerary.id}')" title="Modifier le nom">
+                            <button class="btn-edit" onclick="event.stopPropagation(); window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier">
                                 <span class="material-icons">edit</span>
                             </button>
                             ${hasMultipleItineraries ? `
@@ -144,6 +148,12 @@ class Itineraries {
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">calendar_today</span>
+                                Date de début: ${startDateText}
+                            </span>
+                        </div>
+                        <div class="card-meta">
+                            <span class="meta-item">
+                                <span class="material-icons">event</span>
                                 Date de création: ${itinerary.createdAt ? (itinerary.createdAt.toDate ? new Date(itinerary.createdAt.toDate()).toLocaleString('fr-FR') : new Date(itinerary.createdAt).toLocaleString('fr-FR')) : 'Date inconnue'}
                             </span>
                         </div>
@@ -155,6 +165,31 @@ class Itineraries {
                             </span>
                         </div>
                         ` : ''}
+                        
+                        <!-- Afficher les notes si présentes -->
+                        ${itinerary.notes && itinerary.notes.trim() ? `
+                            <div class="itinerary-notes">${itinerary.notes.replace(/\n/g, '<br>')}</div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Formulaire d'édition -->
+                    <div class="itinerary-form" id="form-${itinerary.id}" style="display: none;">
+                        <div class="form-group full-width">
+                            <label class="form-label">Nom de l'itinéraire</label>
+                            <input type="text" class="form-input" id="name-${itinerary.id}" value="${itinerary.name || ''}" placeholder="Nom de l'itinéraire">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Date de début</label>
+                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${startDate ? startDate.toISOString().split('T')[0] : ''}">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-input" id="notes-${itinerary.id}" placeholder="Ajouter des notes ou remarques..." rows="3">${itinerary.notes || ''}</textarea>
+                        </div>
+                        <div class="form-actions flex-center">
+                            <button class="btn-save" onclick="window.Itineraries.saveItinerary('${itinerary.id}')"><span class="material-icons">save</span> Enregistrer</button>
+                            <button class="btn-cancel" onclick="window.Itineraries.cancelEdit('${itinerary.id}')"><span class="material-icons">close</span> Annuler</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -171,22 +206,9 @@ class Itineraries {
             // Afficher le loading global
             window.showLoading();
             
-            // Générer un nom unique pour le nouvel itinéraire
-            const baseName = 'Nouvel Itinéraire';
-            let itineraryName = baseName;
-            let counter = 1;
-            
-            // Vérifier si un itinéraire avec ce nom existe déjà
-            const currentItinerary = await window.localStorageService.getCurrentItinerary();
-            const itineraries = currentItinerary ? await window.localStorageService.getItineraries() : [];
-            while (itineraries.some(i => i.name === itineraryName)) {
-                counter++;
-                itineraryName = `${baseName} ${counter}`;
-            }
-            
-            // Créer l'itinéraire via localStorage
+            // Créer l'itinéraire via localStorage (avec logique par défaut intégrée)
             if (window.localStorageService && window.localStorageService.createItinerary) {
-                const newItinerary = await window.localStorageService.createItinerary(itineraryName);
+                const newItinerary = await window.localStorageService.createItinerary(); // Plus besoin d'arguments
                     
                 if (newItinerary) {
                     // Petit délai pour laisser le temps à IndexedDB de se mettre à jour
@@ -195,7 +217,7 @@ class Itineraries {
                     // Utiliser setActiveItinerary pour une mise à jour complète avec loading
                     await this.setActiveItinerary(newItinerary.id);
                     
-                    showSuccessSnackBar(`Itinéraire "${itineraryName}" créé avec succès`);
+                    showSuccessSnackBar(`Itinéraire "${newItinerary.name}" créé avec succès`);
                 } else {
                     showErrorSnackBar('Erreur lors de la création de l\'itinéraire');
                 }
@@ -213,7 +235,170 @@ class Itineraries {
     }
 
     /**
-     * Éditer le nom d'un itinéraire (inline)
+     * Déplier le formulaire d'édition d'un itinéraire
+     */
+    expandItineraryForm(itineraryId) {
+        const card = document.querySelector(`[data-id="${itineraryId}"]`);
+        const form = document.getElementById(`form-${itineraryId}`);
+        
+        if (!card || !form) return;
+        
+        // Fermer les autres formulaires
+        document.querySelectorAll('.itinerary-form').forEach(f => {
+            if (f.id !== `form-${itineraryId}`) {
+                f.style.display = 'none';
+                const otherCard = f.closest('.card');
+                if (otherCard) {
+                    otherCard.classList.remove('expanded', 'editing');
+                }
+            }
+        });
+        
+        // Forcer le dépliage
+        form.style.display = 'block';
+        card.classList.add('expanded', 'editing');
+        
+        // Focus automatique sur le champ nom
+        setTimeout(() => {
+            const nameInput = document.getElementById(`name-${itineraryId}`);
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.select();
+            }
+        }, 100);
+    }
+
+    /**
+     * Replier le formulaire d'édition d'un itinéraire
+     */
+    collapseItineraryForm(itineraryId) {
+        const card = document.querySelector(`[data-id="${itineraryId}"]`);
+        const form = document.getElementById(`form-${itineraryId}`);
+        
+        if (!card || !form) return;
+        
+        // Forcer le repli
+        form.style.display = 'none';
+        card.classList.remove('expanded', 'editing');
+    }
+
+    /**
+     * Éditer un itinéraire (ouvre le formulaire)
+     */
+    async editItinerary(itineraryId) {
+        const card = document.querySelector(`[data-id="${itineraryId}"]`);
+        const form = document.getElementById(`form-${itineraryId}`);
+        
+        if (!card || !form) return;
+        
+        // Si le formulaire est déjà visible, ne rien faire
+        if (form.style.display !== 'none') {
+            return;
+        }
+        
+        // Déplier le formulaire
+        this.expandItineraryForm(itineraryId);
+    }
+
+    /**
+     * Sauvegarder les modifications d'un itinéraire
+     */
+    async saveItinerary(itineraryId) {
+        try {
+            const itineraries = await window.localStorageService.getItineraries();
+            const itinerary = itineraries.find(i => i.id === itineraryId);
+            
+            if (!itinerary) {
+                showErrorSnackBar('Itinéraire non trouvé');
+                return;
+            }
+
+            // Récupérer les valeurs du formulaire
+            const nameInput = document.getElementById(`name-${itineraryId}`);
+            const startDateInput = document.getElementById(`startDate-${itineraryId}`);
+            const notesInput = document.getElementById(`notes-${itineraryId}`);
+            
+            const newName = nameInput ? nameInput.value.trim() : itinerary.name;
+            const newStartDate = startDateInput ? startDateInput.value : null;
+            const newNotes = notesInput ? notesInput.value.trim() : '';
+            
+            // Valider le nom
+            if (!newName) {
+                showErrorSnackBar('Le nom de l\'itinéraire est requis');
+                return;
+            }
+            
+            // Vérifier si le nom existe déjà (pour un autre itinéraire)
+            const nameExists = itineraries.some(i => i.id !== itineraryId && i.name === newName);
+            if (nameExists) {
+                showErrorSnackBar('Un itinéraire avec ce nom existe déjà');
+                return;
+            }
+
+            // Mettre à jour l'itinéraire
+            itinerary.name = newName;
+            itinerary.notes = newNotes;
+            
+            if (newStartDate) {
+                itinerary.startDate = new Date(newStartDate);
+            } else if (itinerary.startDate) {
+                delete itinerary.startDate;
+            }
+            
+            // Mettre à jour via localStorage
+            await window.localStorageService.updateItinerary(itineraryId, itinerary);
+            
+            // Replier le formulaire
+            this.collapseItineraryForm(itineraryId);
+            
+            // Rafraîchir l'affichage
+            this.renderItineraries();
+            
+            // Mettre à jour le sidebar si c'est l'itinéraire actuel
+            if (window.Sidebar && window.Sidebar.updateItineraryName) {
+                window.Sidebar.updateItineraryName();
+            }
+            
+            showSuccessSnackBar('Itinéraire mis à jour avec succès');
+        } catch (error) {
+            console.error('Erreur sauvegarde itinéraire:', error);
+            showErrorSnackBar('Erreur lors de la sauvegarde de l\'itinéraire');
+        }
+    }
+
+    /**
+     * Annuler l'édition d'un itinéraire
+     */
+    async cancelEdit(itineraryId) {
+        try {
+            const itineraries = await window.localStorageService.getItineraries();
+            const itinerary = itineraries.find(i => i.id === itineraryId);
+            
+            if (!itinerary) return;
+            
+            // Replier le formulaire
+            this.collapseItineraryForm(itineraryId);
+            
+            // Restaurer les valeurs originales dans le formulaire
+            const nameInput = document.getElementById(`name-${itineraryId}`);
+            const startDateInput = document.getElementById(`startDate-${itineraryId}`);
+            const notesInput = document.getElementById(`notes-${itineraryId}`);
+            
+            if (nameInput) nameInput.value = itinerary.name || '';
+            
+            const startDate = itinerary.startDate ? (itinerary.startDate.toDate ? new Date(itinerary.startDate.toDate()) : new Date(itinerary.startDate)) : null;
+            if (startDateInput) {
+                startDateInput.value = startDate ? startDate.toISOString().split('T')[0] : '';
+            }
+            
+            if (notesInput) notesInput.value = itinerary.notes || '';
+        } catch (error) {
+            console.error('Erreur annulation édition:', error);
+        }
+    }
+
+    /**
+     * Éditer le nom d'un itinéraire (inline) - conservé pour compatibilité
      */
     async editItineraryName(itineraryId) {
         const currentItinerary = await window.localStorageService.getCurrentItinerary(window.firebaseService.getCurrentUser().uid);

@@ -79,14 +79,37 @@ class LocalStorageService {
     /**
      * Créer un itinéraire en local (pour l'utilisateur connecté)
      */
-    async createItinerary(name) {
+    async createItinerary(itineraryData = null) {
         if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
 
         const userId = window.firebaseService.getCurrentUser().uid;
+        
+        // Si pas de données, utiliser les valeurs par défaut
+        if (!itineraryData) {
+            const baseName = 'Nouvel Itinéraire';
+            let itineraryName = baseName;
+            let counter = 1;
+            
+            // Récupérer les itinéraires existants pour générer un nom unique
+            const itineraries = await this.getItineraries();
+            while (itineraries.some(i => i.name === itineraryName)) {
+                counter++;
+                itineraryName = `${baseName} ${counter}`;
+            }
+            
+            itineraryData = {
+                name: itineraryName,
+                startDate: new Date(), // Date du jour par défaut
+                notes: ''
+            };
+        }
+        
         const newItinerary = {
             id: this.generateTempId('itineraryToCreate'),
             userId: userId,
-            name: name,
+            name: itineraryData.name || 'Nouvel Itinéraire',
+            startDate: itineraryData.startDate || null,
+            notes: itineraryData.notes || '',
             active: false,
             isSync: false,
             destinations: [],

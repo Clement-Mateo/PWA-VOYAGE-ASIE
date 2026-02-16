@@ -177,14 +177,16 @@ class FirebaseService {
     /**
      * Créer un itinéraire dans Firebase
      */
-    async createItinerary(name, manageLoading = false) {
+    async createItinerary(itineraryData) {
         if (!this.user) {
             throw new Error('Utilisateur non connecté');
         }
         
         try {
             const itinerary = {
-                name: name,
+                name: itineraryData.name || 'Nouvel Itinéraire',
+                startDate: itineraryData.startDate || null,
+                notes: itineraryData.notes || '',
                 userId: this.user.uid,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
