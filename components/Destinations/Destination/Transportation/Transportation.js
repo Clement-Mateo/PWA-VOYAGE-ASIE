@@ -25,9 +25,23 @@ const Transportation = {
         // Obtenir le libellé du type de transport
         const typeLabel = transportTypes[transportation.type] || transportation.type;
         
-        // Formater la durée
+        // Formater la distance si disponible
+        let distanceText = '';
+        if (transportation.distance) {
+            // Ajouter ~ si c'est une estimation (vol d'oiseau ou calculé sans API)
+            const isEstimated = transportation.isStraightLine || 
+                               (transportation.type === 'train' || transportation.type === 'bus' || transportation.type === 'avion');
+            const prefix = isEstimated ? '~' : '';
+            distanceText = `${prefix}${transportation.distance} km`;
+        }
+        
+        // Formater la durée si disponible
         const duration = transportation.duration || { hours: 0, minutes: 0 };
-        const durationText = window.formatDuration(duration, false);
+        // Ajouter ~ si c'est une estimation (même logique que pour la distance)
+        const isDurationEstimated = transportation.isStraightLine || 
+                                   (transportation.type === 'train' || transportation.type === 'bus' || transportation.type === 'avion');
+        const durationPrefix = isDurationEstimated ? '~' : '';
+        const durationText = durationPrefix + window.formatDuration(duration, false);
         
         // Formater la distance si disponible
         let distanceText = '';
@@ -45,11 +59,7 @@ const Transportation = {
                         <span>${this.getTransportLabel(transportation.type)}</span>
                     </div>
                     <div class="transportation-details">
-                        ${transportation.cost ? `${transportation.cost}€` : ''} 
-                        ${transportation.cost && (distanceText || durationText) ? ' - ' : ''}
-                        ${distanceText ? distanceText : ''}
-                        ${distanceText && durationText ? ' - ' : ''}
-                        ${durationText ? durationText : ''}
+                        ${transportation.cost}€ - ${distanceText} - ${durationText}
                     </div>
                 </div>
                 <div class="transportation-actions">
@@ -58,6 +68,9 @@ const Transportation = {
                     </button>
                 </div>
             </div>
+            ${transportation.notes && transportation.notes.trim() ? `
+                <div class="transportation-notes">${transportation.notes.replace(/\n/g, '<br>')}</div>
+            ` : ''}
         `;
         
         // Ajouter l'événement de clic sur le bouton d'édition
@@ -112,8 +125,15 @@ const Transportation = {
                     <div class="form-group">
                         <label class="form-label">Coût (€)</label>
                         <input type="number" class="form-input" id="transportCost" 
-                               value="${transportation.cost || ''}" 
+                               value="${transportation.cost || 0}" 
                                placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-input" id="transportNotes" 
+                                  placeholder="Ajouter des notes sur le transport..."
+                                  rows="3">${transportation.notes || ''}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -153,6 +173,7 @@ const Transportation = {
         // Récupérer les valeurs du formulaire
         const type = document.getElementById('transportType').value;
         const cost = document.getElementById('transportCost').value;
+        const notes = document.getElementById('transportNotes').value;
         
         console.log('saveTransportation - Valeurs récupérées:', { type, cost });
         
@@ -222,10 +243,11 @@ const Transportation = {
             // Préparer les données du transport
             const transportationData = {
                 type: type || null,
-                cost: cost ? parseFloat(cost) : null,
+                cost: cost ? parseFloat(cost) : 0,
                 duration: calculatedDuration || { hours: 0, minutes: 0 },
                 distance: calculatedDistance,
-                isStraightLine: isStraightLine
+                isStraightLine: isStraightLine,
+                notes: notes || null
             };
             
             // Mettre à jour la destination avec le nouveau transport
@@ -389,6 +411,27 @@ const Transportation = {
         const card = document.getElementById(`transportation-${destinationId}`);
         if (card) {
             const newCard = this.createTransportationCard(transportationData, destinationId);
+            
+            // Mettre à jour la classe et les marges du connector parent
+            const connector = card.closest('.destination-connector');
+            if (connector) {
+                if (transportationData.notes && transportationData.notes.trim()) {
+                    
+                    // Calculer le nombre de lignes dans les notes
+                    const noteLines = transportationData.notes.split('\n').filter(line => line.trim()).length;
+                    const extraMargin = (noteLines - 1) * 10; // 10px par ligne supplémentaire
+                    const totalMargin = 25 + extraMargin; // 25px de base + extra
+                    
+                    // Appliquer les marges dynamiques
+                    connector.style.marginTop = `${totalMargin}px`;
+                    connector.style.marginBottom = `${totalMargin}px`;
+                } else {
+                    // Réinitialiser les marges par défaut
+                    connector.style.marginTop = '';
+                    connector.style.marginBottom = '';
+                }
+            }
+            
             card.replaceWith(newCard);
         }
     }
