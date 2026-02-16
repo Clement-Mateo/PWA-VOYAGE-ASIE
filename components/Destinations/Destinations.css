@@ -139,6 +139,39 @@
     font-size: 14px;
 }
 
+.destination-dates {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+    padding: 8px;
+    background: var(--background-light);
+    border-radius: 6px;
+    border: 3px solid var(--primary-blue);
+}
+
+.date-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.date-item .material-icons {
+    font-size: 16px;
+    color: var(--primary-blue);
+}
+
+.date-label {
+    font-weight: 500;
+    color: var(--gray-darker);
+    min-width: 50px;
+}
+
+.date-value {
+    color: var(--font-color-gray-dark);
+    font-weight: 600;
+}
+
 /* Address Input Container */
 .address-input-container {
     gap: 8px;

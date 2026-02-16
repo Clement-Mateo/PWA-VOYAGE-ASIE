@@ -1,6 +1,5 @@
 /**
  * Styles pour le gestionnaire d'itinéraires
- * Utilise les classes génériques de modals.css
  */
 
 /* ========================================
@@ -23,11 +22,13 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-height: calc(90vh - 250px);
+    overflow-y: auto;
     margin-bottom: 24px;
 }
 
 /* ========================================
-   ITINERARY CARDS (réutilise les classes card)
+   ITINERARY CARDS
    ======================================== */
 
 .card {
@@ -220,7 +221,7 @@ textarea.form-input {
 }
 
 /* ========================================
-   EMPTY STATE (réutilise les classes empty-state)
+   EMPTY STATE
    ======================================== */
 
 .empty-icon {

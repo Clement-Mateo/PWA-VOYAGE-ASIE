@@ -268,8 +268,6 @@ const Destination = {
             // Réactiver le hover sur les autres destinations
             this.enableOtherCardsHover();
             
-            await Destinations.loadDestinations();
-            
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de la destination:', error);
             window.showErrorSnackBar('Erreur lors de la sauvegarde: ' + error.message);
