@@ -538,7 +538,8 @@ const Destinations = {
                                     cost: 0,
                                     duration: defaultTransport.duration,
                                     distance: defaultTransport.distance,
-                                    isStraightLine: defaultTransport.isStraightLine
+                                    isStraightLine: defaultTransport.isStraightLine,
+                                    notes: null
                                 };
                                 
                                 console.log(`🚗 Transport par défaut: ${defaultTransport.type} - ${defaultTransport.distance}km`);
@@ -549,7 +550,8 @@ const Destinations = {
                                     type: 'voiture',
                                     cost: 0,
                                     duration: null,
-                                    distance: null
+                                    distance: null,
+                                    notes: null
                                 };
                             }
                         } catch (error) {
@@ -559,7 +561,8 @@ const Destinations = {
                                 type: 'voiture',
                                 cost: 0,
                                 duration: null,
-                                distance: null
+                                distance: null,
+                                notes: null
                             };
                         }
                     }
@@ -573,6 +576,16 @@ const Destinations = {
                     }
                     
                     const transportCard = Transportation.createTransportationCard(transportation, destination.id);
+                    if (transportation.notes && transportation.notes.trim()) {                        
+                        // Calculer le nombre de lignes dans les notes
+                        const noteLines = transportation.notes.split('\n').filter(line => line.trim()).length;
+                        const extraMargin = (noteLines - 1) * 10; // 10px par ligne supplémentaire
+                        const totalMargin = 25 + extraMargin; // 25px de base + extra
+                        
+                        // Appliquer les marges dynamiques
+                        connector.style.marginTop = `${totalMargin}px`;
+                        connector.style.marginBottom = `${totalMargin}px`;
+                    }
                     connector.appendChild(transportCard);
                     container.appendChild(connector);
                 }
@@ -903,7 +916,8 @@ const Destinations = {
                                 cost: destination.transportation?.cost || 0,
                                 duration: newTransport.duration,
                                 distance: newTransport.distance,
-                                isStraightLine: newTransport.isStraightLine
+                                isStraightLine: newTransport.isStraightLine,
+                                notes: destination.transportation?.notes || null
                             }
                         };
                         
@@ -973,7 +987,8 @@ const Destinations = {
                                 cost: destination.transportation?.cost || 0,
                                 duration: newTransport.duration,
                                 distance: newTransport.distance,
-                                isStraightLine: newTransport.isStraightLine
+                                isStraightLine: newTransport.isStraightLine,
+                                notes: destination.transportation?.notes || null
                             }
                         };
                         

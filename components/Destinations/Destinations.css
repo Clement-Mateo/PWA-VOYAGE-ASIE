@@ -19,9 +19,9 @@
     content: '';
     position: absolute;
     left: 35px;
-    top: -20px;
+    top: -100px;
     bottom: -10px;
-    height: 250%;
+    height: 600%;
     width: 2px;
     background-image: repeating-linear-gradient(
         to bottom,
@@ -30,7 +30,7 @@
         transparent 10px,
         transparent 20px
     );
-    z-index: 0;
+    z-index: -1;
 }
 
 /* ========================================

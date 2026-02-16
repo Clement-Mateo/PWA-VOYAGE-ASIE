@@ -2,7 +2,7 @@
    STYLES DES NOTES
    ======================================== */
 
-.destination-notes, .activity-notes {
+.destination-notes, .activity-notes, .transportation-notes {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-left: 3px solid var(--primary-blue);
     padding: 8px 12px;
