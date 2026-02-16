@@ -310,10 +310,7 @@ const Destinations = {
             }
         }
         
-        // Rafraîchir la synthèse seulement s'il y a eu des changements
-        if (window.Synthèse && window.Synthèse.refresh) {
-            await window.Synthèse.refresh();
-        }
+        console.log('✅ Nettoyage des transports de première destination terminé');
     },
 
     /**
