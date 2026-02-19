@@ -256,6 +256,13 @@ class LocalStorageService {
         // Émettre événement pour la synchronisation
         this.emit('itinerary:updated', { id, ...updateData });
         
+        // Recharger la liste des destinations pour mettre à jour les dates (après la mise à jour DB)
+        if (updates.startDate && updates.startDate !== currentItinerary.startDate) {
+            if (window.Destinations && window.Destinations.loadDestinations) {
+                await window.Destinations.loadDestinations();
+            }
+        }
+        
         console.log('✅ Itinéraire mis à jour:', id);
     }
 
