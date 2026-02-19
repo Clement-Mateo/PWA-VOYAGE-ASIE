@@ -108,13 +108,13 @@ class LocalStorageService {
             id: this.generateTempId('itineraryToCreate'),
             userId: userId,
             name: itineraryData.name || 'Nouvel Itinéraire',
-            startDate: itineraryData.startDate || null,
+            startDate: (itineraryData.startDate || new Date()).toISOString(), // Toujours stocker en string
             notes: itineraryData.notes || '',
             active: false,
             isSync: false,
             destinations: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            createdAt: new Date().toISOString(), // Toujours stocker en string
+            updatedAt: new Date().toISOString() // Toujours stocker en string
         };
 
         await this.db.itineraries.add(newItinerary);
@@ -139,6 +139,19 @@ class LocalStorageService {
             .where('userId')
             .equals(userId)
             .toArray();
+        
+        // Convertir les dates en Date JavaScript si nécessaire
+        itineraries.forEach(itinerary => {
+            if (itinerary.startDate && typeof itinerary.startDate === 'string') {
+                itinerary.startDate = new Date(itinerary.startDate);
+            }
+            if (itinerary.createdAt && typeof itinerary.createdAt === 'string') {
+                itinerary.createdAt = new Date(itinerary.createdAt);
+            }
+            if (itinerary.updatedAt && typeof itinerary.updatedAt === 'string') {
+                itinerary.updatedAt = new Date(itinerary.updatedAt);
+            }
+        });
         
         console.log(`📋 ${itineraries.length} itinéraires chargés depuis IndexedDB`);
         return itineraries.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -167,6 +180,19 @@ class LocalStorageService {
             
             const current = userItineraries.find(itinerary => itinerary.active === true);
             
+            // Convertir les dates en Date JavaScript si nécessaire
+            if (current) {
+                if (current.startDate && typeof current.startDate === 'string') {
+                    current.startDate = new Date(current.startDate);
+                }
+                if (current.createdAt && typeof current.createdAt === 'string') {
+                    current.createdAt = new Date(current.createdAt);
+                }
+                if (current.updatedAt && typeof current.updatedAt === 'string') {
+                    current.updatedAt = new Date(current.updatedAt);
+                }
+            }
+            
             return current || null;
             
         } catch (error) {
@@ -188,7 +214,7 @@ class LocalStorageService {
         const updateData = {
             ...updates,
             isSync: false, // Marquer comme non synchronisé pour forcer la sync
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString() // Toujours stocker en string
         };
 
         // Si la date de début change, recalculer toutes les dates des destinations
