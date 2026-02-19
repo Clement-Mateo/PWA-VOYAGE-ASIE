@@ -117,6 +117,13 @@ const Destinations = {
                 <div class="destination-notes">${destination.notes.replace(/\n/g, '<br>')}</div>
             ` : ''}
             
+            <!-- Afficher les liens si présents -->
+            ${destination.links && destination.links.length > 0 ? `
+                <div class="links-list">
+                    ${destination.links.map(link => LinksService.createLinkCard(link, true)).join('')}
+                </div>
+            ` : ''}
+            
             <!-- Formulaire d'édition -->
             <div class="destination-form" id="form-${destination.id}">
                 <div class="form-group full-width">
@@ -146,6 +153,19 @@ const Destinations = {
                 <div class="form-group full-width">
                     <label class="form-label">Notes</label>
                     <textarea class="form-input" id="notes-${destination.id}" placeholder="Ajouter des notes ou remarques..." rows="3">${destination.notes || ''}</textarea>
+                </div>
+                
+                <!-- Section des liens -->
+                <div class="form-group full-width">
+                    <div class="links-header flex-between">
+                        <label class="form-label">Liens utiles</label>
+                        <button class="btn-add-link" onclick="LinksService.openModal('${destination.id}')" title="Ajouter un lien">
+                            <span class="material-icons">add_link</span> Ajouter un lien
+                        </button>
+                    </div>
+                    <div class="links-list" id="links-${destination.id}">
+                        ${destination.links ? destination.links.map(link => LinksService.createLinkCard(link)).join('') : ''}
+                    </div>
                 </div>
                 <div class="form-actions flex-center">
                     <button class="btn-save" onclick="Destination.saveDestination('${destination.id}')"><span class="material-icons">save</span> Enregistrer</button>

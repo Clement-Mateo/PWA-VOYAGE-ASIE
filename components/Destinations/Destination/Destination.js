@@ -3,7 +3,10 @@
  */
 
 const Destination = {
-    
+    isSaving: false,
+    links: [], // Liste des liens de la destination en cours d'édition
+    currentDestinationId: null, // ID de la destination en cours d'édition
+
     /**
      * Mettre à jour le style des champs adresse selon l'état de connexion
      */
@@ -90,6 +93,15 @@ const Destination = {
             if (minutesInput) minutesInput.value = destination.duration.minutes || 0;
         }
         
+        // Définir la destination en cours d'édition
+        this.currentDestinationId = destinationId;
+        
+        // Charger les liens dans la variable de classe
+        this.links = destination.links ? [...destination.links] : [];
+        
+        // Restaurer les liens sauvegardés
+        LinksService.reloadLinksList(destinationId, this.links);
+        
         // Focus automatique sur le champ nom pour l'édition
         setTimeout(() => {
             if (nameInput) {
@@ -148,7 +160,6 @@ const Destination = {
             window.showButtonLoading(`#form-${destinationId} .btn-save`, 'Enregistrement...');
 
             // Récupérer l'itinéraire courant
-            const currentItinerary = await window.localStorageService.getCurrentItinerary();
             const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
             const destination = destinations.find(d => d.id === destinationId);
             
@@ -163,6 +174,9 @@ const Destination = {
             const addressInput = document.getElementById(`address-${destinationId}`);
             const address = addressInput ? addressInput.value.trim() : '';
             const notes = document.getElementById(`notes-${destinationId}`).value.trim();
+            
+            // Récupérer les liens depuis la variable de classe
+            const links = this.links || [];
             
             // Récupérer les valeurs de durée
             const days = parseInt(document.getElementById(`days-${destinationId}`).value) || 0;
@@ -187,6 +201,7 @@ const Destination = {
                 ...destination,
                 name: name,
                 notes: notes || '',
+                links: links, // Ajout des liens
                 address: {
                     address: address,
                     country: destination.address?.country || null,
@@ -260,9 +275,9 @@ const Destination = {
             await window.localStorageService.updateDestination(destinationId, updatedDestination);
             
             if(destinationId === 'temp_destination') {
-                window.showSuccessSnackBar('Destination mise à jour avec succès');
-            } else {
                 window.showSuccessSnackBar('Destination créée avec succès');
+            } else {
+                window.showSuccessSnackBar('Destination mise à jour avec succès');
             }
             
             // Réactiver le hover sur les autres destinations
@@ -302,9 +317,16 @@ const Destination = {
             // Réactiver le hover sur les autres destinations
             this.enableOtherCardsHover();
             
+            // Nettoyer la variable de classe
+            this.links = [];
+            this.currentDestinationId = null;
+            
+            // Restaurer les liens sauvegardés (supprimer les liens temporaires)
+            LinksService.reloadLinksList(destinationId, destination.links || []);
+            
             // Restaurer les valeurs originales
-            const nameInput = document.querySelector(`#name-${destinationId}`);
-            const addressInput = document.querySelector(`#address-${destinationId}`);
+            const nameInput = document.getElementById(`name-${destinationId}`);
+            const addressInput = document.getElementById(`address-${destinationId}`);
             const durationInputs = document.querySelectorAll('#form-' + destinationId + ' .duration-inputs input');
             
             if (nameInput) nameInput.value = destination.name || '';

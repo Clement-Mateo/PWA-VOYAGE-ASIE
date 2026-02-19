@@ -38,3 +38,10 @@
     color: var(--gray-light);
     min-width: 12px;
 }
+
+
+/* Modale de transport - plus petite */
+.links-modal .modal-content {
+    width: 60%;
+    max-width: 400px;
+}

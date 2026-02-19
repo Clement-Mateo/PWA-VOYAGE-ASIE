@@ -211,6 +211,17 @@ const Activities = {
                         `;
                 }
                 
+                // Afficher les liens si présents
+                if (activity.links && activity.links.length > 0) {
+                    activityHTML += `
+                        <div class="activity-links">
+                            <div class="links-list">
+                                ${activity.links.map(link => LinksService.createLinkCard(link, true, '${activity.id}')).join('')}
+                            </div>
+                        </div>
+                        `;
+                }
+                
                 activityHTML += `
                     </div>
                 `;

@@ -1,0 +1,96 @@
+/* ========================================
+   STYLES DES LIENS
+   ======================================== */
+
+.links-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.btn-add-link {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-add-link:hover {
+    background: var(--primary-dark);
+}
+
+.links-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.link-card {
+    background: var(--gray);
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.read-only-link-card {
+    cursor: pointer;
+}
+
+.link-card:hover {
+    border-color: var(--primary-blue);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.link-name {
+    font-weight: 500;
+    color: var(--font-color-black);
+    font-size: 0.8em;
+}
+
+.link-info .material-icons {
+    color: var(--primary-blue);
+    font-size: 15px;
+    padding-top: 2px;
+}
+
+.btn-edit-link {
+    border: none;
+    cursor: pointer;
+    display: flex;
+}
+
+.btn-edit-link:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.btn-edit-link .material-icons {
+    color: var(--primary-blue);
+}
+
+.btn-remove-link {
+    border: none;
+    cursor: pointer;
+    display: flex;
+}
+
+.btn-remove-link:hover {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.btn-remove-link .material-icons {
+    color: var(--error-red);
+}

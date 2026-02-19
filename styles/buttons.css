@@ -177,6 +177,10 @@
     box-shadow: var(--box-shadow-1);
 }
 
+.btn-add:hover {
+    background: var(--primary-dark);
+}
+
 .btn-add:active {
     transform: translateY(0);
     box-shadow: var(--box-shadow-2);
