@@ -8,6 +8,13 @@ class Itineraries {
     }
 
     /**
+     * Vérifier si un itinéraire est en cours d'édition
+     */
+    isEditingItinerary() {
+        return this.editingItineraryId !== null;
+    }
+
+    /**
      * Initialiser le composant
      */
     init() {
@@ -123,16 +130,16 @@ class Itineraries {
         const startDateText = startDate ? startDate.toLocaleDateString('fr-FR') : 'Non définie';
         
         return `
-            <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="window.Itineraries.setActiveItinerary('${itinerary.id}')">
+            <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="if(!window.Itineraries.isEditingItinerary()) { window.Itineraries.setActiveItinerary('${itinerary.id}') }">
                 <div class="card-content">
                     <div class="card-header">
-                        <h4 class="card-title" id="itinerary-name-${itinerary.id}" onclick="event.stopPropagation(); window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier l'itinéraire">${window.escapeHtml(itinerary.name)}</h4>
+                        <h4 class="card-title" id="itinerary-name-${itinerary.id}">${window.escapeHtml(itinerary.name)}</h4>
                         <div class="card-actions">
-                            <button class="btn-edit" onclick="event.stopPropagation(); window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier">
+                            <button class="btn-edit" onclick="window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier">
                                 <span class="material-icons">edit</span>
                             </button>
                             ${hasMultipleItineraries ? `
-                            <button class="btn-delete" onclick="event.stopPropagation(); window.Itineraries.deleteItinerary('${itinerary.id}')" title="Supprimer">
+                            <button class="btn-delete" onclick="window.Itineraries.deleteItinerary('${itinerary.id}')" title="Supprimer">
                                 <span class="material-icons">delete</span>
                             </button>
                             ` : ''}
@@ -296,6 +303,9 @@ class Itineraries {
             return;
         }
         
+        // Marquer comme en édition
+        this.editingItineraryId = itineraryId;
+        
         // Déplier le formulaire
         this.expandItineraryForm(itineraryId);
     }
@@ -351,6 +361,9 @@ class Itineraries {
             // Replier le formulaire
             this.collapseItineraryForm(itineraryId);
             
+            // Fin du mode édition
+            this.editingItineraryId = null;
+            
             // Rafraîchir l'affichage
             this.renderItineraries();
             
@@ -392,215 +405,16 @@ class Itineraries {
             }
             
             if (notesInput) notesInput.value = itinerary.notes || '';
+            
+            // Fin du mode édition
+            this.editingItineraryId = null;
         } catch (error) {
             console.error('Erreur annulation édition:', error);
         }
     }
 
     /**
-     * Éditer le nom d'un itinéraire (inline) - conservé pour compatibilité
-     */
-    async editItineraryName(itineraryId) {
-        const currentItinerary = await window.localStorageService.getCurrentItinerary(window.firebaseService.getCurrentUser().uid);
-        const itineraries = currentItinerary ? await window.localStorageService.getItineraries(currentItinerary.userId) : [];
-        const itinerary = itineraries.find(i => i.id === itineraryId);
-        if (!itinerary) return;
-
-        const titleElement = document.getElementById(`itinerary-name-${itineraryId}`);
-        if (!titleElement) return;
-
-        // Si déjà en édition, ne rien faire
-        if (this.editingItineraryId === itineraryId) {
-            return;
-        }
-
-        // Marquer comme en édition
-        this.editingItineraryId = itineraryId;
-        let cancelled = false; // Flag pour empêcher la sauvegarde après Échap
-
-        const currentName = window.escapeHtml(itinerary.name);
-        
-        // Créer le conteneur pour l'input (position relative pour l'icône)
-        const inputContainer = document.createElement('div');
-        inputContainer.style.cssText = `
-            position: relative;
-            width: 100%;
-            display: flex;
-            align-items: center;
-        `;
-
-        // Créer l'input avec padding pour l'icône
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = itinerary.name;
-        input.className = 'itinerary-name-input';
-        input.style.cssText = `
-            background: transparent;
-            border: 1px solid var(--primary-blue);
-            border-radius: 4px;
-            padding: 2px 30px 2px 6px;  // Padding droit pour l'icône
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--font-color-gray-dark);
-            width: 100%;
-            outline: none;
-            box-sizing: border-box;
-        `;
-
-        // Créer l'icône de validation (positionnée à l'intérieur)
-        const validationIcon = document.createElement('span');
-        validationIcon.className = 'material-icons';
-        validationIcon.textContent = 'check';
-        validationIcon.style.cssText = `
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--success-green);
-            cursor: pointer;
-            font-size: 16px;
-            display: none;
-            transition: all 0.2s ease;
-            background: transparent;
-        `;
-
-        // Ajouter les éléments au conteneur
-        inputContainer.appendChild(input);
-        inputContainer.appendChild(validationIcon);
-
-        // Remplacer le titre par le conteneur d'input
-        titleElement.innerHTML = '';
-        titleElement.appendChild(inputContainer);
-        input.focus();
-        input.select();
-
-        // Fonction pour restaurer le titre
-        const restoreTitle = (finalName) => {
-            // Recréer l'élément h4
-            const newTitle = document.createElement('h4');
-            newTitle.className = 'card-title';
-            newTitle.id = `itinerary-name-${itineraryId}`;
-            newTitle.textContent = window.escapeHtml(finalName);
-            newTitle.onclick = () => this.editItineraryName(itineraryId);
-            newTitle.title = 'Modifier le nom';
-            newTitle.style.cursor = 'pointer';
-            
-            // Remplacer le conteneur d'input par le titre
-            inputContainer.replaceWith(newTitle);
-            
-            this.editingItineraryId = null; // Fin du mode édition
-        };
-
-        // Fonction de sauvegarde
-        const saveName = async () => {
-            const newName = input.value.trim();
-            
-            // Si pas de changement, restaurer simplement
-            if (!newName || newName === currentName) {
-                restoreTitle(currentName);
-                return;
-            }
-
-            // Vérifier si le nom existe déjà
-            const nameExists = itineraries.some(i => i.id !== itineraryId && i.name === newName);
-            if (nameExists) {
-                showErrorSnackBar('Un itinéraire avec ce nom existe déjà');
-                restoreTitle(currentName);
-                return;
-            }
-
-            try {
-                // Mettre à jour le nom (instantané dans IndexedDB)
-                itinerary.name = newName;
-                await this.updateItineraryName(itineraryId, newName);
-                restoreTitle(newName);
-            } catch (error) {
-                // En cas d'erreur, restaurer l'état d'édition
-                input.focus();
-                console.error('Erreur sauvegarde nom:', error);
-            }
-        };
-
-        // Afficher l'icône de validation quand le contenu change
-        const showValidationIcon = () => {
-            const hasChanges = input.value.trim() && input.value.trim() !== currentName;
-            if (hasChanges) {
-                validationIcon.style.display = 'block';
-            } else {
-                validationIcon.style.display = 'none';
-            }
-        };
-
-        // Écouteurs d'événements
-        input.addEventListener('input', showValidationIcon);
-        showValidationIcon(); // État initial
-
-        // Sauvegarder au clic sur l'icône de validation
-        validationIcon.addEventListener('click', saveName);
-
-        // Détecter le clic en dehors du champ input
-        let isEditing = true;
-        
-        const handleClickOutside = (e) => {
-            if (!inputContainer.contains(e.target) && !validationIcon.contains(e.target) && isEditing) {
-                restoreTitle(currentName);
-                isEditing = false;
-                document.removeEventListener('mousedown', handleClickOutside);
-            }
-        };
-
-        // Ajouter l'écouteur de clic sur tout le document avec un petit délai
-        setTimeout(() => {
-            document.addEventListener('mousedown', handleClickOutside);
-        }, 100);
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                saveName();
-                // Retirer l'écouteur après sauvegarde
-                isEditing = false;
-                document.removeEventListener('mousedown', handleClickOutside);
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                restoreTitle(currentName);
-                // Retirer l'écouteur après annulation
-                isEditing = false;
-                document.removeEventListener('mousedown', handleClickOutside);
-            }
-        });
-    }
-
-    /**
-     * Mettre à jour le nom d'un itinéraire en base
-     */
-    async updateItineraryName(itineraryId, newName) {
-        try {
-            const currentItinerary = await window.localStorageService.getCurrentItinerary();
-            const itineraries = currentItinerary ? await window.localStorageService.getItineraries() : [];
-            const itinerary = itineraries.find(i => i.id === itineraryId);
-            if (!itinerary) return;
-
-            // Mettre à jour le nom
-            itinerary.name = newName;
-            
-            // Mettre à jour via localStorage
-            await window.localStorageService.updateItinerary(itineraryId, itinerary);
-            
-            showSuccessSnackBar('Nom de l\'itinéraire mis à jour');
-            
-            // Mettre à jour le nom dans le sidebar si c'est l'itinéraire actuel
-            if (window.Sidebar && window.Sidebar.updateItineraryName) {
-                window.Sidebar.updateItineraryName();
-            }
-        } catch (error) {
-            console.error('Erreur mise à jour nom itinéraire:', error);
-            showErrorSnackBar('Erreur lors de la mise à jour du nom');
-        }
-    }
-
-    /**
-     * Rendre un itinéraire actif
+     * Sauvegarder les modifications d'un itinéraire
      */
     async setActiveItinerary(itineraryId, manageLoading = true) {
         try {
