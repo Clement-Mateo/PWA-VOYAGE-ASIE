@@ -151,3 +151,8 @@
     flex-shrink: 0;
 }
 
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: calc(5px + 2%);
+}

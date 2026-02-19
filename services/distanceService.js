@@ -289,6 +289,13 @@ class DistanceService {
      * @returns {number} - 0 pour arrivée même jour, 1 pour lendemain
      */
     calculateArrivalDayOffset(transportation) {
+        // Si la case "Arrivée le lendemain" est explicitement cochée, utiliser cette valeur
+        if (transportation && typeof transportation.arrivalNextDay === 'boolean') {
+            const offset = transportation.arrivalNextDay ? 1 : 0;
+            console.log(`📅 Case "Arrivée le lendemain": ${transportation.arrivalNextDay ? 'cochée' : 'décochée'} → offset: ${offset}`);
+            return offset;
+        }
+        
         // Si pas de transport, arrivée lendemain par défaut
         if (!transportation || !transportation.duration) {
             console.log('⚠️ Aucun temps de transport disponible, arrivée lendemain par défaut');

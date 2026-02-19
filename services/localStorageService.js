@@ -443,7 +443,7 @@ class LocalStorageService {
     /**
      * Mettre à jour une destination (dans l'itinéraire actuel)
      */
-    async updateDestination(destinationId, updates) {
+    async updateDestination(destinationId, updates, options = {}) {
         if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
 
         const currentItinerary = await this.getCurrentItinerary();
@@ -508,11 +508,12 @@ class LocalStorageService {
         const hasAddressChanged = updates.address && currentDestination.address?.address !== updates.address?.address;
         const hasDurationChanged = updates.duration && JSON.stringify(currentDestination.duration) !== JSON.stringify(updates.duration);
         const hasTransportTypeChanged = updates.transportation && updates.transportation.type !== currentDestination.transportation?.type;
+        const forceRecalculate = options.forceRecalculateDates === true;
 
-        const shouldRecalculateDates = hasAddressChanged || hasDurationChanged || hasTransportTypeChanged;
+        const shouldRecalculateDates = hasAddressChanged || hasDurationChanged || hasTransportTypeChanged || forceRecalculate;
 
         if (shouldRecalculateDates) {
-            const reason = hasAddressChanged ? 'adresse' : hasDurationChanged ? 'durée' : 'transport';
+            const reason = hasAddressChanged ? 'adresse' : hasDurationChanged ? 'durée' : hasTransportTypeChanged ? 'transport' : 'case arrivée (forcée)';
             console.log(`🔄 Recalcul des dates pour ${updatedDestination.name} (raison: ${reason})`);
             
             // Récupérer les destinations précédentes pour le calcul

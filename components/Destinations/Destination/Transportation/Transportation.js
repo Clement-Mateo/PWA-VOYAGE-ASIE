@@ -122,6 +122,12 @@ const Transportation = {
                                placeholder="0.00" step="0.01" min="0">
                     </div>
                     
+                    <div class="form-group" checkbox-group full-width>
+                        <input type="checkbox" id="arrivalNextDay" 
+                                ${this.shouldCheckNextDay(transportation) ? 'checked' : ''}>
+                        <span class="bbbb">Arrivée le lendemain</span>
+                    </div>
+                    
                     <div class="form-group full-width">
                         <label class="form-label">Notes</label>
                         <textarea class="form-input" id="transportNotes" 
@@ -167,8 +173,36 @@ const Transportation = {
         const type = document.getElementById('transportType').value;
         const cost = document.getElementById('transportCost').value;
         const notes = document.getElementById('transportNotes').value;
+        const arrivalNextDayCheckbox = document.getElementById('arrivalNextDay');
         
-        console.log('saveTransportation - Valeurs récupérées:', { type, cost });
+        // Déterminer si c'est une création ou une édition
+        const isEditing = destination.transportation && destination.transportation.type;
+        
+        // Utiliser la case à cocher seulement en édition et si l'utilisateur a changé la valeur
+        let arrivalNextDay = false;
+        let arrivalDayChanged = false; // Pour détecter si l'utilisateur a changé la case
+        if (isEditing) {
+            // En édition : utiliser la valeur de la case seulement si l'utilisateur a changé
+            const defaultShouldCheck = this.shouldCheckNextDay(destination.transportation);
+            const userChecked = arrivalNextDayCheckbox.checked;
+            
+            // Si l'utilisateur a changé la valeur par défaut, utiliser son choix
+            if (userChecked !== defaultShouldCheck) {
+                arrivalNextDay = userChecked;
+                arrivalDayChanged = true;
+                console.log(`📅 Utilisateur a changé la case: ${userChecked ? 'cochée' : 'décochée'}`);
+            } else {
+                // Sinon, ne pas sauvegarder arrivalNextDay (utilise le calcul automatique)
+                arrivalNextDay = undefined;
+                console.log(`📅 Utilisateur n'a pas changé la case, utilisation du calcul auto`);
+            }
+        } else {
+            // En création : toujours utiliser le calcul automatique
+            arrivalNextDay = undefined;
+            console.log(`📅 Création : utilisation du calcul auto`);
+        }
+        
+        console.log('saveTransportation - Valeurs récupérées:', { type, cost, arrivalNextDay, isEditing });
         
         // Afficher le spinner de chargement
         window.showButtonLoading('.modal-footer .btn-save', 'Enregistrement');
@@ -243,6 +277,12 @@ const Transportation = {
                 notes: notes || null
             };
             
+            // Ajouter arrivalNextDay seulement en édition et si l'utilisateur a changé la valeur
+            if (isEditing && arrivalNextDay !== undefined) {
+                transportationData.arrivalNextDay = arrivalNextDay;
+                console.log(`📅 Sauvegarde arrivalNextDay: ${arrivalNextDay}`);
+            }
+            
             // Mettre à jour la destination avec le nouveau transport
             const updatedDestination = {
                 ...destination,
@@ -250,7 +290,7 @@ const Transportation = {
             };
             
             // Sauvegarder via localStorage
-            await window.localStorageService.updateDestination(destination.id, updatedDestination);
+            await window.localStorageService.updateDestination(destination.id, updatedDestination, { forceRecalculateDates: arrivalDayChanged });
             
             window.showSuccessSnackBar('Transport mis à jour avec succès');
             
@@ -390,6 +430,20 @@ const Transportation = {
             'a pied': 'À pied'
         };
         return labels[type] || type;
+    },
+
+    /**
+     * Déterminer si la case "Arrivée le lendemain" doit être cochée par défaut
+     */
+    shouldCheckNextDay(transportation) {
+        // En création (pas de transport existant), ne pas cocher par défaut
+        if (!transportation || !transportation.type) {
+            return false;
+        }
+        
+        // En édition, utiliser le calcul par défaut du distanceService
+        const daysToAdd = window.distanceService.calculateArrivalDayOffset(transportation);
+        return daysToAdd > 0;
     },
 
     /**

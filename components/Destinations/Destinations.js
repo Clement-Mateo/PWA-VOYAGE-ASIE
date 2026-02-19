@@ -105,7 +105,7 @@ const Destinations = {
                         <span class="date-value">${new Date(destination.arrivalDate).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
                     <div class="date-item">
-                        <span class="material-icons">event_available</span>
+                        <span class="material-icons">event</span>
                         <span class="date-label">Départ:</span>
                         <span class="date-value">${new Date(destination.departureDate).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
