@@ -193,7 +193,6 @@ const Login = {
             // Réactiver le bouton mais ne pas masquer le loading global
             const button = document.querySelector('.auth-btn-primary');
             if (button) button.disabled = false;
-            // Le loading global sera géré par updateUserPanel
         }
     },
 
