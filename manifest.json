@@ -1,7 +1,7 @@
 {
-  "name": "Carte du Monde Interactive",
-  "short_name": "CarteInteractive",
-  "description": "Carte du monde interactive avec recherche d'adresses",
+  "name": "Trip planner",
+  "short_name": "TripPlanner",
+  "description": "Application de planification de voyage",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",

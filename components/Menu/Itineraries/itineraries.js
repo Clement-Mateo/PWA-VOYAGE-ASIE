@@ -126,8 +126,17 @@ class Itineraries {
         const hasMultipleItineraries = itineraries.length > 1;
         
         // Formater la date de début pour l'affichage
-        const startDate = itinerary.startDate ? (itinerary.startDate.toDate ? new Date(itinerary.startDate.toDate()) : new Date(itinerary.startDate)) : null;
-        const startDateText = startDate ? startDate.toLocaleDateString('fr-FR') : 'Non définie';
+        let startDate = null;
+        let startDateText = 'Non définie';
+        
+        if (itinerary.startDate) {
+            if (itinerary.startDate.toDate) {
+                startDate = new Date(itinerary.startDate.toDate());
+            } else {
+                startDate = new Date(itinerary.startDate);
+            }
+            startDateText = startDate.toLocaleDateString('fr-FR');
+        }
         
         return `
             <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="if(!window.Itineraries.isEditingItinerary()) { window.Itineraries.setActiveItinerary('${itinerary.id}') }">
@@ -350,7 +359,22 @@ class Itineraries {
             itinerary.notes = newNotes;
             
             if (newStartDate) {
-                itinerary.startDate = new Date(newStartDate);
+                try {
+                    const parsedDate = new Date(newStartDate);
+                    // Validation de la date avant sauvegarde
+                    if (isNaN(parsedDate.getTime()) || 
+                        parsedDate.getFullYear() < 1970 || 
+                        parsedDate.getFullYear() > 9999) {
+                        console.error('❌ Date invalide lors de la sauvegarde:', newStartDate);
+                        showErrorSnackBar('La date de début est invalide');
+                        return;
+                    }
+                    itinerary.startDate = parsedDate;
+                } catch (error) {
+                    console.error('❌ Erreur parsing date lors de la sauvegarde:', error);
+                    showErrorSnackBar('La date de début est invalide');
+                    return;
+                }
             } else if (itinerary.startDate) {
                 delete itinerary.startDate;
             }

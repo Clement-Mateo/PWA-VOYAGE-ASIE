@@ -102,6 +102,20 @@ class LocalStorageService {
                 startDate: new Date(), // Date du jour par défaut
                 notes: ''
             };
+        } else if (itineraryData.startDate) {
+            // Valider la date si fournie
+            try {
+                const parsedDate = new Date(itineraryData.startDate);
+                if (isNaN(parsedDate.getTime()) || 
+                    parsedDate.getFullYear() < 1970 || 
+                    parsedDate.getFullYear() > 9999) {
+                    console.warn('⚠️ Date invalide dans createItinerary, utilisation de la date du jour');
+                    itineraryData.startDate = new Date();
+                }
+            } catch (error) {
+                console.error('❌ Erreur parsing date dans createItinerary:', error);
+                itineraryData.startDate = new Date();
+            }
         }
         
         const newItinerary = {
