@@ -96,6 +96,22 @@ const Destinations = {
             <div class="destination-address">${destination.address ? destination.address.address : 'Adresse non définie'}</div>
             <div class="destination-duration">${durationText || "Aucune durée"}</div>
             
+            <!-- Afficher les dates calculées -->
+            ${destination.arrivalDate && destination.departureDate ? `
+                <div class="destination-dates">
+                    <div class="date-item">
+                        <span class="material-icons">event</span>
+                        <span class="date-label">Arrivée:</span>
+                        <span class="date-value">${new Date(destination.arrivalDate).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <div class="date-item">
+                        <span class="material-icons">event</span>
+                        <span class="date-label">Départ:</span>
+                        <span class="date-value">${new Date(destination.departureDate).toLocaleDateString('fr-FR', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                </div>
+            ` : ''}
+            
             <!-- Afficher les notes si présentes -->
             ${destination.notes && destination.notes.trim() ? `
                 <div class="destination-notes">${destination.notes.replace(/\n/g, '<br>')}</div>
@@ -503,74 +519,8 @@ const Destinations = {
                     const connector = document.createElement('div');
                     connector.className = 'destination-connector';
                     
-                    // Ajouter la carte de transport à l'intérieur du connecteur
-                    let transportation = destination.transportation;
-                    
-                    // Si pas de transport, calculer le transport par défaut intelligent
-                    if (!transportation) {
-                        console.log('🚦 Aucun transport existant, calcul du transport par défaut...');
-                        try {
-                            // Récupérer la destination précédente dans la liste triée
-                            const previousDestination = sortedDestinations[sortedIndex - 1];
-                            console.log('📍 Destination précédente:', previousDestination?.name);
-                            console.log('📍 Destination actuelle:', destination.name);
-                            console.log('🔍 Coordonnées destination précédente:', previousDestination?.address?.location);
-                            console.log('🔍 Coordonnées destination actuelle:', destination.address?.location);
-                            
-                            if (previousDestination && (previousDestination.address?.location?.lat && previousDestination.address?.location?.lng)) {
-                                const coords = destination.address?.location ? [destination.address.location.lat, destination.address.location.lng] : [0, 0];
-                                const prevCoords = [previousDestination.address.location.lat, previousDestination.address.location.lng];
-                                
-                                console.log('🌍 Coordonnées précédentes:', prevCoords);
-                                console.log('🌍 Coordonnées actuelles:', coords);
-                                
-                                // Déterminer le transport par défaut
-                                const defaultTransport = await window.distanceService.determineDefaultTransport(
-                                    prevCoords[0], prevCoords[1], // lat, lon précédent
-                                    coords[0], coords[1]           // lat, lon actuel
-                                );
-                                
-                                transportation = {
-                                    type: defaultTransport.type,
-                                    cost: 0,
-                                    duration: defaultTransport.duration,
-                                    distance: defaultTransport.distance,
-                                    isStraightLine: defaultTransport.isStraightLine,
-                                    notes: null
-                                };
-                                
-                                console.log(`🚗 Transport par défaut: ${defaultTransport.type} - ${defaultTransport.distance}km`);
-                            } else {
-                                console.log('⚠️ Condition non vérifiée - previousDestination:', !!previousDestination, 'address.location:', !!previousDestination?.address?.location);
-                                // Fallback si pas de destination précédente
-                                transportation = {
-                                    type: 'voiture',
-                                    cost: 0,
-                                    duration: null,
-                                    distance: null,
-                                    notes: null
-                                };
-                            }
-                        } catch (error) {
-                            console.error('Erreur calcul transport par défaut:', error);
-                            // Fallback en cas d'erreur
-                            transportation = {
-                                type: 'voiture',
-                                cost: 0,
-                                duration: null,
-                                distance: null,
-                                notes: null
-                            };
-                        }
-                    }
-                    
-                    // Sauvegarder le transport par défaut dans la base si la destination n'en a pas
-                    if (!destination.transportation) {
-                        await window.localStorageService.updateDestination(destination.id, {
-                            ...destination,
-                            transportation: transportation
-                        });
-                    }
+                    // Le transport est maintenant calculé dans updateDestination
+                    const transportation = destination.transportation;
                     
                     const transportCard = Transportation.createTransportationCard(transportation, destination.id);
                     if (transportation.notes && transportation.notes.trim()) {                        
@@ -626,7 +576,7 @@ const Destinations = {
         const destinationData = {
             name: '',
             address: '',
-            duration: { days: 0, hours: 0, minutes: 0 },
+            duration: { days: 3, hours: 0, minutes: 0 },
             order: destinations.length // Order = position dans la liste
         };
 

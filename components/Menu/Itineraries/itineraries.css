@@ -1,6 +1,5 @@
 /**
  * Styles pour le gestionnaire d'itinéraires
- * Utilise les classes génériques de modals.css
  */
 
 /* ========================================
@@ -23,11 +22,14 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    max-height: calc(95vh - 250px);
+    overflow-y: auto;
     margin-bottom: 24px;
+    padding: 6px; /* Ajout de padding pour éviter que le box-shadow soit coupé */
 }
 
 /* ========================================
-   ITINERARY CARDS (réutilise les classes card)
+   ITINERARY CARDS
    ======================================== */
 
 .card {
@@ -92,7 +94,135 @@
 }
 
 /* ========================================
-   EMPTY STATE (réutilise les classes empty-state)
+   ITINERARY CARDS EXPANSION
+   ======================================== */
+
+/* Carte d'itinéraire en mode édition */
+.card.editing {
+    cursor: default !important;
+    pointer-events: none;
+}
+
+.card.editing * {
+    pointer-events: auto;
+}
+
+.card.editing:hover {
+    transform: none !important;
+    box-shadow: var(--box-shadow-1) !important;
+}
+
+/* Carte d'itinéraire étendue */
+.card.expanded {
+    background: var(--background-light);
+    transform: none !important;
+}
+
+.card.expanded:hover {
+    transform: none !important;
+    box-shadow: var(--box-shadow-2) !important;
+}
+
+/* Masquer le bouton expand en mode édition */
+.card.editing .btn-expand {
+    display: none;
+}
+
+/* Masquer le bouton edit en mode édition */
+.card.editing .btn-edit {
+    display: none;
+}
+
+/* ========================================
+   ITINERARY FORM
+   ======================================== */
+
+.itinerary-form {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-light);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group.full-width {
+    width: 100%;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--font-color-gray-dark);
+}
+
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--background-light);
+    color: var(--font-color-gray-dark);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--gray-light);
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* ========================================
+   ITINERARY NOTES
+   ======================================== */
+
+.itinerary-notes {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 3px solid var(--primary-blue);
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: var(--font-color-gray);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* ========================================
+   EMPTY STATE
    ======================================== */
 
 .empty-icon {

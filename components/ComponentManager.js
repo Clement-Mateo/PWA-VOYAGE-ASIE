@@ -12,6 +12,19 @@ export const ComponentManager = {
         menuPopup: 'menuPopupContainer',
         addDestination: 'addPanelContainer'
     },
+    
+    // Ordre d'initialisation des composants
+    initializationOrder: [
+        'versionManager',
+        'offlineFirstApp', 
+        'login',
+        'settings',
+        'leafletMap',
+        'sidebar',
+        'chooseAddress',
+        'destinations',
+        'activity'
+    ],
 
     /**
      * Enregistrer un composant
@@ -67,24 +80,185 @@ export const ComponentManager = {
     },
 
     /**
-     * Initialiser tous les composants enregistrés
+     * Initialiser l'application complète dans le bon ordre
      */
     async initAll() {
-        const loadPromises = [];
-        
-        for (const [name] of this.components) {
-            if (this.containers[name]) {
-                loadPromises.push(this.load(name));
-            }
-        }
+        console.log('🚀 ComponentManager: Démarrage de l\'initialisation séquentielle...');
         
         try {
-            const results = await Promise.all(loadPromises);
-            console.log('Tous les composants chargés:', results.length);
-            return results;
+            // 1. Vérifier la version
+            if (window.CacheVersionManager) {
+                console.log('📋 1/13 Vérification de la version...');
+                const versionManager = new window.CacheVersionManager();
+                await versionManager.init();
+            }
+            
+            // 2. Initialiser l'architecture offline-first
+            if (window.OfflineFirstApp) {
+                console.log('🏗️ 2/13 Initialisation de l\'architecture offline-first...');
+                const app = new window.OfflineFirstApp();
+                await app.init();
+                window.offlineFirstApp = app;
+            }
+            
+            // 3. Initialiser Login
+            if (window.Login) {
+                console.log('🔐 3/13 Initialisation de Login...');
+                window.Login.init();
+            }
+            
+            // 4. Initialiser Settings
+            if (window.Settings) {
+                console.log('⚙️ 4/13 Initialisation de Settings...');
+                window.Settings.init();
+            }
+            
+            // 5. Initialiser LeafletMap
+            if (window.LeafletMap) {
+                console.log('🗺️ 5/13 Initialisation de LeafletMap...');
+                const mapInstance = new window.LeafletMap();
+                mapInstance.init();
+                mapInstance.exportForLegacy();
+                window.MapInstance = mapInstance;
+                console.log('✅ LeafletMap initialisée et exportée');
+            }
+            
+            // 6. Vérifier les taux de change
+            if (window.LocationService && navigator.onLine) {
+                console.log('💱 6/13 Vérification des taux de change...');
+                try {
+                    await window.LocationService.loadExchangeRates();
+                    console.log('✅ Taux de change vérifiés au démarrage');
+                } catch (error) {
+                    console.warn('⚠️ Impossible de vérifier les taux de change au démarrage:', error);
+                }
+            }
+            
+            // 7. Initialiser Sidebar
+            if (window.Sidebar) {
+                console.log('📋 7/13 Initialisation de Sidebar...');
+                await window.Sidebar.init();
+            }
+            
+            // 8. Initialiser ChooseAddress
+            if (window.ChooseAddress) {
+                console.log('📍 8/13 Initialisation de ChooseAddress...');
+                window.ChooseAddress.init();
+            }
+            
+            // 9. Initialiser Destinations
+            if (window.Destinations) {
+                console.log('🎯 9/13 Initialisation de Destinations...');
+                await window.Destinations.loadDestinations();
+            }
+            
+            // 10. Initialiser Activity
+            if (window.Activity) {
+                console.log('🎪 10/13 Initialisation de Activity...');
+                window.Activity.init();
+            }
+            
+            // 11. Initialiser Menu
+            if (window.Menu) {
+                console.log('📱 11/13 Initialisation de Menu...');
+                // Menu est déjà initialisé globalement, pas besoin de .init()
+            }
+            
+            // 12. Initialiser Itineraries
+            if (window.Itineraries) {
+                console.log('🗂️ 12/13 Initialisation de Itineraries...');
+                // Itineraries est déjà initialisé globalement, pas besoin de .init()
+            }
+            
+            // 13. Mettre à jour le panneau utilisateur une fois tout initialisé
+            await this.updateUserPanel();
+            
+            console.log('✅ ComponentManager: Initialisation complète terminée');
+            
         } catch (error) {
-            console.error('Erreur lors du chargement des composants:', error);
-            return [];
+            console.error('❌ ComponentManager: Erreur lors de l\'initialisation:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Mettre à jour le panneau utilisateur après initialisation complète
+     */
+    async updateUserPanel() {
+        console.log('🔄 ComponentManager: Mise à jour du panneau utilisateur...');
+        
+        if (!window.firebaseService || !window.firebaseService.isReady()) {
+            console.warn('⚠️ FirebaseService non prêt, attente...');
+            return;
+        }
+        
+        if (window.firebaseService.isAuthenticated()) {
+            // Utilisateur connecté
+            console.log('✅ Utilisateur connecté');
+            
+            if (window.offlineFirstApp && window.offlineFirstApp.loadUserDataFromFirebase) {
+                console.log('📥 Chargement des données utilisateur depuis Firebase...');
+                await window.offlineFirstApp.loadUserDataFromFirebase();
+            } else {
+                console.warn('⚠️ loadUserDataFromFirebase non disponible');
+            }
+            
+            // Masquer la page de connexion
+            if (window.Login) {
+                window.Login.hide();
+            } else {
+                console.error('❌ Login non trouvé');
+            }
+
+            // Utiliser IndexedDB comme source de données principale
+            const itineraries = await window.localStorageService.getItineraries();
+            
+            // Créer un itinéraire si aucun n'existe
+            if (itineraries.length === 0) {
+                await window.localStorageService.createItinerary();
+            }
+            
+            // Vérifier et supprimer la destination temporaire
+            await window.localStorageService.removeTempDestination();
+            
+            // Vérifier s'il y a un itinéraire actif
+            const currentItinerary = await window.localStorageService.getCurrentItinerary();
+            if (!currentItinerary && itineraries.length > 0 && window.Itineraries) {
+                console.log('🔄 Aucun itinéraire actif trouvé, activation du premier disponible');
+                await window.Itineraries.setActiveItinerary(itineraries[0].id, false);
+            }
+
+            // Afficher la carte
+            if (window.MapInstance) {
+                window.MapInstance.show();
+            }
+        } else {
+            // Utilisateur déconnecté
+            console.log('🔒 Utilisateur déconnecté');
+            
+            // Afficher la page de connexion
+            if (window.Login) {
+                window.Login.show();
+            } else {
+                console.error('❌ Login non trouvé');
+            }
+            
+            // Effacer les marqueurs lors de la déconnexion
+            if (window.MapInstance && window.MapInstance.cleanMap) {
+                window.MapInstance.cleanMap();
+            }
+            
+            // Masquer la carte
+            if (window.MapInstance) {
+                window.MapInstance.hide();
+            } else {
+                console.error('❌ MapInstance non trouvé');
+            }
+        }
+
+        // Cacher le loading global
+        if (window.hideLoading) {
+            window.hideLoading();
         }
     },
 

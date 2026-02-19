@@ -653,36 +653,8 @@ const Synthèse = {
         }
     },
     
-    /**
-     * Rafraîchir la synthèse
-     */
-    async refresh() {
-        if (window.Menu && window.Menu.loadSynthese) {
-            window.Menu.loadSynthese();
-        }
-    }
 };
 
-// Écouteur centralisé pour rafraîchir automatiquement la synthèse lors des CRUD d'itinéraires/destinations
-function setupSyntheseEventListener() {
-    console.log('🔧 Mise en place de l écouteur d événements pour la synthèse');
-    window.addEventListener('itinerary:updated', (event) => {
-        console.log('🔄 Événement itinerary:updated reçu - Rafraîchissement de la synthèse', event.detail);
-        if (window.Synthèse && window.Synthèse.render) {
-            // Attendre plus longtemps pour laisser le temps aux recalculs de transports de se terminer
-            setTimeout(() => {
-                window.Synthèse.refresh();
-            }, 100);
-        }
-    });
-}
-
-// Initialiser l'écouteur quand le DOM est prêt
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupSyntheseEventListener);
-} else {
-    setupSyntheseEventListener();
-}
 
 // Exporter globalement
 window.Synthèse = Synthèse;

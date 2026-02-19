@@ -50,6 +50,11 @@ class Menu {
             document.body.style.overflow = 'hidden';
             this.isOpen = true;
             
+            // Recharger la synthèse à chaque ouverture pour avoir les données à jour
+            if (this.currentAction === 'synthese') {
+                this.loadSynthese();
+            }
+            
             if (this.isMobile) {
                 // Mobile : afficher la navigation par défaut SANS bouton actif
                 this.showNavigation();

@@ -97,6 +97,8 @@ class DistanceService {
      * Estimer la durée selon le type de transport (fallback)
      */
     estimateDurationByType(distanceKm, type) {
+        console.log('🧭 estimateDurationByType appelé avec:', { distanceKm, type });
+        
         const speeds = {
             'voiture': 80,    // km/h moyen
             'velo': 15,      // km/h moyen
@@ -111,13 +113,15 @@ class DistanceService {
             const hours = Math.floor(totalHours);
             const minutes = Math.round((totalHours - hours) * 60);
             
-            return { hours, minutes };
+            // Retourner un format cohérent avec days=0 pour les transports
+            return { days: 0, hours: hours, minutes: minutes };
         } else {
             const speed = speeds[type] || 80;
             const hours = Math.floor(distanceKm / speed);
             const minutes = Math.round((distanceKm / speed - hours) * 60);
             
-            return { hours, minutes };
+            // Retourner un format cohérent avec days=0 pour les transports
+            return { days: 0, hours: hours, minutes: minutes };
         }
     }
 
@@ -277,6 +281,61 @@ class DistanceService {
         const minutes = Math.round((seconds % 3600) / 60);
         
         return { hours, minutes };
+    }
+
+    /**
+     * Calculer le décalage en jours pour l'arrivée selon le type et durée du transport
+     * @param {Object} transportation - Objet transport avec type et duration {days, hours, minutes}
+     * @returns {number} - 0 pour arrivée même jour, 1 pour lendemain
+     */
+    calculateArrivalDayOffset(transportation) {
+        // Si la case "Arrivée le lendemain" est explicitement cochée, utiliser cette valeur
+        if (transportation && typeof transportation.arrivalNextDay === 'boolean') {
+            const offset = transportation.arrivalNextDay ? 1 : 0;
+            console.log(`📅 Case "Arrivée le lendemain": ${transportation.arrivalNextDay ? 'cochée' : 'décochée'} → offset: ${offset}`);
+            return offset;
+        }
+        
+        // Si pas de transport, arrivée lendemain par défaut
+        if (!transportation || !transportation.duration) {
+            console.log('⚠️ Aucun temps de transport disponible, arrivée lendemain par défaut');
+            return 1;
+        }
+
+        // Convertir la durée en heures depuis le format {days, hours, minutes}
+        let transportHours;
+        if (typeof transportation.duration === 'object' && transportation.duration.hours !== undefined) {
+            // Format {days, hours, minutes}
+            transportHours = transportation.duration.hours + (transportation.duration.minutes || 0) / 60;
+        } else {
+            console.log('⚠️ Format de durée non reconnu, arrivée lendemain par défaut');
+            return 1;
+        }
+        
+        const transportType = transportation.type;
+
+        console.log(`🚗 Analyse du transport: ${transportType} - ${transportHours.toFixed(1)}h`);
+
+        // Définir les seuils selon le type de transport
+        let maxHoursForSameDay;
+        
+        if (['avion', 'bus', 'train'].includes(transportType)) {
+            maxHoursForSameDay = 19; // Transports publics : 19h max
+        } else if (['voiture', 'velo', 'a pied'].includes(transportType)) {
+            maxHoursForSameDay = 10; // Transports individuels : 10h max
+        } else {
+            maxHoursForSameDay = 18; // Autres types : 18h par défaut
+        }
+
+        const offset = transportHours <= maxHoursForSameDay ? 0 : 1;
+        
+        if (offset === 0) {
+            console.log(`✅ Trajet ${transportType} ≤ ${maxHoursForSameDay}h : arrivée même jour`);
+        } else {
+            console.log(`🌙 Trajet ${transportType} > ${maxHoursForSameDay}h : arrivée lendemain`);
+        }
+
+        return offset;
     }
 }
 

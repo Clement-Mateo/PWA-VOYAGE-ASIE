@@ -305,3 +305,26 @@ function parseDuration(duration) {
 
 // Exporter la fonction parseDuration
 window.parseDuration = parseDuration;
+
+/**
+ * Extraire la durée en jours depuis l'objet duration
+ * @param {Object} duration - Objet duration {days, hours, minutes}
+ * @returns {Number} Durée en jours (minimum 3 si non spécifié ou 0)
+ */
+function extractDurationInDays(duration) {
+    let durationInDays;
+    
+    if (duration && typeof duration === 'object' && duration.days !== undefined) {
+        durationInDays = duration.days;
+    }
+    
+    // Si pas de durée ou durée = 0, utiliser 3 jours par défaut
+    if (!durationInDays || durationInDays === 0) {
+        durationInDays = 3;
+    }
+    
+    return durationInDays;
+}
+
+// Exporter la fonction extractDurationInDays
+window.extractDurationInDays = extractDurationInDays;

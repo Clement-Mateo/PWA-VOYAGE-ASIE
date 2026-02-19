@@ -197,91 +197,22 @@
     
     <!-- Component Manager -->
     <script type="module">
-        // Les composants sont déjà disponibles globalement
-        // Importer uniquement ComponentManager
+        // Importer ComponentManager
         import { ComponentManager } from './components/ComponentManager.js';
-        
-        // Récupérer les composants depuis window
-        const Destinations = window.Destinations;
-        const Activity = window.Activity;
-        const ChooseAddress = window.ChooseAddress;
-        const LeafletMap = window.LeafletMap;
-        const Login = window.Login;
-        const Register = window.Register;
-        const ResetPassword = window.ResetPassword;
-        
-        // Enregistrer les composants
-        ComponentManager.register('destinations', Destinations);
         
         // Exporter globalement
         window.ComponentManager = ComponentManager;
-        window.Destinations = Destinations;
-        window.Activity = Activity;
-        window.ChooseAddress = ChooseAddress;
-        window.LeafletMap = LeafletMap;
-        window.Login = Login;
-        window.Register = Register;
-        window.ResetPassword = ResetPassword;
         
-        // Initialiser les composants quand le DOM est prêt
+        // Initialiser l'application quand le DOM est prêt
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀 Démarrage de l\'application...');
+            console.log('🚀 Démarrage de l\'application via ComponentManager...');
             
-            // Vérifier la version au chargement de l'app (toujours exécuté)
-            if (window.CacheVersionManager) {
-                const versionManager = new window.CacheVersionManager();
-                await versionManager.init();
+            try {
+                await ComponentManager.initAll();
+                console.log('✅ Application initialisée avec succès');
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'initialisation:', error);
             }
-            
-            // Initialiser l'architecture offline-first
-            if (window.OfflineFirstApp) {
-                const app = new window.OfflineFirstApp();
-                await app.init();
-                
-                // Exporter l'instance globalement
-                window.offlineFirstApp = app;
-                
-                console.log('✅ Architecture offline-first prête');
-            } else {
-                console.error('❌ OfflineFirstApp non trouvé');
-            }
-            
-            // Initialiser Login
-            if (window.Login) {
-                window.Login.init();
-            } else {
-                console.error('❌ Login non trouvé');
-            }
-
-            // Initialiser Settings
-            if (window.Settings) {
-                window.Settings.init();
-            } else {
-                console.error('❌ Settings non trouvé');
-            }
-
-            // Initialiser LeafletMap
-            if (window.LeafletMap) {
-                const mapInstance = new window.LeafletMap(); // Utiliser LeafletMap
-                mapInstance.init();
-                mapInstance.exportForLegacy();
-                window.MapInstance = mapInstance;
-                console.log('✅ LeafletMap initialisée');
-            } else {
-                console.error('❌ LeafletMap non trouvé');
-            }
-            
-            // Vérifier les taux de change au chargement de l'application
-            if (window.LocationService && navigator.onLine) {
-                try {
-                    await window.LocationService.loadExchangeRates();
-                    console.log('✅ Taux de change vérifiés au démarrage');
-                } catch (error) {
-                    console.warn('⚠️ Impossible de vérifier les taux de change au démarrage:', error);
-                }
-            }
-            
-            await ComponentManager.initAll();
         });
     </script>
     
@@ -314,103 +245,6 @@
             }
         }
         
-        // Mettre à jour l'affichage des destinations après connexion
-        async function updateUserPanel() {
-            if (!window.firebaseService || !window.firebaseService.isReady()) {
-                console.warn('⚠️ FirebaseService non prêt, attente...');
-                return;
-            }
-            
-            if (window.firebaseService.isAuthenticated()) {
-                // Utilisateur connecté
-                console.log('✅ Utilisateur connecté');
-                
-                if (window.offlineFirstApp && window.offlineFirstApp.loadUserDataFromFirebase) {
-                    console.log('📥 Chargement des données utilisateur depuis Firebase...');
-                    await window.offlineFirstApp.loadUserDataFromFirebase();
-                } else {
-                    console.warn('⚠️ loadUserDataFromFirebase non disponible');
-                }
-                
-                // Masquer la page de connexion
-                if (window.Login) {
-                    window.Login.hide();
-                } else {
-                    console.error('❌ Login non trouvé');
-                }
-
-                // Utiliser IndexedDB comme source de données principale
-                const itineraries = await window.localStorageService.getItineraries();
-                
-                // Créer un itinéraire si aucun n'existe
-                let newItinerary = null;
-                if (itineraries.length === 0) {
-                    newItinerary = await window.localStorageService.createItinerary('Mon itinéraire');
-                }
-                
-                // Vérifier et supprimer la destination temporaire
-                await window.localStorageService.removeTempDestination();
-                
-                // Vérifier s'il y a un itinéraire actif
-                const currentItinerary = await window.localStorageService.getCurrentItinerary();
-                if (!currentItinerary && itineraries.length > 0 && window.Itineraries) {
-                    console.log('🔄 Aucun itinéraire actif trouvé, activation du premier disponible');
-                    await window.Itineraries.setActiveItinerary(itineraries[0].id, false);
-                }
-
-                // Initialiser le sidebar maintenant que les itinéraires sont chargés
-                if (window.Sidebar) {
-                    await window.Sidebar.init();
-                } else {
-                    console.error('❌ Sidebar non trouvé');
-                }
-
-                // Initialiser ChooseAddress
-                if (window.ChooseAddress) {
-                    window.ChooseAddress.init();
-                }
-                
-                // Charger les destinations (après que la sidebar soit initialisée)
-                await window.Destinations.loadDestinations();
-
-                // Initialiser Activity
-                if (window.Activity) {
-                    window.Activity.init();
-                }
-                
-                // Afficher la carte
-                if (window.MapInstance) {
-                    window.MapInstance.show();
-                }
-            } else {
-                // Utilisateur déconnecté
-                console.log('🔒 Utilisateur déconnecté');
-                
-                // Afficher la page de connexion
-                if (window.Login) {
-                    window.Login.show();
-                } else {
-                    console.error('❌ Login non trouvé');
-                }
-                
-                // Effacer les marqueurs lors de la déconnexion
-                if (window.MapInstance && window.MapInstance.cleanMap) {
-                    window.MapInstance.cleanMap();
-                }
-                
-                // Le panneau destinations est maintenant toujours visible
-                // Masquer la carte
-                if (window.MapInstance) {
-                    window.MapInstance.hide();
-                } else {
-                    console.error('❌ MapInstance non trouvé');
-                }
-            }
-
-            // Cacher le loading global pour la déconnexion
-            hideLoading();
-        }
-        
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
             isOnline = true;
@@ -423,16 +257,15 @@
         });
         
         // Exporter les fonctions globalement
-        window.updateUserPanel = updateUserPanel;
         window.handleLogout = handleLogout;
         
         // Écouter l'événement d'authentification prête (pour connexions manuelles)
         window.addEventListener('firebaseAuthReady', async (event) => {
             console.log('🔥 Événement firebaseAuthReady reçu');
             
-            // Appeler updateUserPanel quand l'auth est prête
-            if (window.updateUserPanel) {
-                await window.updateUserPanel();
+            // Appeler updateUserPanel via ComponentManager
+            if (window.ComponentManager && window.ComponentManager.updateUserPanel) {
+                await window.ComponentManager.updateUserPanel();
             }
         });
         
@@ -440,9 +273,9 @@
         window.addEventListener('offlineFirstAppReady', async (event) => {
             console.log('🚀 Événement offlineFirstAppReady reçu');
             
-            // Appeler updateUserPanel quand tout est prêt
-            if (window.updateUserPanel) {
-                await window.updateUserPanel();
+            // Appeler updateUserPanel via ComponentManager
+            if (window.ComponentManager && window.ComponentManager.updateUserPanel) {
+                await window.ComponentManager.updateUserPanel();
             }
         });
     </script>
