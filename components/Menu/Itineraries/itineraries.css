@@ -25,6 +25,7 @@
     max-height: calc(90vh - 250px);
     overflow-y: auto;
     margin-bottom: 24px;
+    padding: 6px; /* Ajout de padding pour éviter que le box-shadow soit coupé */
 }
 
 /* ========================================
