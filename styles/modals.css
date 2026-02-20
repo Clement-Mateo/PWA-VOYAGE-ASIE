@@ -40,7 +40,7 @@
     position: relative;
     width: 80%;
     max-width: 600px;
-    max-height: 80vh;
+    max-height: 90vh;
     background: var(--white);
     border-radius: 12px;;
     overflow: hidden;
@@ -50,12 +50,6 @@
 
 .modal.open .modal-content {
     transform: scale(1) translateY(0);
-}
-
-/* Modale de transport - plus petite */
-.modal-content.transport-modal {
-    width: 60%;
-    max-width: 400px;
 }
 
 /* Modale de type de transport - encore plus petite */
@@ -90,9 +84,9 @@
 
 /* Corps modal */
 .modal-body {
-    padding: 24px;
+    padding: 20px;
     overflow-y: auto;
-    max-height: calc(80vh - 80px);
+    max-height: calc(88vh - 140px);
 }
 
 /* Positionnement universel bouton fermeture */

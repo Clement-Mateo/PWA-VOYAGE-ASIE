@@ -13,3 +13,24 @@
     font-style: italic;
     line-height: 1.4;
 }
+
+/* Styles pour les champs input en mode édition */
+.link-info input.form-input {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.9em;
+    min-width: 120px;
+    transition: border-color 0.2s;
+}
+
+.link-info input.form-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.link-info input.form-input[type="url"] {
+    min-width: 200px;
+}

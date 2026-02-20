@@ -3,6 +3,7 @@ const Activity = {
     // État du composant
     currentDestination: null,
     currentActivity: null,
+    links: [], // Liens de l'activité en cours d'édition
 
     // Initialiser le composant
     init() {
@@ -197,6 +198,19 @@ const Activity = {
                         <label class="form-label" for="activityNotes">Notes</label>
                         <textarea class="form-input" id="activityNotes" placeholder="Ajouter des notes ou remarques..." rows="3"></textarea>
                     </div>
+                    
+                    <!-- Section des liens -->
+                    <div class="form-group full-width">
+                        <div class="links-header flex-between">
+                            <label class="form-label">Liens utiles</label>
+                            <button class="btn-add-link" onclick="LinksService.openModal(null, '${this.currentActivity?.id}')" title="Ajouter un lien">
+                                <span class="material-icons">add_link</span> Ajouter un lien
+                            </button>
+                        </div>
+                        <div class="links-list" id="links-${this.currentActivity?.id}">
+                            ${this.currentActivity?.links ? this.currentActivity.links.map(link => LinksService.createLinkCard(link)).join('') : ''}
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn-cancel" onclick="Activity.hideActivityPopup()">Annuler</button>
@@ -237,6 +251,9 @@ const Activity = {
         
         // Réinitialiser l'activité actuelle
         this.currentActivity = null;
+        
+        // Réinitialiser les liens
+        this.links = [];
         
         // Réinitialiser le formulaire
         const form = document.getElementById('activityForm');
@@ -299,7 +316,8 @@ const Activity = {
             endTime: formattedEnd,
             price: parseFloat(priceAmount) || 0, // TOUJOURS une simple valeur
             type: activityType || '',
-            notes: notes.trim() || ''
+            notes: notes.trim() || '',
+            links: this.links || [] // Ajouter les liens
         };
         
         // Ajouter les champs de devise locale seulement si ce n'est pas EUR
@@ -506,6 +524,12 @@ const Activity = {
                 return;
             }
 
+            // Stocker l'activité actuelle AVANT de pré-remplir le formulaire
+            this.currentActivity = activity;
+
+            // Charger les liens dans la variable de classe
+            this.links = activity.links ? [...activity.links] : [];
+
             // Pré-remplir le formulaire avec les données de l'activité (après que le popup soit créé)
             setTimeout(() => {
                 const nameField = document.getElementById('activityName');
@@ -541,9 +565,6 @@ const Activity = {
                 
             }, 100);
 
-            // Stocker l'activité actuelle
-            this.currentActivity = activity;
-            
             // Afficher le popup
             await this.showActivityPopup();
             

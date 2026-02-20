@@ -155,14 +155,6 @@
     }
 }
 
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group.full-width {
-    width: 100%;
-}
-
 .form-label {
     display: block;
     margin-bottom: 6px;

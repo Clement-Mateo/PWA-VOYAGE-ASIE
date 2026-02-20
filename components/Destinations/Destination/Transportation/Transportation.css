@@ -4,6 +4,12 @@
 
    ======================================== */
 
+/* Modale de transport - plus petite */
+.modal-content.transport-modal {
+    width: 60%;
+    max-width: 400px;
+}
+
 /* Cartes de transport */
 .transportation-card {
     background: var(--glass-white-light);
