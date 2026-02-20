@@ -170,6 +170,8 @@ const Login = {
             }
             
         } catch (error) {
+            window.hideLoading();
+
             console.error('Erreur de connexion:', error);
             let errorMessage = 'Erreur de connexion';
             
@@ -178,6 +180,8 @@ const Login = {
                 errorMessage = 'Utilisateur non trouvé';
             } else if (error.code === 'auth/wrong-password') {
                 errorMessage = 'Mot de passe incorrect';
+            } else if (error.code === 'auth/invalid-credential') {
+                errorMessage = 'Identifiant ou Mot de passe incorrect';
             } else if (error.code === 'auth/invalid-email') {
                 errorMessage = 'Email invalide';
             } else if (error.code === 'auth/user-disabled') {
