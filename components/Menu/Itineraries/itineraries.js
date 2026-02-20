@@ -369,7 +369,8 @@ class Itineraries {
                         showErrorSnackBar('La date de début est invalide');
                         return;
                     }
-                    itinerary.startDate = parsedDate;
+                    // Sauvegarder comme chaîne ISO pour garantir la consistance
+                    itinerary.startDate = parsedDate.toISOString();
                 } catch (error) {
                     console.error('❌ Erreur parsing date lors de la sauvegarde:', error);
                     showErrorSnackBar('La date de début est invalide');
