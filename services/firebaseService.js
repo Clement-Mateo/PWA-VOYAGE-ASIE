@@ -216,7 +216,7 @@ class FirebaseService {
         try {
             const updateData = {
                 ...updates,
-                updatedAt: window.firebase.serverTimestamp()
+                updatedAt: new Date().toISOString()
             };
             
             await window.firebase.updateDoc(window.firebase.doc(this.db, 'itineraries', id), updateData);
