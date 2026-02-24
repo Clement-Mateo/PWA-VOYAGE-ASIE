@@ -72,6 +72,31 @@ const Activity = {
                 title.textContent = 'Modifier une activité';
             }
             
+            // Mettre à jour l'ID du links-list pour correspondre à this.currentActivity
+            const linksList = popup.querySelector('.links-list');
+            if (linksList) {
+                linksList.id = this.currentActivity?.id ? `links-${this.currentActivity.id}` : 'links-new-activity';
+            }
+            
+            // Nettoyer et recréer les cartes de liens basées sur this.links
+            setTimeout(() => {
+                const linksListId = this.currentActivity?.id ? `links-${this.currentActivity.id}` : 'links-new-activity';
+                const linksList = document.getElementById(linksListId);
+                if (linksList) {
+                    linksList.innerHTML = '';
+                    
+                    if (this.links && this.links.length > 0) {
+                        this.links.forEach(link => {
+                            const linkCardHTML = LinksService.createLinkCard(link, false, this.currentActivity?.id);
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = linkCardHTML;
+                            const linkCard = tempDiv.firstElementChild;
+                            linksList.appendChild(linkCard);
+                        });
+                    }
+                }
+            }, 100);
+            
             // Récupérer la devise locale
             const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
             
@@ -529,6 +554,7 @@ const Activity = {
 
             // Charger les liens dans la variable de classe
             this.links = activity.links ? [...activity.links] : [];
+            
 
             // Pré-remplir le formulaire avec les données de l'activité (après que le popup soit créé)
             setTimeout(() => {
