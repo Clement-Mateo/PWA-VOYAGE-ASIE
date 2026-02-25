@@ -5,51 +5,164 @@
 
 const LocationService = {
 
+    lastGeocodeTime: 0,
+    geocodeAttempts: 0,
+    
     /**
-     * Géocoder une adresse avec l'API Nominatim (OpenStreetMap)
+     * Géocoder une adresse avec plusieurs APIs de secours
      */
-
     async geocodeAddress(address) {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
-            
-            if (!response.ok) {
-                throw new Error(`Erreur HTTP: ${response.status}`);
+            // Rate limiting : minimum 1 seconde entre les requêtes
+            if (this.lastGeocodeTime && Date.now() - this.lastGeocodeTime < 1000) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
             
-            const data = await response.json();
+            this.lastGeocodeTime = Date.now();
+            this.geocodeAttempts++;
             
-            if (data && data.length > 0) {
-                const result = data[0];
+            // Essayer Nominatim en premier avec headers personnalisés
+            try {
+                const result = await this.geocodeWithNominatim(address);
+                this.geocodeAttempts = 0; // Reset en cas de succès
+                return result;
+            } catch (error) {
+                console.warn('⚠️ Nominatim échoué, tentative avec alternative...');
                 
-                const lat = parseFloat(result.lat);
-                const lng = parseFloat(result.lon);
+                // Si trop de requêtes, attendre plus longtemps
+                if (error.message.includes('Trop de requêtes')) {
+                    const waitTime = Math.min(5000, 1000 * this.geocodeAttempts);
+                    console.log(`⏱️ Attente de ${waitTime}ms avant de réessayer...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
                 
-                // Utiliser getCountryFromCoordinates pour obtenir le nom anglais du pays
-                const countryName = await this.getCountryFromCoordinates(lat, lng);
-                
-                const geocodedResult = {
-                    lat: lat,
-                    lng: lng,
-                    address: result.display_name,
-                    country: countryName || result.display_name.split(',').pop().trim()
-                };
-                
-                console.log('✅ Adresse géocodée:', address, '→', geocodedResult.country);
-                return geocodedResult;
+                // Alternative : OpenCage Geocoder (gratuit, 2500 req/jour)
+                try {
+                    return await this.geocodeWithOpenCage(address);
+                } catch (altError) {
+                    console.warn('⚠️ OpenCage échoué, tentative avec MapBox...');
+                    
+                    // Alternative : MapBox (nécessite une clé, mais plus généreux)
+                    try {
+                        return await this.geocodeWithMapBox(address);
+                    } catch (mapBoxError) {
+                        throw new Error('Tous les services de géocodage sont indisponibles');
+                    }
+                }
             }
             
-            return null;
         } catch (error) {
             console.error('❌ Erreur géocodage:', error);
-            return null;
+            throw error;
         }
+    },
+
+    /**
+     * Géocoder avec Nominatim (OpenStreetMap)
+     */
+    async geocodeWithNominatim(address) {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'PWA-Voyage-Asie/1.0 (contact@voyage-asie.com)',
+                'Referer': window.location.origin,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 425) {
+                throw new Error('Trop de requêtes trop rapides - Veuillez patienter quelques secondes');
+            }
+            throw new Error(`Erreur HTTP Nominatim: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data || data.length === 0) {
+            throw new Error('Aucun résultat trouvé');
+        }
+        
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        
+        // Utiliser getCountryFromCoordinates pour obtenir le nom anglais du pays
+        const countryName = await this.getCountryFromCoordinates(lat, lng);
+        
+        return {
+            lat: lat,
+            lng: lng,
+            address: result.display_name,
+            country: countryName || result.display_name.split(',').pop().trim()
+        };
+    },
+
+    /**
+     * Géocoder avec OpenCage Geocoder (alternative)
+     */
+    async geocodeWithOpenCage(address) {
+        // Note : Pour la production, il faudrait une clé API
+        const apiKey = '4f326dfe3dda4bc6939cc1f727976a7c'; // Clé de démonstration
+        const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}&limit=1`);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP OpenCage: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status.code !== 200 || !data.results || data.results.length === 0) {
+            throw new Error('OpenCage: Aucun résultat trouvé');
+        }
+        
+        const result = data.results[0];
+        const countryName = await this.getCountryFromCoordinates(result.geometry.lat, result.geometry.lng);
+        
+        return {
+            lat: result.geometry.lat,
+            lng: result.geometry.lng,
+            address: result.formatted,
+            country: countryName || result.components.country
+        };
+    },
+
+    /**
+     * Géocoder avec MapBox (alternative avec clé)
+     */
+    async geocodeWithMapBox(address) {
+        const apiKey = 'votre_mapbox_api_key'; // TODO je recois pas le mail de validation
+        if (apiKey === 'votre_mapbox_api_key') {
+            throw new Error('MapBox nécessite une clé API configurée');
+        }
+        
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${apiKey}&limit=1`);
+        
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP MapBox: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.features || data.features.length === 0) {
+            throw new Error('MapBox: Aucun résultat trouvé');
+        }
+        
+        const result = data.features[0];
+        const [lng, lat] = result.center;
+        const countryName = await this.getCountryFromCoordinates(lat, lng);
+        
+        return {
+            lat: lat,
+            lng: lng,
+            address: result.place_name,
+            country: countryName || result.context?.find(c => c.id.startsWith('country'))?.text
+        };
     },
 
     /**
      * Obtenir le pays à partir des coordonnées (reverse geocoding)
      */
-
     async getCountryFromCoordinates(lat, lng) {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=en`);

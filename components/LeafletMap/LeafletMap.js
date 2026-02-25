@@ -345,9 +345,23 @@ class LeafletMap {
                 const marker = L.marker([destination.address.location.lat, destination.address.location.lng], { icon: customIcon })
                     .addTo(this.leafletMap)
                     .on('click', () => {
-                        // Scroll vers la destination si le panneau est déjà ouvert
-                        if (window.Destinations && window.Destinations) {
-                            window.Destinations.scrollToDestination(index);
+                        // Sur mobile, ouvrir la barre des destinations avant de scroller
+                        if (window.innerWidth <= 768 && window.Sidebar) {
+                            // Petit délai pour s'assurer que le contenu est prêt
+                            setTimeout(() => {
+                                window.Sidebar.open();
+                                
+                                // Scroll vers la destination après l'ouverture
+                                if (window.Destinations && window.Destinations.scrollToDestination && destination.id) {
+                                    // Passer l'ID de la destination, pas l'index
+                                    window.Destinations.scrollToDestination(destination.id);
+                                }
+                            }, 100);
+                        } else {
+                            // Sur desktop, scroller directement
+                            if (window.Destinations && window.Destinations.scrollToDestination && destination.id) {
+                                window.Destinations.scrollToDestination(destination.id);
+                            }
                         }
                     });
                 
