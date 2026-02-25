@@ -20,7 +20,7 @@ class SyncService {
         
         // Démarrer la synchronisation si en ligne
         if (this.isOnline) {
-            this.syncPendingChanges();
+            this.sync();
         }
     }
 
@@ -29,32 +29,24 @@ class SyncService {
      */
     setupEventListeners() {
         // Écouter les événements de LocalStorage pour les itinéraires
-        window.addEventListener('itinerary:created', (e) => {
-            // Synchroniser uniquement si utilisateur connecté et en ligne
+        // Tous les événements CRUD déclenchent la synchronisation intelligente
+        const triggerSync = (eventName, data) => {
+            console.log(`📝 ${eventName} détecté, déclenchement de la synchronisation intelligente`);
             if (this.isOnline && window.firebaseService && window.firebaseService.user) {
-                this.syncCreatedItinerary(e.detail);
+                // Délai court pour éviter les appels multiples lors de modifications rapides
+                setTimeout(() => this.sync(), 500);
             }
-        });
+        };
 
-        window.addEventListener('itinerary:updated', (e) => {
-            // Synchroniser uniquement si utilisateur connecté et en ligne
-            if (this.isOnline && window.firebaseService && window.firebaseService.user) {
-                this.syncUpdatedItinerary(e.detail);
-            }
-        });
-
-        window.addEventListener('itinerary:deleted', (e) => {
-            // Synchroniser uniquement si utilisateur connecté et en ligne
-            if (this.isOnline && window.firebaseService && window.firebaseService.user) {
-                this.syncDeletedItinerary(e.detail);
-            }
-        });
+        window.addEventListener('itinerary:created', (e) => triggerSync('Itinéraire créé', e.detail));
+        window.addEventListener('itinerary:updated', (e) => triggerSync('Itinéraire mis à jour', e.detail));
+        window.addEventListener('itinerary:deleted', (e) => triggerSync('Itinéraire supprimé', e.detail));
 
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
-            console.log('🌐 Connexion rétablie - Démarrage sync');
+            console.log('🌐 Connexion rétablie - Démarrage sync intelligente');
             this.isOnline = true;
-            this.syncPendingChanges();
+            this.sync();
         });
 
         window.addEventListener('offline', () => {
@@ -66,7 +58,7 @@ class SyncService {
     /**
      * Synchroniser toutes les modifications en attente
      */
-    async syncPendingChanges() {
+    async sync() {
         if (!this.isOnline || this.syncInProgress) return;
 
         // Vérification simple avec this.user
@@ -76,29 +68,75 @@ class SyncService {
         }
 
         this.syncInProgress = true;
-        console.log('🔄 Début de la synchronisation...');
+        console.log('🔄 Début de la synchronisation intelligente...');
 
         try {
-            const unsyncedItineraries = await window.localStorageService.getUnsyncedItineraries();
-            
-            // Synchroniser les itinéraires
-            for (const itinerary of unsyncedItineraries) {
-                if (itinerary.id.startsWith('itineraryToCreate_')) {
-                    await this.syncCreatedItinerary(itinerary);
-                } else {
-                    await this.syncUpdatedItinerary(itinerary);
-                }
-            }
+            // Nouvelle logique de synchronisation basée sur updatedAt
+            await this.intelligentSync();
 
             // Synchroniser les suppressions en attente
             await this.syncPendingDeletions();
 
-            console.log('✅ Synchronisation terminée');
+            console.log('✅ Synchronisation intelligente terminée');
             
         } catch (error) {
             console.error('❌ Erreur lors de la synchronisation:', error);
         } finally {
             this.syncInProgress = false;
+        }
+    }
+
+    /**
+     * Synchronisation intelligente basée sur updatedAt
+     */
+    async intelligentSync() {
+        console.log('🧠 Synchronisation intelligente en cours...');
+        
+        // Récupérer les itinéraires depuis le cache et Firebase
+        const cacheItineraries = await window.localStorageService.getItineraries();
+        const firebaseItineraries = await window.firebaseService.getItineraries();
+        const pendingDeletions = await window.localStorageService.db.toDelete.toArray();
+        const deletedFirebaseIds = new Set(pendingDeletions.filter(d => d.type === 'itinerary').map(d => d.firebaseId));
+        
+        console.log(`📊 Cache: ${cacheItineraries.length} itinéraires, Firebase: ${firebaseItineraries.length} itinéraires, Suppressions: ${deletedFirebaseIds.size}`);
+        
+        // Créer des maps pour faciliter les comparaisons
+        const cacheMap = new Map(cacheItineraries.map(i => [i.id, i]));
+        const firebaseMap = new Map(firebaseItineraries.map(i => [i.id, i]));
+        
+        // 1. Itinéraires en cache mais pas dans Firebase -> créer dans Firebase
+        for (const [id, cacheItinerary] of cacheMap) {
+            if (!firebaseMap.has(id)) {
+                console.log(`☁️  Cache → Firebase: ${cacheItinerary.name}`);
+                await this.createItineraryInFirebase(cacheItinerary);
+            }
+        }
+        
+        // 2. Itinéraires dans Firebase mais pas dans le cache -> créer dans le cache
+        for (const [id, firebaseItinerary] of firebaseMap) {
+            if (!cacheMap.has(id) && !deletedFirebaseIds.has(id)) {
+                console.log(`💾 Firebase → Cache: ${firebaseItinerary.name}`);
+                await this.createItineraryInCache(firebaseItinerary);
+            }
+        }
+        
+        // 3. Itinéraires présents dans les deux -> comparer updatedAt et garder le plus récent
+        for (const [id, cacheItinerary] of cacheMap) {
+            const firebaseItinerary = firebaseMap.get(id);
+            if (!firebaseItinerary) continue; // Déjà traité dans l'étape 1
+            
+            const cacheUpdatedAt = new Date(cacheItinerary.updatedAt);
+            const firebaseUpdatedAt = new Date(firebaseItinerary.updatedAt);
+            
+            if (cacheUpdatedAt > firebaseUpdatedAt) {
+                console.log(`⬆️  Cache plus récent: ${cacheItinerary.name} (${cacheUpdatedAt} > ${firebaseUpdatedAt})`);
+                await this.updateItineraryInFirebase(cacheItinerary);
+            } else if (firebaseUpdatedAt > cacheUpdatedAt) {
+                console.log(`⬇️  Firebase plus récent: ${firebaseItinerary.name} (${firebaseUpdatedAt} > ${cacheUpdatedAt})`);
+                await this.updateItineraryInCache(firebaseItinerary);
+            } else {
+                console.log(`✅ Identique: ${cacheItinerary.name}`);
+            }
         }
     }
 
@@ -125,80 +163,10 @@ class SyncService {
     }
 
     /**
-     * Synchroniser un itinéraire créé
-     */
-    async syncCreatedItinerary(itinerary) {
-        if (!this.isOnline) return;
-
-        // Vérification simple avec this.user
-        if (!window.firebaseService || !window.firebaseService.user) {
-            console.log('⏸️ Sync itinéraire créé ignoré: utilisateur non connecté');
-            return;
-        }
-
-        try {
-            // Si c'est un itinéraire temporaire, le créer sur Firebase
-            if (itinerary.id.startsWith('itineraryToCreate_')) {
-                const firebaseId = await window.firebaseService.createItinerary({
-                    name: itinerary.name,
-                    startDate: itinerary.startDate,
-                    notes: itinerary.notes
-                });
-                
-                // Mettre à jour l'ID local et marquer comme synchronisé
-                await window.localStorageService.db.itineraries.update(itinerary.id, {
-                    id: firebaseId,
-                    isSync: true,
-                    updatedAt: new Date()
-                });
-                
-                console.log(`✅ Itinéraire synchronisé: ${itinerary.id} → ${firebaseId}`);
-                
-                // Rafraîchir le composant Itineraries pour mettre à jour les IDs
-                if (window.Itineraries && window.Itineraries.renderItineraries) {
-                    await window.Itineraries.renderItineraries();
-                }
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur sync itinéraire créé:', error);
-            // Reste en isSync: false pour réessayer plus tard
-        }
-    }
-
-    /**
-     * Synchroniser un itinéraire mis à jour
-     */
-    async syncUpdatedItinerary(itinerary) {
-        if (!this.isOnline) return;
-
-        // Vérification simple avec this.user
-        if (!window.firebaseService || !window.firebaseService.user) {
-            console.log('⏸️ Sync itinéraire mis à jour ignoré: utilisateur non connecté');
-            return;
-        }
-
-        try {
-            await window.firebaseService.updateItinerary(itinerary.id, itinerary);
-            
-            // Marquer comme synchronisé
-            await window.localStorageService.db.itineraries.update(itinerary.id, {
-                isSync: true,
-                updatedAt: new Date()
-            });
-            
-            console.log(`✅ Itinéraire mis à jour synchronisé: ${itinerary.id}`);
-            
-        } catch (error) {
-            console.error('❌ Erreur sync itinéraire mis à jour:', error);
-        }
-    }
-
-    /**
      * Synchroniser un itinéraire supprimé
      */
     async syncDeletedItinerary(data) {
-        if (!this.isOnline || !data.wasSynced) return;
+        if (!this.isOnline) return;
 
         // Vérification simple avec this.user
         if (!window.firebaseService || !window.firebaseService.user) {
@@ -239,11 +207,107 @@ class SyncService {
     }
 
     /**
+     * Créer un itinéraire dans Firebase
+     */
+    async createItineraryInFirebase(itinerary) {
+        try {
+            const firebaseId = await window.firebaseService.createItinerary({
+                name: itinerary.name,
+                startDate: itinerary.startDate,
+                notes: itinerary.notes,
+                destinations: itinerary.destinations || []
+            });
+            
+            // Mettre à jour l'ID dans le cache
+            if (itinerary.id.startsWith('itineraryToCreate_')) {
+                // Supprimer l'ancien itinéraire temporaire
+                await window.localStorageService.db.itineraries.delete(itinerary.id);
+                
+                // Créer le nouvel itinéraire avec l'ID Firebase
+                await window.localStorageService.db.itineraries.add({
+                    ...itinerary,
+                    id: firebaseId,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                console.log(`✅ Itinéraire créé dans Firebase: ${itinerary.name} (${itinerary.id} → ${firebaseId})`);
+                
+                // Rafraîchir l'interface
+                if (window.Itineraries && window.Itineraries.renderItineraries) {
+                    await window.Itineraries.renderItineraries();
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erreur création itinéraire dans Firebase:', error);
+        }
+    }
+
+    /**
+     * Créer un itinéraire dans le cache
+     */
+    async createItineraryInCache(itinerary) {
+        try {
+            await window.localStorageService.db.itineraries.add({
+                ...itinerary,
+                updatedAt: new Date().toISOString()
+            });
+            
+            console.log(`✅ Itinéraire créé dans le cache: ${itinerary.name}`);
+            
+            // Rafraîchir l'interface
+            if (window.Itineraries && window.Itineraries.renderItineraries) {
+                await window.Itineraries.renderItineraries();
+            }
+        } catch (error) {
+            console.error('❌ Erreur création itinéraire dans le cache:', error);
+        }
+    }
+
+    /**
+     * Mettre à jour un itinéraire dans Firebase
+     */
+    async updateItineraryInFirebase(itinerary) {
+        try {
+            await window.firebaseService.updateItinerary(itinerary.id, itinerary);
+            
+            // Mettre à jour le cache avec la nouvelle date de modification
+            await window.localStorageService.db.itineraries.update(itinerary.id, {
+                updatedAt: new Date().toISOString()
+            });
+            
+            console.log(`✅ Itinéraire mis à jour dans Firebase: ${itinerary.name}`);
+        } catch (error) {
+            console.error('❌ Erreur mise à jour itinéraire dans Firebase:', error);
+        }
+    }
+
+    /**
+     * Mettre à jour un itinéraire dans le cache
+     */
+    async updateItineraryInCache(itinerary) {
+        try {
+            await window.localStorageService.db.itineraries.update(itinerary.id, {
+                ...itinerary,
+                updatedAt: new Date().toISOString()
+            });
+            
+            console.log(`✅ Itinéraire mis à jour dans le cache: ${itinerary.name}`);
+            
+            // Rafraîchir l'interface
+            if (window.Itineraries && window.Itineraries.renderItineraries) {
+                await window.Itineraries.renderItineraries();
+            }
+        } catch (error) {
+            console.error('❌ Erreur mise à jour itinéraire dans le cache:', error);
+        }
+    }
+
+    /**
      * Forcer la synchronisation manuelle
      */
     async forceSync() {
         console.log('🔄 Synchronisation forcée...');
-        await this.syncPendingChanges();
+        await this.sync();
     }
 
     /**

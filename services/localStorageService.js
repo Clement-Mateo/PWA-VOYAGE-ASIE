@@ -25,7 +25,7 @@ class LocalStorageService {
             
             // Définition des schémas
             this.db.version(3).stores({
-                itineraries: 'id, userId, name, active, isSync, createdAt, updatedAt, [userId+active]',
+                itineraries: 'id, userId, name, active, createdAt, updatedAt, [userId+active]',
                 toDelete: 'id, type, firebaseId, userId, createdAt',
                 exchangeRates: 'id, lastUpdated, base'
             });
@@ -125,7 +125,6 @@ class LocalStorageService {
             startDate: (itineraryData.startDate || new Date()).toISOString(), // Toujours stocker en string
             notes: itineraryData.notes || '',
             active: false,
-            isSync: false,
             destinations: [],
             createdAt: new Date().toISOString(), // Toujours stocker en string
             updatedAt: new Date().toISOString() // Toujours stocker en string
@@ -227,7 +226,6 @@ class LocalStorageService {
 
         const updateData = {
             ...updates,
-            isSync: false, // Marquer comme non synchronisé pour forcer la sync
             updatedAt: new Date().toISOString() // Toujours stocker en string
         };
 
@@ -288,22 +286,20 @@ class LocalStorageService {
 
         const itinerary = await this.db.itineraries.get(id);
         
-        if (itinerary.isSync) {
-            // Ajouter à la liste des suppressions à sync
-            await this.db.toDelete.add({
-                id: this.generateTempId('toDelete'),
-                type: 'itinerary',
-                firebaseId: id,
-                userId: itinerary.userId,
-                createdAt: new Date()
-            });
-        }
+        // Ajouter toujours à la liste des suppressions à sync
+        await this.db.toDelete.add({
+            id: this.generateTempId('toDelete'),
+            type: 'itinerary',
+            firebaseId: id,
+            userId: itinerary.userId,
+            createdAt: new Date()
+        });
 
         // Supprimer de IndexedDB
         await this.db.itineraries.delete(id);
         
         // Émettre événement pour sync
-        this.emit('itinerary:deleted', { id, wasSynced: itinerary.isSync });
+        this.emit('itinerary:deleted', { id, wasSynced: true });
         
         console.log('✅ Itinéraire supprimé:', id);
     }
@@ -436,11 +432,9 @@ class LocalStorageService {
 
         // Ajouter la destination à l'itinéraire
         currentItinerary.destinations.push(newDestination);
-        currentItinerary.isSync = false; // Marquer l'itinéraire comme non sync
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            isSync: false,
             updatedAt: new Date()
         });
         
@@ -547,11 +541,8 @@ class LocalStorageService {
 
         currentItinerary.destinations[destinationIndex] = updatedDestination;
 
-        currentItinerary.isSync = false; // Marquer l'itinéraire comme non sync
-        
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            isSync: false,
             updatedAt: new Date()
         });
         
@@ -622,11 +613,9 @@ class LocalStorageService {
 
         // Mettre à jour l'itinéraire
         currentItinerary.destinations = reorderedDestinations;
-        currentItinerary.isSync = false;
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            isSync: false,
             updatedAt: new Date()
         });
         
@@ -697,11 +686,8 @@ class LocalStorageService {
             }
         }
 
-        currentItinerary.isSync = false; // Marquer l'itinéraire comme non sync
-        
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            isSync: false,
             updatedAt: new Date()
         });
         
@@ -759,11 +745,8 @@ class LocalStorageService {
         const destination = currentItinerary.destinations[destinationIndex];
         destination.activities = (destination.activities || []).filter(a => a.id !== activityId);
         
-        currentItinerary.isSync = false; // Marquer l'itinéraire comme non sync
-        
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            isSync: false,
             updatedAt: new Date()
         });
         
@@ -774,31 +757,8 @@ class LocalStorageService {
     }
 
     // ========================================
-    // SYNCHRONISATION
+    // FIN - Plus de méthodes de synchronisation basées sur isSync
     // ========================================
-
-    /**
-     * Récupérer les itinéraires non synchronisés
-     */
-    async getUnsyncedItineraries() {
-        if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
-
-        try {
-            // Éviter la requête where() qui cause l'erreur et utiliser toArray() + filtrage
-            console.log('🔄 Récupération de tous les itinéraires pour filtrage...');
-            const allItineraries = await this.db.itineraries.toArray();
-            const unsynced = allItineraries.filter(itinerary => itinerary.isSync === false);
-            console.log(`📋 ${unsynced.length} itinéraires non synchronisés trouvés`);
-            return unsynced;
-            
-        } catch (error) {
-            console.error('❌ Erreur getUnsyncedItineraries:', error);
-            
-            // En cas d'erreur grave, retourner un tableau vide pour ne pas bloquer l'application
-            console.warn('⚠️ Retour d\'un tableau vide pour éviter le blocage');
-            return [];
-        }
-    }
 
     /**
      * Sauvegarder les taux de change globaux
