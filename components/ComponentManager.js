@@ -170,14 +170,108 @@ export const ComponentManager = {
                 // Itineraries est déjà initialisé globalement, pas besoin de .init()
             }
             
-            // 13. Mettre à jour le panneau utilisateur une fois tout initialisé
-            await this.updateUserPanel();
+            // 13. Vérifier si une synchronisation est en cours et gérer le loading
+            await this.handleSyncStatus();
+            
+            // 14. Mettre à jour le panneau utilisateur une fois tout initialisé ET synchronisé
+            // Note: updateUserPanel est appelé dans handleSyncStatus/reloadAfterSync si une synchro est en cours
+            if (!window.SyncService || !window.SyncService.syncInProgress) {
+                await this.updateUserPanel();
+            }
             
             console.log('✅ ComponentManager: Initialisation complète terminée');
             
         } catch (error) {
             console.error('❌ ComponentManager: Erreur lors de l\'initialisation:', error);
             throw error;
+        }
+    },
+
+    /**
+     * Gérer le statut de synchronisation au démarrage
+     */
+    async handleSyncStatus() {
+        console.log('🔄 ComponentManager: Vérification du statut de synchronisation...');
+        
+        // Vérifier si le SyncService est disponible et si une synchro est en cours
+        if (window.SyncService && window.SyncService.syncInProgress) {
+            console.log('⏳ Synchronisation en cours détectée - Affichage du loading global');
+            
+            // Afficher le loading global
+            if (window.showLoading) {
+                window.showLoading();
+            }
+            
+            // Attendre la fin de la synchronisation
+            await this.waitForSyncCompletion();
+        } else {
+            console.log('✅ Aucune synchronisation en cours - Continuation normale');
+        }
+    },
+    
+    /**
+     * Attendre la fin de la synchronisation
+     */
+    async waitForSyncCompletion() {
+        return new Promise((resolve) => {
+            const checkSyncStatus = () => {
+                if (!window.SyncService || !window.SyncService.syncInProgress) {
+                    console.log('✅ Synchronisation terminée - Rechargement de l\'application');
+                    
+                    // Recharger les données et l'interface
+                    this.reloadAfterSync();
+                    resolve();
+                } else {
+                    // Vérifier à nouveau dans 500ms
+                    setTimeout(checkSyncStatus, 500);
+                }
+            };
+            
+            checkSyncStatus();
+        });
+    },
+    
+    /**
+     * Recharger l'application après la synchronisation
+     */
+    async reloadAfterSync() {
+        console.log('🔄 Rechargement des données après synchronisation...');
+        
+        try {
+            // Recharger les destinations
+            if (window.Destinations && window.Destinations.loadDestinations) {
+                await window.Destinations.loadDestinations();
+            }
+            
+            // Recharger la carte
+            if (window.MapInstance && window.MapInstance.displayDestinations) {
+                await window.MapInstance.displayDestinations();
+            }
+            
+            // Recharger les itinéraires si nécessaire
+            if (window.Itineraries && window.Itineraries.renderItineraries) {
+                await window.Itineraries.renderItineraries();
+            }
+            
+            console.log('✅ Rechargement après synchronisation terminé');
+            
+            // Mettre à jour le panneau utilisateur après la synchronisation
+            await this.updateUserPanel();
+            
+            // Masquer le loading global après le rechargement complet
+            if (window.hideLoading) {
+                console.log('🎯 ComponentManager: Masquage du loading global après synchronisation');
+                window.hideLoading();
+            }
+            
+        } catch (error) {
+            console.error('❌ Erreur lors du rechargement après synchronisation:', error);
+            
+            // Masquer le loading même en cas d'erreur pour éviter un loading infini
+            if (window.hideLoading) {
+                console.log('🎯 ComponentManager: Masquage du loading global (erreur)');
+                window.hideLoading();
+            }
         }
     },
 
@@ -256,9 +350,12 @@ export const ComponentManager = {
             }
         }
 
-        // Cacher le loading global
-        if (window.hideLoading) {
+        // Cacher le loading global seulement s'il n'y a pas de synchronisation en cours
+        if (window.hideLoading && (!window.SyncService || !window.SyncService.syncInProgress)) {
+            console.log('🎯 ComponentManager: Masquage du loading global');
             window.hideLoading();
+        } else if (window.SyncService && window.SyncService.syncInProgress) {
+            console.log('⏳ ComponentManager: Synchronisation toujours en cours - Loading maintenu');
         }
     },
 
