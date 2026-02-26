@@ -112,7 +112,7 @@ const Sidebar = {
      */
     async createContainer() {
         const currentItinerary = await window.localStorageService.getCurrentItinerary();
-        const itineraryName = currentItinerary?.name || 'Mon Itinéraire';
+        const itineraryName = currentItinerary?.name || 'Nouvel Itinéraire';
         
         const container = document.createElement('div');
         container.id = 'sidebarContainer'; // Ajouter l'ID pour la vérification
