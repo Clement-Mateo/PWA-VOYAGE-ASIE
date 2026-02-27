@@ -126,16 +126,10 @@ class Itineraries {
         const hasMultipleItineraries = itineraries.length > 1;
         
         // Formater la date de début pour l'affichage
-        let startDate = null;
         let startDateText = 'Non définie';
         
         if (itinerary.startDate) {
-            if (itinerary.startDate.toDate) {
-                startDate = new Date(itinerary.startDate.toDate());
-            } else {
-                startDate = new Date(itinerary.startDate);
-            }
-            startDateText = startDate.toLocaleDateString('fr-FR');
+            startDateText = itinerary.startDate;
         }
         
         return `
@@ -170,14 +164,14 @@ class Itineraries {
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">event</span>
-                                Date de création: ${itinerary.createdAt ? (itinerary.createdAt.toDate ? new Date(itinerary.createdAt.toDate()).toLocaleString('fr-FR') : new Date(itinerary.createdAt).toLocaleString('fr-FR')) : 'Date inconnue'}
+                                Date de création: ${itinerary.createdAt ? new Date(itinerary.createdAt).toLocaleString('fr-FR') : 'Date inconnue'}
                             </span>
                         </div>
                         ${itinerary.updatedAt ? `
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">update</span>
-                                Dernière modification: ${itinerary.updatedAt.toDate ? new Date(itinerary.updatedAt.toDate()).toLocaleString('fr-FR') : new Date(itinerary.updatedAt).toLocaleString('fr-FR')}
+                                Dernière modification: ${new Date(itinerary.updatedAt).toLocaleString('fr-FR')}
                             </span>
                         </div>
                         ` : ''}
@@ -196,7 +190,7 @@ class Itineraries {
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Date de début</label>
-                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${startDate ? startDate.toISOString().split('T')[0] : ''}">
+                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${itinerary.startDate && new Date(itinerary.startDate).toString() !== 'Invalid Date' ? new Date(itinerary.startDate).toISOString().split('T')[0] : ''}">
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Notes</label>
@@ -221,6 +215,11 @@ class Itineraries {
             
             // Afficher le loading global
             window.showLoading();
+            
+            // Nettoyer les destinations temporaires avant de créer un nouvel itinéraire
+            if (window.localStorageService && window.localStorageService.removeTempDestination) {
+                await window.localStorageService.removeTempDestination();
+            }
             
             // Créer l'itinéraire via localStorage (avec logique par défaut intégrée)
             if (window.localStorageService && window.localStorageService.createItinerary) {
@@ -424,7 +423,7 @@ class Itineraries {
             
             if (nameInput) nameInput.value = itinerary.name || '';
             
-            const startDate = itinerary.startDate ? (itinerary.startDate.toDate ? new Date(itinerary.startDate.toDate()) : new Date(itinerary.startDate)) : null;
+            const startDate = itinerary.startDate ? new Date(itinerary.startDate) : null;
             if (startDateInput) {
                 startDateInput.value = startDate ? startDate.toISOString().split('T')[0] : '';
             }
@@ -452,6 +451,11 @@ class Itineraries {
             // Gérer le loading si demandé
             if (manageLoading) {
                 window.showLoading();
+            }
+
+            // Nettoyer les destinations temporaires avant de changer d'itinéraire
+            if (window.localStorageService && window.localStorageService.removeTempDestination) {
+                await window.localStorageService.removeTempDestination();
             }
 
             const itineraries = await window.localStorageService.getItineraries();
