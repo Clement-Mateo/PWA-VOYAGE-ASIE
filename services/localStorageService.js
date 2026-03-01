@@ -118,13 +118,17 @@ class LocalStorageService {
             }
         }
         
+        // Vérifier s'il y a déjà des itinéraires pour déterminer si celui-ci doit être actif
+        const existingItineraries = await this.db.itineraries.where('userId').equals(userId).toArray();
+        const shouldBeActive = existingItineraries.length === 0;
+        
         const newItinerary = {
             id: this.generateTempId('itineraryToCreate'),
             userId: userId,
             name: itineraryData.name || 'Nouvel Itinéraire',
             startDate: (itineraryData.startDate || new Date()).toISOString(), // Toujours stocker en string
             notes: itineraryData.notes || '',
-            active: false,
+            active: shouldBeActive, // Actif par défaut si c'est le premier itinéraire
             destinations: [],
             createdAt: new Date().toISOString(), // Toujours stocker en string
             updatedAt: new Date().toISOString() // Toujours stocker en string
@@ -132,10 +136,11 @@ class LocalStorageService {
 
         await this.db.itineraries.add(newItinerary);
         
+        console.log(`✅ Itinéraire créé en local: ${newItinerary.id} (actif: ${newItinerary.active})`);
+        
         // Émettre événement pour sync
         this.emit('itinerary:created', newItinerary);
         
-        console.log('✅ Itinéraire créé en local:', newItinerary.id);
         return newItinerary;
     }
 
@@ -248,15 +253,20 @@ class LocalStorageService {
                         // Calculer le décalage selon le type et durée du transport
                         const daysToAdd = window.distanceService.calculateArrivalDayOffset(prevDestination.transportation);
                         
-                        prevDeparture.setDate(prevDeparture.getDate() + daysToAdd);
-                        destination.arrivalDate = prevDeparture.toISOString().split('T')[0];
+                        // Créer une copie pour éviter de modifier l'original
+                        const newArrivalDate = new Date(prevDeparture);
+                        newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+                        destination.arrivalDate = newArrivalDate.toISOString().split('T')[0];
                     }
 
                     // Recalculer la date de départ
                     const departureDate = new Date(destination.arrivalDate);
                     const durationInDays = window.extractDurationInDays(destination.duration);
-                    departureDate.setDate(departureDate.getDate() + durationInDays - 1);
-                    destination.departureDate = departureDate.toISOString().split('T')[0];
+                    
+                    // Créer une copie pour éviter de modifier l'original
+                    const newDepartureDate = new Date(departureDate);
+                    newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+                    destination.departureDate = newDepartureDate.toISOString().split('T')[0];
                 }
 
                 updateData.destinations = currentItinerary.destinations;
@@ -292,7 +302,7 @@ class LocalStorageService {
             type: 'itinerary',
             firebaseId: id,
             userId: itinerary.userId,
-            createdAt: new Date()
+            createdAt: new Date().toISOString()
         });
 
         // Supprimer de IndexedDB
@@ -327,82 +337,55 @@ class LocalStorageService {
      * @returns {Object} { arrivalDate, departureDate } au format YYYY-MM-DD
      */
     calculateDestinationDates(existingDestinations, itineraryStartDate, duration, currentDestination = null) {
-        console.log('🔍 Debug calculateDestinationDates:', {
-            existingDestinationsCount: existingDestinations.length,
-            itineraryStartDate,
-            duration,
-            currentDestination: currentDestination?.name,
-            currentDestinationTransport: currentDestination?.transportation
-        });
-        
         let arrivalDate;
         
         if (existingDestinations.length === 0) {
             // Première destination = date de début de l'itinéraire
-            console.log('📅 Première destination, itineraryStartDate:', itineraryStartDate);
-            
-            // Convertir le Timestamp Firestore en Date JavaScript si nécessaire
             if (itineraryStartDate) {
-                if (typeof itineraryStartDate === 'object' && itineraryStartDate.seconds !== undefined) {
-                    // Timestamp Firestore
-                    arrivalDate = new Date(itineraryStartDate.seconds * 1000 + (itineraryStartDate.nanoseconds || 0) / 1000000);
-                } else if (typeof itineraryStartDate === 'string') {
-                    // Chaîne de date
+                if (typeof itineraryStartDate === 'string') {
                     arrivalDate = new Date(itineraryStartDate);
                 } else if (itineraryStartDate instanceof Date) {
-                    // Objet Date déjà
                     arrivalDate = itineraryStartDate;
                 } else {
-                    console.warn('⚠️ Format de date non reconnu, utilisation de la date actuelle');
                     arrivalDate = new Date();
                 }
             } else {
-                console.warn('⚠️ Aucune date de début d\'itinéraire, utilisation de la date actuelle');
                 arrivalDate = new Date();
             }
-            console.log('📅 arrivalDate calculée:', arrivalDate, 'isValid:', !isNaN(arrivalDate.getTime()));
         } else {
             // Destinations suivantes = date de départ de la précédente
             const lastDestination = existingDestinations[existingDestinations.length - 1];
             const lastDepartureDate = lastDestination.departureDate;
-            console.log('📅 Destination suivante, lastDestination:', lastDestination, 'lastDepartureDate:', lastDepartureDate);
             
-            // Convertir le Timestamp Firestore en Date JavaScript si nécessaire
-            if (typeof lastDepartureDate === 'object' && lastDepartureDate.seconds !== undefined) {
-                // Timestamp Firestore
-                arrivalDate = new Date(lastDepartureDate.seconds * 1000 + (lastDepartureDate.nanoseconds || 0) / 1000000);
-            } else if (typeof lastDepartureDate === 'string') {
-                // Chaîne de date
+            // Convertir la date en Date JavaScript si nécessaire
+            if (typeof lastDepartureDate === 'string') {
                 arrivalDate = new Date(lastDepartureDate);
             } else if (lastDepartureDate instanceof Date) {
-                // Objet Date déjà
                 arrivalDate = lastDepartureDate;
             } else {
-                console.warn('⚠️ Format de date de départ non reconnu, utilisation de la date actuelle');
                 arrivalDate = new Date();
             }
-            
-            console.log('📅 arrivalDate depuis lastDepartureDate:', arrivalDate, 'isValid:', !isNaN(arrivalDate.getTime()));
             
             // Utiliser le transport de la destination actuelle pour déterminer l'arrivée
             const daysToAdd = window.distanceService.calculateArrivalDayOffset(currentDestination?.transportation);
             
-            // Ajouter le nombre de jours calculé
-            arrivalDate.setDate(arrivalDate.getDate() + daysToAdd);
+            // Créer une copie pour éviter de modifier l'original
+            const newArrivalDate = new Date(arrivalDate);
+            newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+            arrivalDate = newArrivalDate;
         }
         
         // Calculer la date de départ = arrivée + durée - 1 jour
-        const departureDate = new Date(arrivalDate);
+        let departureDate = new Date(arrivalDate);
         const durationInDays = window.extractDurationInDays(duration);
         
-        console.log('📅 Duration utilisée:', durationInDays, 'duration original:', duration);
-        departureDate.setDate(departureDate.getDate() + durationInDays - 1);
-        
-        console.log('📅 Dates finales:', { arrivalDate, departureDate });
+        // Créer une copie pour éviter de modifier l'original
+        const newDepartureDate = new Date(departureDate);
+        newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+        departureDate = newDepartureDate;
         
         // Formater les dates en YYYY-MM-DD pour le stockage
         const formatDate = (date) => {
-            console.log('🔍 formatDate input:', date, 'isValid:', !isNaN(date.getTime()));
             return date.toISOString().split('T')[0];
         };
         
@@ -426,8 +409,8 @@ class LocalStorageService {
             id: 'temp_destination', // ID temporaire pour les destinations en création
             ...destinationData,
             // Les dates seront calculées plus tard dans loadDestinations après le calcul du transport
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
 
         // Ajouter la destination à l'itinéraire
@@ -435,7 +418,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         });
         
         // NE PAS émettre d'événement pour les destinations temporaires
@@ -444,7 +427,6 @@ class LocalStorageService {
             this.emit('itinerary:updated', currentItinerary);
         }
         
-        console.log('✅ Destination créée dans itinéraire (sans calcul de dates):', newDestination.id);
         return newDestination;
     }
 
@@ -458,14 +440,29 @@ class LocalStorageService {
         if (!currentItinerary) throw new Error('Aucun itinéraire actif');
 
         // Mettre à jour la destination dans l'itinéraire
-        const destinationIndex = currentItinerary.destinations.findIndex(d => d.id === destinationId);
-        if (destinationIndex === -1) throw new Error('Destination non trouvée');
+        let destinationIndex = currentItinerary.destinations.findIndex(d => d.id === destinationId);
+        
+        if (destinationIndex === -1) {
+            // Si c'est une destination temporaire, l'ajouter à l'itinéraire
+            if (destinationId === 'temp_destination') {
+                const tempDestination = {
+                    id: destinationId,
+                    ...updates,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                currentItinerary.destinations.push(tempDestination);
+                destinationIndex = currentItinerary.destinations.length - 1;
+            } else {
+                throw new Error('Destination non trouvée');
+            }
+        }
 
         const currentDestination = currentItinerary.destinations[destinationIndex];
         const updatedDestination = {
             ...currentDestination,
             ...updates,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         };
         
         const currentAddress = currentDestination.address?.address || '';
@@ -473,7 +470,6 @@ class LocalStorageService {
 
         // Si l'adresse est mise à jour et qu'elle a réellement changé, calculer le transport
         if (destinationIndex > 0 && updates.address && currentAddress != newAddress) {
-            console.log('🚦 Adresse changée, calcul du transport par défaut...');
             try {
                 // Récupérer la destination précédente
                 const previousDestination = currentItinerary.destinations[destinationIndex - 1];
@@ -512,52 +508,38 @@ class LocalStorageService {
             }
         }
 
-        // Vérifier les changements réels pour décider du recalcul des dates
-        const hasAddressChanged = updates.address && currentDestination.address?.address !== updates.address?.address;
-        const hasDurationChanged = updates.duration && JSON.stringify(currentDestination.duration) !== JSON.stringify(updates.duration);
-        const hasTransportTypeChanged = updates.transportation && updates.transportation.type !== currentDestination.transportation?.type;
-        const forceRecalculate = options.forceRecalculateDates === true;
-
-        const shouldRecalculateDates = hasAddressChanged || hasDurationChanged || hasTransportTypeChanged || forceRecalculate;
-
-        if (shouldRecalculateDates) {
-            const reason = hasAddressChanged ? 'adresse' : hasDurationChanged ? 'durée' : hasTransportTypeChanged ? 'transport' : 'case arrivée (forcée)';
-            console.log(`🔄 Recalcul des dates pour ${updatedDestination.name} (raison: ${reason})`);
-            
-            // Récupérer les destinations précédentes pour le calcul
-            const previousDestinations = currentItinerary.destinations.slice(0, destinationIndex);
-            
-            // Calculer les dates avec les données actuelles
-            const calculatedDates = this.calculateDestinationDates(
-                previousDestinations, 
-                currentItinerary.startDate, 
-                updatedDestination.duration,
-                updatedDestination // Passer la destination actuelle pour son transport
-            );
-            
-            updatedDestination.arrivalDate = calculatedDates.arrivalDate;
-            updatedDestination.departureDate = calculatedDates.departureDate;
-        }
-
+        // Recalculer les dates pour cette destination
+        const calculatedDates = this.calculateDestinationDates(
+            currentItinerary.destinations.slice(0, destinationIndex), // Destinations précédentes
+            currentItinerary.startDate,
+            updatedDestination.duration,
+            updatedDestination // Passer la destination actuelle pour son transport
+        );
+        
+        updatedDestination.arrivalDate = calculatedDates.arrivalDate;
+        updatedDestination.departureDate = calculatedDates.departureDate;
         currentItinerary.destinations[destinationIndex] = updatedDestination;
 
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
         this.emit('itinerary:updated', currentItinerary);
         
-        // Recharger toujours la liste des destinations pour voir les changements
-        console.log(`📅 Rechargement de la liste après mise à jour de la destination`);
+        // Si c'était une destination temporaire, supprimer sa card avant le rechargement
+        if (destinationId === 'temp_destination') {
+            const tempCard = document.querySelector('[data-temp-destination="true"]');
+            if (tempCard) {
+                tempCard.remove();
+            }
+        }
         
-        // Appeler direct car tous les process sont terminés (sauvegarde DB faite)
+        // Recharger la liste des destinations
         if (window.Destinations && window.Destinations.loadDestinations) {
             await window.Destinations.loadDestinations();
         }
-        
-        console.log('✅ Destination mise à jour:', destinationId);
     }
 
     /**
@@ -600,15 +582,20 @@ class LocalStorageService {
                 // Calculer le décalage selon le type et durée du transport
                 const daysToAdd = window.distanceService.calculateArrivalDayOffset(prevDestination.transportation);
                 
-                prevDeparture.setDate(prevDeparture.getDate() + daysToAdd);
-                destination.arrivalDate = prevDeparture.toISOString().split('T')[0];
+                // Créer une copie pour éviter de modifier l'original
+                const newArrivalDate = new Date(prevDeparture);
+                newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+                destination.arrivalDate = newArrivalDate.toISOString().split('T')[0];
             }
 
             // Recalculer la date de départ
             const departureDate = new Date(destination.arrivalDate);
             const durationInDays = window.extractDurationInDays(destination.duration);
-            departureDate.setDate(departureDate.getDate() + durationInDays - 1);
-            destination.departureDate = departureDate.toISOString().split('T')[0];
+            
+            // Créer une copie pour éviter de modifier l'original
+            const newDepartureDate = new Date(departureDate);
+            newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+            destination.departureDate = newDepartureDate.toISOString().split('T')[0];
         }
 
         // Mettre à jour l'itinéraire
@@ -616,7 +603,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -639,33 +626,17 @@ class LocalStorageService {
         
         // Recalculer les dates des destinations restantes
         if (currentItinerary.destinations.length > 0) {
-            // Convertir le Timestamp Firestore en Date JavaScript si nécessaire
-            let currentDate;
-            if (currentItinerary.startDate) {
-                if (typeof currentItinerary.startDate === 'object' && currentItinerary.startDate.seconds !== undefined) {
-                    // Timestamp Firestore
-                    currentDate = new Date(currentItinerary.startDate.seconds * 1000 + (currentItinerary.startDate.nanoseconds || 0) / 1000000);
-                } else if (typeof currentItinerary.startDate === 'string') {
-                    // Chaîne de date
-                    currentDate = new Date(currentItinerary.startDate);
-                } else if (currentItinerary.startDate instanceof Date) {
-                    // Objet Date déjà
-                    currentDate = currentItinerary.startDate;
-                } else {
-                    console.warn('⚠️ Format de date non reconnu, utilisation de la date actuelle');
-                    currentDate = new Date();
-                }
-            } else {
-                console.warn('⚠️ Aucune date de début d\'itinéraire, utilisation de la date actuelle');
-                currentDate = new Date();
-            }
+            // Récupérer la date de début de l'itinéraire
+            let currentDate = currentItinerary.startDate && new Date(currentItinerary.startDate).toString() !== 'Invalid Date'
+                ? new Date(currentItinerary.startDate).toISOString().split('T')[0] 
+                : new Date().toISOString().split('T')[0];
 
             for (let i = 0; i < currentItinerary.destinations.length; i++) {
                 const destination = currentItinerary.destinations[i];
                 
                 // Première destination : date de début de l'itinéraire
                 if (i === 0) {
-                    destination.arrivalDate = currentDate.toISOString().split('T')[0];
+                    destination.arrivalDate = currentDate;
                 } else {
                     // Destinations suivantes : date de départ de la précédente + temps de transport
                     const prevDestination = currentItinerary.destinations[i - 1];
@@ -674,21 +645,26 @@ class LocalStorageService {
                     // Calculer le décalage selon le type et durée du transport
                     const daysToAdd = window.distanceService.calculateArrivalDayOffset(prevDestination.transportation);
                     
-                    prevDeparture.setDate(prevDeparture.getDate() + daysToAdd);
-                    destination.arrivalDate = prevDeparture.toISOString().split('T')[0];
+                    // Créer une copie pour éviter de modifier l'original
+                    const newArrivalDate = new Date(prevDeparture);
+                    newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+                    destination.arrivalDate = newArrivalDate.toISOString().split('T')[0];
                 }
 
                 // Recalculer la date de départ
                 const departureDate = new Date(destination.arrivalDate);
                 const durationInDays = window.extractDurationInDays(destination.duration);
-                departureDate.setDate(departureDate.getDate() + durationInDays - 1);
-                destination.departureDate = departureDate.toISOString().split('T')[0];
+                
+                // Créer une copie pour éviter de modifier l'original
+                const newDepartureDate = new Date(departureDate);
+                newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+                destination.departureDate = newDepartureDate.toISOString().split('T')[0];
             }
         }
 
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -747,7 +723,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -823,7 +799,7 @@ class LocalStorageService {
                 // Mettre à jour l'itinéraire
                 await this.db.itineraries.update(currentItinerary.id, {
                     destinations: currentItinerary.destinations,
-                    updatedAt: new Date()
+                    updatedAt: new Date().toISOString()
                 });
 
                 console.log('🗑️ Destination temporaire supprimée de l\'itinéraire');

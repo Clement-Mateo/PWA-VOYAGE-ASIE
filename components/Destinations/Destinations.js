@@ -8,6 +8,7 @@ const Destinations = {
     isSaving: false, // État de sauvegarde pour éviter les clics multiples
     isDeleting: false, // État de suppression pour éviter les clics multiples
     isReordering: false, // État de réorganisation pour éviter les doubles appels
+    eventListenersInitialized: false, // Flag pour éviter d'initialiser les écouteurs plusieurs fois
     
     /**
      * Obtenir ou créer le panneau
@@ -683,6 +684,30 @@ const Destinations = {
      */
     async loadDestinations() {
         try {
+            // Éviter les chargements multiples
+            if (this.isLoading) {
+                return;
+            }
+            
+            this.isLoading = true;
+            
+            // Initialiser les écouteurs d'événements (première fois seulement)
+            if (!this.eventListenersInitialized) {
+                // Écouter les mises à jour d'itinéraires pour recharger les destinations
+                window.addEventListener('itinerary:updated', (event) => {
+                    if (!this.isLoading) {
+                        this.loadDestinations();
+                    }
+                });
+                
+                // Écouter les changements d'itinéraire actif
+                window.addEventListener('itinerary:activated', (event) => {
+                    this.loadDestinations();
+                });
+                
+                this.eventListenersInitialized = true;
+            }
+            
             // S'assurer que le panneau existe avant de faire le rendu
             this.getPanel();
             await this.render();
@@ -695,6 +720,8 @@ const Destinations = {
         } catch (error) {
             console.error('❌ Erreur chargement destinations:', error);
             await this.render();
+        } finally {
+            this.isLoading = false;
         }
     },
 

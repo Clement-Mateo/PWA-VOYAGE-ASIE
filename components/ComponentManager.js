@@ -137,7 +137,7 @@ export const ComponentManager = {
             // 7. Initialiser Sidebar
             if (window.Sidebar) {
                 console.log('📋 7/13 Initialisation de Sidebar...');
-                await window.Sidebar.init();
+                await window.Sidebar.init(); // Attendre la fin du rendu complet
             }
             
             // 8. Initialiser ChooseAddress
@@ -146,7 +146,7 @@ export const ComponentManager = {
                 window.ChooseAddress.init();
             }
             
-            // 9. Initialiser Destinations
+            // 9. Initialiser Destinations (après que Sidebar soit complètement rendue)
             if (window.Destinations) {
                 console.log('🎯 9/13 Initialisation de Destinations...');
                 await window.Destinations.loadDestinations();
@@ -314,13 +314,6 @@ export const ComponentManager = {
             
             // Vérifier et supprimer la destination temporaire
             await window.localStorageService.removeTempDestination();
-            
-            // Vérifier s'il y a un itinéraire actif
-            const currentItinerary = await window.localStorageService.getCurrentItinerary();
-            if (!currentItinerary && itineraries.length > 0 && window.Itineraries) {
-                console.log('🔄 Aucun itinéraire actif trouvé, activation du premier disponible');
-                await window.Itineraries.setActiveItinerary(itineraries[0].id, false);
-            }
 
             // Afficher la carte
             if (window.MapInstance) {

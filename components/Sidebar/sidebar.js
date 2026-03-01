@@ -11,14 +11,17 @@ const Sidebar = {
         if (this.isInitialized || document.getElementById('sidebarContainer')) {
             await this.updateItineraryName();
             this.loadDestinationsContent();
-            return;
+            return Promise.resolve(); // Retourner une promesse résolue
         }
         
         // Marquer comme en cours d'initialisation
         this.isInitialized = true;
         
-        await this.render();
-        this.initMobileToggle();
+        // Retourner la promesse de rendu complet
+        return this.render().then(() => {
+            this.initMobileToggle();
+            console.log('✅ Sidebar: Rendu terminé et prêt');
+        });
     },
     
     /**
