@@ -190,7 +190,7 @@ class Itineraries {
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Date de début</label>
-                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${itinerary.startDate && new Date(itinerary.startDate).toString() !== 'Invalid Date' ? new Date(itinerary.startDate).toISOString().split('T')[0] : ''}">
+                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${itinerary.startDate ? new Date(itinerary.startDate).toISOString().split('T')[0] : ''}">
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Notes</label>
@@ -215,6 +215,11 @@ class Itineraries {
             
             // Afficher le loading global
             window.showLoading();
+            
+            // Nettoyer les destinations temporaires avant de créer un nouvel itinéraire
+            if (window.localStorageService && window.localStorageService.removeTempDestination) {
+                await window.localStorageService.removeTempDestination();
+            }
             
             // Nettoyer les destinations temporaires avant de créer un nouvel itinéraire
             if (window.localStorageService && window.localStorageService.removeTempDestination) {
@@ -451,6 +456,11 @@ class Itineraries {
             // Gérer le loading si demandé
             if (manageLoading) {
                 window.showLoading();
+            }
+
+            // Nettoyer les destinations temporaires avant de changer d'itinéraire
+            if (window.localStorageService && window.localStorageService.removeTempDestination) {
+                await window.localStorageService.removeTempDestination();
             }
 
             // Nettoyer les destinations temporaires avant de changer d'itinéraire

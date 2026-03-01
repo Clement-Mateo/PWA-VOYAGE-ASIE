@@ -161,7 +161,19 @@ const Destination = {
 
             // Récupérer l'itinéraire courant
             const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
-            const destination = destinations.find(d => d.id === destinationId);
+            let destination = destinations.find(d => d.id === destinationId);
+            
+            // Si c'est une destination temporaire et qu'elle n'est pas trouvée, la créer
+            if (!destination && destinationId === 'temp_destination') {
+                destination = {
+                    id: 'temp_destination',
+                    name: '',
+                    address: '',
+                    duration: { days: 3, hours: 0, minutes: 0 },
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+            }
             
             if (!destination) {
                 console.error('❌ Destination non trouvée avec l\'ID', destinationId);
