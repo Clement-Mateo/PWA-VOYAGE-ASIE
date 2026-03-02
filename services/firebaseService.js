@@ -47,7 +47,7 @@ class FirebaseService {
     setupAuthObserver() {
         if (!this.isInitialized) return;
 
-        this.auth.onAuthStateChanged((user) => {
+        this.auth.onAuthStateChanged(async (user) => {
             this.user = user;
             console.log(user ? `✅ Utilisateur connecté: ${user.email}` : '🔒 Utilisateur déconnecté');
             
@@ -188,8 +188,9 @@ class FirebaseService {
                 startDate: itineraryData.startDate || null,
                 notes: itineraryData.notes || '',
                 userId: this.user.uid,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                // Préfixer pour empêcher la conversion Firestore
+                createdAt_string: new Date().toISOString(),
+                updatedAt_string: new Date().toISOString(),
                 destinations: [],
             };
             
@@ -216,7 +217,8 @@ class FirebaseService {
         try {
             const updateData = {
                 ...updates,
-                updatedAt: new Date().toISOString()
+                // Préfixer pour empêcher la conversion Firestore
+                updatedAt_string: new Date().toISOString()
             };
             
             await window.firebase.updateDoc(window.firebase.doc(this.db, 'itineraries', id), updateData);
@@ -259,7 +261,7 @@ class FirebaseService {
             const q = window.firebase.query(
                 window.firebase.collection(this.db, 'itineraries'),
                 window.firebase.where('userId', '==', this.user.uid),
-                window.firebase.orderBy('createdAt', 'asc')
+                window.firebase.orderBy('createdAt_string', 'asc')
             );
             
             const querySnapshot = await window.firebase.getDocs(q);

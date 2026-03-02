@@ -25,8 +25,8 @@ class LocalStorageService {
             
             // Définition des schémas
             this.db.version(3).stores({
-                itineraries: 'id, userId, name, active, createdAt, updatedAt, [userId+active]',
-                toDelete: 'id, type, firebaseId, userId, createdAt',
+                itineraries: 'id, userId, name, active, createdAt_string, updatedAt_string, [userId+active]',
+                toDelete: 'id, type, firebaseId, userId, createdAt_string',
                 exchangeRates: 'id, lastUpdated, base'
             });
 
@@ -120,28 +120,28 @@ class LocalStorageService {
         
         // Vérifier s'il y a déjà des itinéraires pour déterminer si celui-ci doit être actif
         const existingItineraries = await this.db.itineraries.where('userId').equals(userId).toArray();
-        const shouldBeActive = existingItineraries.length === 0;
+        const active = existingItineraries.length === 0;
         
-        const newItinerary = {
-            id: this.generateTempId('itineraryToCreate'),
-            userId: userId,
+        const itinerary = {
+            id: `itineraryToCreate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: itineraryData.name || 'Nouvel Itinéraire',
-            startDate: (itineraryData.startDate || new Date()).toISOString(), // Toujours stocker en string
+            startDate: itineraryData.startDate || null,
             notes: itineraryData.notes || '',
-            active: shouldBeActive, // Actif par défaut si c'est le premier itinéraire
+            userId: userId,
+            active: active,
             destinations: [],
-            createdAt: new Date().toISOString(), // Toujours stocker en string
-            updatedAt: new Date().toISOString() // Toujours stocker en string
+            createdAt_string: new Date().toISOString(),
+            updatedAt_string: new Date().toISOString()
         };
 
-        await this.db.itineraries.add(newItinerary);
+        await this.db.itineraries.add(itinerary);
         
-        console.log(`✅ Itinéraire créé en local: ${newItinerary.id} (actif: ${newItinerary.active})`);
+        console.log(`✅ Itinéraire créé en local: ${itinerary.id} (actif: ${active})`);
         
         // Émettre événement pour sync
-        this.emit('itinerary:created', newItinerary);
+        this.emit('itinerary:created', itinerary);
         
-        return newItinerary;
+        return itinerary;
     }
 
     /**
@@ -163,11 +163,11 @@ class LocalStorageService {
             if (itinerary.startDate && typeof itinerary.startDate === 'string') {
                 itinerary.startDate = new Date(itinerary.startDate);
             }
-            if (itinerary.createdAt && typeof itinerary.createdAt === 'string') {
-                itinerary.createdAt = new Date(itinerary.createdAt);
+            if (itinerary.createdAt_string && typeof itinerary.createdAt_string === 'string') {
+                itinerary.createdAt = new Date(itinerary.createdAt_string);
             }
-            if (itinerary.updatedAt && typeof itinerary.updatedAt === 'string') {
-                itinerary.updatedAt = new Date(itinerary.updatedAt);
+            if (itinerary.updatedAt_string && typeof itinerary.updatedAt_string === 'string') {
+                itinerary.updatedAt = new Date(itinerary.updatedAt_string);
             }
         });
         
@@ -203,11 +203,11 @@ class LocalStorageService {
                 if (current.startDate && typeof current.startDate === 'string') {
                     current.startDate = new Date(current.startDate);
                 }
-                if (current.createdAt && typeof current.createdAt === 'string') {
-                    current.createdAt = new Date(current.createdAt);
+                if (current.createdAt_string && typeof current.createdAt_string === 'string') {
+                    current.createdAt = new Date(current.createdAt_string);
                 }
-                if (current.updatedAt && typeof current.updatedAt === 'string') {
-                    current.updatedAt = new Date(current.updatedAt);
+                if (current.updatedAt_string && typeof current.updatedAt_string === 'string') {
+                    current.updatedAt = new Date(current.updatedAt_string);
                 }
             }
             
@@ -231,7 +231,7 @@ class LocalStorageService {
 
         const updateData = {
             ...updates,
-            updatedAt: new Date().toISOString() // Toujours stocker en string
+            updatedAt_string: new Date().toISOString()
         };
 
         // Si la date de début change, recalculer toutes les dates des destinations
@@ -302,7 +302,7 @@ class LocalStorageService {
             type: 'itinerary',
             firebaseId: id,
             userId: itinerary.userId,
-            createdAt: new Date().toISOString()
+            createdAt_string: new Date().toISOString()
         });
 
         // Supprimer de IndexedDB
@@ -410,7 +410,7 @@ class LocalStorageService {
             ...destinationData,
             // Les dates seront calculées plus tard dans loadDestinations après le calcul du transport
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         };
 
         // Ajouter la destination à l'itinéraire
@@ -418,7 +418,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // NE PAS émettre d'événement pour les destinations temporaires
@@ -449,7 +449,7 @@ class LocalStorageService {
                     id: destinationId,
                     ...updates,
                     createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    updatedAt_string: new Date().toISOString()
                 };
                 currentItinerary.destinations.push(tempDestination);
                 destinationIndex = currentItinerary.destinations.length - 1;
@@ -462,7 +462,7 @@ class LocalStorageService {
         const updatedDestination = {
             ...currentDestination,
             ...updates,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         };
         
         const currentAddress = currentDestination.address?.address || '';
@@ -520,9 +520,36 @@ class LocalStorageService {
         updatedDestination.departureDate = calculatedDates.departureDate;
         currentItinerary.destinations[destinationIndex] = updatedDestination;
 
+        // Si la durée a changé, recalculer les dates des destinations suivantes
+        const hasDurationChanged = updates.duration && JSON.stringify(currentDestination.duration) !== JSON.stringify(updates.duration);
+        
+        if (hasDurationChanged && destinationIndex < currentItinerary.destinations.length - 1) {
+            // Recalculer les dates de toutes les destinations suivantes
+            for (let i = destinationIndex + 1; i < currentItinerary.destinations.length; i++) {
+                const nextDestination = currentItinerary.destinations[i];
+                const prevDestination = currentItinerary.destinations[i - 1];
+                
+                // Date d'arrivée = date de départ de la destination précédente + temps de transport
+                const prevDeparture = new Date(prevDestination.departureDate);
+                const daysToAdd = window.distanceService.calculateArrivalDayOffset(prevDestination.transportation);
+                
+                const newArrivalDate = new Date(prevDeparture);
+                newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+                nextDestination.arrivalDate = newArrivalDate.toISOString().split('T')[0];
+                
+                // Recalculer la date de départ
+                const departureDate = new Date(nextDestination.arrivalDate);
+                const durationInDays = window.extractDurationInDays(nextDestination.duration);
+                
+                const newDepartureDate = new Date(departureDate);
+                newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+                nextDestination.departureDate = newDepartureDate.toISOString().split('T')[0];
+            }
+        }
+
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -603,7 +630,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -664,7 +691,7 @@ class LocalStorageService {
 
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -723,7 +750,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -799,7 +826,7 @@ class LocalStorageService {
                 // Mettre à jour l'itinéraire
                 await this.db.itineraries.update(currentItinerary.id, {
                     destinations: currentItinerary.destinations,
-                    updatedAt: new Date().toISOString()
+                    updatedAt_string: new Date().toISOString()
                 });
 
                 console.log('🗑️ Destination temporaire supprimée de l\'itinéraire');
