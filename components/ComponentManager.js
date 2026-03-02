@@ -298,6 +298,11 @@ export const ComponentManager = {
                 if (window.Destinations && window.Destinations.loadDestinations) {
                     await window.Destinations.loadDestinations();
                 }
+                
+                // Rafraîchir le nom de l'itinéraire dans la sidebar
+                if (window.Sidebar && window.Sidebar.updateItineraryName) {
+                    await window.Sidebar.updateItineraryName();
+                }
             } else {
                 console.warn('⚠️ loadUserDataFromFirebase non disponible');
             }
@@ -319,6 +324,11 @@ export const ComponentManager = {
                 // Après création, charger les destinations
                 if (window.Destinations && window.Destinations.loadDestinations) {
                     await window.Destinations.loadDestinations();
+                }
+                
+                // Rafraîchir le nom de l'itinéraire dans la sidebar
+                if (window.Sidebar && window.Sidebar.updateItineraryName) {
+                    await window.Sidebar.updateItineraryName();
                 }
             }
             
