@@ -293,6 +293,11 @@ export const ComponentManager = {
             if (window.offlineFirstApp && window.offlineFirstApp.loadUserDataFromFirebase) {
                 console.log('📥 Chargement des données utilisateur depuis Firebase...');
                 await window.offlineFirstApp.loadUserDataFromFirebase();
+                
+                // Après chargement depuis Firebase, rafraîchir les destinations
+                if (window.Destinations && window.Destinations.loadDestinations) {
+                    await window.Destinations.loadDestinations();
+                }
             } else {
                 console.warn('⚠️ loadUserDataFromFirebase non disponible');
             }
@@ -310,6 +315,11 @@ export const ComponentManager = {
             // Créer un itinéraire si aucun n'existe
             if (itineraries.length === 0) {
                 await window.localStorageService.createItinerary();
+                
+                // Après création, charger les destinations
+                if (window.Destinations && window.Destinations.loadDestinations) {
+                    await window.Destinations.loadDestinations();
+                }
             }
             
             // Vérifier et supprimer la destination temporaire
