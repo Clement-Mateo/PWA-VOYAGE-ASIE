@@ -127,9 +127,23 @@ class Itineraries {
         
         // Formater la date de début pour l'affichage
         let startDateText = 'Non définie';
+        let startDateValue = '';
         
         if (itinerary.startDate) {
-            startDateText = itinerary.startDate;
+            try {
+                const date = new Date(itinerary.startDate);
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    startDateText = `${day}/${month}/${year}`;
+                    startDateValue = date.toISOString().split('T')[0];
+                } else {
+                    console.warn('Date invalide dans l\'itinéraire:', itinerary.startDate);
+                }
+            } catch (error) {
+                console.warn('Date invalide dans l\'itinéraire:', itinerary.startDate);
+            }
         }
         
         return `
@@ -190,7 +204,7 @@ class Itineraries {
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Date de début</label>
-                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${itinerary.startDate ? new Date(itinerary.startDate).toISOString().split('T')[0] : ''}">
+                            <input type="date" class="form-input" id="startDate-${itinerary.id}" value="${startDateValue}">
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Notes</label>
