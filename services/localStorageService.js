@@ -410,7 +410,7 @@ class LocalStorageService {
             ...destinationData,
             // Les dates seront calculées plus tard dans loadDestinations après le calcul du transport
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         };
 
         // Ajouter la destination à l'itinéraire
@@ -418,7 +418,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // NE PAS émettre d'événement pour les destinations temporaires
@@ -449,7 +449,7 @@ class LocalStorageService {
                     id: destinationId,
                     ...updates,
                     createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    updatedAt_string: new Date().toISOString()
                 };
                 currentItinerary.destinations.push(tempDestination);
                 destinationIndex = currentItinerary.destinations.length - 1;
@@ -462,7 +462,7 @@ class LocalStorageService {
         const updatedDestination = {
             ...currentDestination,
             ...updates,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         };
         
         const currentAddress = currentDestination.address?.address || '';
@@ -520,9 +520,36 @@ class LocalStorageService {
         updatedDestination.departureDate = calculatedDates.departureDate;
         currentItinerary.destinations[destinationIndex] = updatedDestination;
 
+        // Si la durée a changé, recalculer les dates des destinations suivantes
+        const hasDurationChanged = updates.duration && JSON.stringify(currentDestination.duration) !== JSON.stringify(updates.duration);
+        
+        if (hasDurationChanged && destinationIndex < currentItinerary.destinations.length - 1) {
+            // Recalculer les dates de toutes les destinations suivantes
+            for (let i = destinationIndex + 1; i < currentItinerary.destinations.length; i++) {
+                const nextDestination = currentItinerary.destinations[i];
+                const prevDestination = currentItinerary.destinations[i - 1];
+                
+                // Date d'arrivée = date de départ de la destination précédente + temps de transport
+                const prevDeparture = new Date(prevDestination.departureDate);
+                const daysToAdd = window.distanceService.calculateArrivalDayOffset(prevDestination.transportation);
+                
+                const newArrivalDate = new Date(prevDeparture);
+                newArrivalDate.setDate(newArrivalDate.getDate() + daysToAdd);
+                nextDestination.arrivalDate = newArrivalDate.toISOString().split('T')[0];
+                
+                // Recalculer la date de départ
+                const departureDate = new Date(nextDestination.arrivalDate);
+                const durationInDays = window.extractDurationInDays(nextDestination.duration);
+                
+                const newDepartureDate = new Date(departureDate);
+                newDepartureDate.setDate(newDepartureDate.getDate() + durationInDays - 1);
+                nextDestination.departureDate = newDepartureDate.toISOString().split('T')[0];
+            }
+        }
+
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -603,7 +630,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -664,7 +691,7 @@ class LocalStorageService {
 
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -723,7 +750,7 @@ class LocalStorageService {
         
         await this.db.itineraries.update(currentItinerary.id, {
             destinations: currentItinerary.destinations,
-            updatedAt: new Date().toISOString()
+            updatedAt_string: new Date().toISOString()
         });
         
         // Émettre événement pour sync de l'itinéraire
@@ -799,7 +826,7 @@ class LocalStorageService {
                 // Mettre à jour l'itinéraire
                 await this.db.itineraries.update(currentItinerary.id, {
                     destinations: currentItinerary.destinations,
-                    updatedAt: new Date().toISOString()
+                    updatedAt_string: new Date().toISOString()
                 });
 
                 console.log('🗑️ Destination temporaire supprimée de l\'itinéraire');
