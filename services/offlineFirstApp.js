@@ -91,6 +91,16 @@ class OfflineFirstApp {
             
             console.log(`✅ ${firebaseItineraries.length} itinéraires chargés dans IndexedDB`);
             
+            // Rafraîchir l'interface après chargement des données
+            if (window.Itineraries && window.Itineraries.renderItineraries) {
+                await window.Itineraries.renderItineraries();
+            }
+            
+            // Rafraîchir la liste des destinations pour l'itinéraire actif
+            if (window.Destinations && window.Destinations.loadDestinations) {
+                await window.Destinations.loadDestinations();
+            }
+            
         } catch (error) {
             console.error('❌ Erreur chargement données Firebase:', error);
             // Continuer avec les données locales si erreur
