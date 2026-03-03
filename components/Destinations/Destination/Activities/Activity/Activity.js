@@ -203,7 +203,7 @@ const Activity = {
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.symbol} - ${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="LocationService.updateEurFromLocalCurrency(this.value, localCurrency.code)" style="display: none;" />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="Activity.updateEurFromLocalCurrency(this.value)" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group full-width">
@@ -249,6 +249,11 @@ const Activity = {
 
     // Mettre à jour le champ de devise locale lors de la saisie du prix en euros
     async updateLocalCurrency() {
+        // Éviter les conversions en boucle
+        if (window.LocationService.isConverting) {
+            return;
+        }
+        
         const priceAmount = document.getElementById('priceAmount');
         const localCurrencyField = document.getElementById('localCurrency');
         
@@ -265,6 +270,19 @@ const Activity = {
         } else {
             localCurrencyField.value = '';
         }
+    },
+
+    // Mettre à jour le champ EUR depuis la devise locale
+    async updateEurFromLocalCurrency(localAmount) {
+        // Éviter les conversions en boucle
+        if (window.LocationService.isConverting) {
+            return;
+        }
+        
+        // Récupérer la devise locale de la destination actuelle
+        const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
+        
+        await window.LocationService.updateEurFromLocalCurrency(localAmount, localCurrency.code);
     },
 
     // Cacher le popup d'activité
