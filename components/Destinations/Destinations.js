@@ -88,9 +88,15 @@ const Destinations = {
                         <button class="btn-delete" onclick="Destinations.deleteDestination('${destination.id}')">
                             <span class="material-icons">delete</span>
                         </button>
-                        <button class="btn-expand" onclick="Destination.toggleDestinationCard('${destination.id}')" title="Déplier">
-                            <span class="material-icons">keyboard_arrow_down</span>
+                        ${destination.activities && destination.activities.length > 0 ? `
+                        <button class="btn-activities" onclick="Activities.showActivitiesPopup('${destination.id}')" title="Voir les activités">
+                            <span class="material-icons">attractions</span>
                         </button>
+                    ` : `
+                        <button class="btn-add-activity" onclick="Activities.addActivity('${destination.id}')" title="Ajouter une activité">
+                            <span class="material-icons">add</span>
+                        </button>
+                    `}
                     ` : ''}
                 </div>
             </div>
@@ -172,19 +178,6 @@ const Destinations = {
                     <button class="btn-save" onclick="Destination.saveDestination('${destination.id}')"><span class="material-icons">save</span> Enregistrer</button>
                     <button class="btn-cancel" onclick="Destination.cancelEdit('${destination.id}')"><span class="material-icons">close</span> Annuler</button>
                 </div>
-            </div>
-            
-            <!-- Section des activités -->
-            <div class="destination-activities" id="activities-${destination.id}" style="display: none;">
-                <div class="activities-header">
-                    <h4>Activités</h4>
-                </div>
-                <div class="activities-list" id="activities-list-${destination.id}">
-                    <!-- Les activités seront chargées ici -->
-                </div>
-                <button class="btn-add" onclick="Activities.addActivity('${destination.id}')" title="Ajouter une activité">
-                    Ajouter une activité
-                </button>
             </div>
         `;
         
@@ -560,11 +553,6 @@ const Destinations = {
                 
                 const card = this.createDestinationCard(destination);
                 container.appendChild(card);
-                
-                // Mettre à jour l'icône d'activité selon les activités existantes
-                if (window.Destination && window.Destination.updateActivityIcon) {
-                    await window.Destination.updateActivityIcon(destination.id);
-                }
                 
                 // Réactiver le drag & drop sur les cartes existantes (si la dernière destination a un ID)
                 const lastDestination = destinations[destinations.length - 1];

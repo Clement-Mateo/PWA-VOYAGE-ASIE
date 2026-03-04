@@ -112,22 +112,6 @@
     box-shadow: var(--box-shadow-1) !important;
 }
 
-/* Carte d'itinéraire étendue */
-.card.expanded {
-    background: var(--background-light);
-    transform: none !important;
-}
-
-.card.expanded:hover {
-    transform: none !important;
-    box-shadow: var(--box-shadow-2) !important;
-}
-
-/* Masquer le bouton expand en mode édition */
-.card.editing .btn-expand {
-    display: none;
-}
-
 /* Masquer le bouton edit en mode édition */
 .card.editing .btn-edit {
     display: none;

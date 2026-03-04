@@ -95,14 +95,6 @@
     background: var(--background-light);
 }
 
-.destination-card.expanded {
-    background: var(--background-light);
-}
-
-.destination-card.editing .btn-expand {
-    display: none;
-}
-
 .destination-card.editing .btn-edit {
     display: none;
 }

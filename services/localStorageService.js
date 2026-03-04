@@ -735,7 +735,7 @@ class LocalStorageService {
     /**
      * Supprimer une activité (dans la destination de l'itinéraire actuel)
      */
-    async deleteActivity(destinationId, activityId) {
+    async deleteActivity(activityId, destinationId) {
         if (!this.isInitialized) throw new Error('LocalStorage non initialisé');
 
         const currentItinerary = await this.getCurrentItinerary();

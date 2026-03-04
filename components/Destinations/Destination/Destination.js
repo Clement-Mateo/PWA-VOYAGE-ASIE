@@ -39,19 +39,6 @@ const Destination = {
                 
         const card = document.getElementById(`destination-${destinationId}`);
         const form = document.getElementById(`form-${destinationId}`);
-        const activitiesSection = document.getElementById(`activities-${destinationId}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        // Replier la destination avant l'édition
-        if (activitiesSection && activitiesSection.style.display !== 'none') {
-            activitiesSection.style.display = 'none';
-            if (expandBtn) {
-                expandBtn.textContent = 'keyboard_arrow_down';
-            }
-        }
-        
-        // Mettre à jour l'icône selon les activités
-        this.updateActivityIcon(destinationId);
         
         // Fermer les autres formulaires
         document.querySelectorAll('.destination-form.show').forEach(f => {
@@ -409,96 +396,6 @@ const Destination = {
         
         if (value < 0) {
             input.value = 0;
-        }
-    },
-
-    /**
-     * Vérifier si une destination a des activités et mettre à jour l'icône
-     */
-    async updateActivityIcon(destinationId) {
-        const activities = await window.localStorageService.getActivities(destinationId);
-        const expandBtn = document.querySelector(`#destination-${destinationId} .btn-expand span`);
-        
-        if (!expandBtn) return;
-        
-        if (activities.length === 0) {
-            // Pas d'activités : afficher l'icône add avec tooltip
-            expandBtn.textContent = 'add';
-            expandBtn.title = 'Ajouter une activité';
-            expandBtn.parentElement.title = 'Ajouter une activité';
-        } else {
-            // Des activités existent : afficher l'icône flèche
-            expandBtn.textContent = 'keyboard_arrow_down';
-            expandBtn.title = 'Déplier';
-            expandBtn.parentElement.title = 'Déplier';
-        }
-    },
-
-    /**
-     * Déplier la section des activités (sans vérifier l'icône)
-     */
-    expandActivitiesSection(destinationId) {
-        const card = document.getElementById(`destination-${destinationId}`);
-        const activitiesSection = document.getElementById(`activities-${destinationId}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        if (!card || !activitiesSection || !expandBtn) return;
-        
-        // Forcer le dépliage
-        activitiesSection.style.display = 'block';
-        expandBtn.textContent = 'keyboard_arrow_up';
-        expandBtn.title = 'Masquer les activités';
-        expandBtn.parentElement.title = 'Masquer les activités';
-        card.classList.add('expanded');
-        
-        // Charger les activités si pas encore chargées
-        if (activitiesSection.querySelector('.activities-list').children.length === 0) {
-            Activities.displayActivitiesOfDestination(destinationId);
-        }
-    },
-
-    /**
-     * Replier la section des activités (sans vérifier l'icône)
-     */
-    collapseActivitiesSection(destinationId) {
-        const card = document.getElementById(`destination-${destinationId}`);
-        const activitiesSection = document.getElementById(`activities-${destinationId}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        if (!card || !activitiesSection || !expandBtn) return;
-        
-        // Forcer le repli
-        activitiesSection.style.display = 'none';
-        card.classList.remove('expanded');
-        
-        // Mettre à jour l'icône selon les activités
-        this.updateActivityIcon(destinationId);
-    },
-
-    /**
-     * Toggle l'affichage des activités d'une destination
-     */
-    toggleDestinationCard(destinationId) {
-        const card = document.getElementById(`destination-${destinationId}`);
-        const activitiesSection = document.getElementById(`activities-${destinationId}`);
-        const expandBtn = card.querySelector('.btn-expand span');
-        
-        if (!card || !activitiesSection || !expandBtn) return;
-        
-        // Si l'icône est "add", appeler Activities.addActivity
-        if (expandBtn.textContent === 'add') {
-            Activities.addActivity(destinationId);
-            return;
-        }
-        
-        const isExpanded = activitiesSection.style.display !== 'none';
-        
-        if (isExpanded) {
-            // Replier
-            this.collapseActivitiesSection(destinationId);
-        } else {
-            // Déplier
-            this.expandActivitiesSection(destinationId);
         }
     },
 

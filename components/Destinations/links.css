@@ -2,6 +2,16 @@
    STYLES DES LIENS
    ======================================== */
 
+/* Modal de lien (au-dessus de toutes les autres popups) */
+.links-modal {
+    z-index: 2200;
+}
+
+.links-modal .modal-content {
+    width: 60%;
+    max-width: 400px;
+}
+
 .links-header {
     display: flex;
     justify-content: space-between;

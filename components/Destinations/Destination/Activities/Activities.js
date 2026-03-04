@@ -49,30 +49,14 @@ const Activities = {
             const activityToDelete = { id: activityId };
             
             // Utiliser le service pour supprimer l'activité
-            await window.localStorageService.deleteActivity(destination.id, activityId);
+            await window.localStorageService.deleteActivity(activityId, destination.id);
             
             if (window.showSuccessSnackBar) {
                 window.showSuccessSnackBar('Activité supprimée avec succès');
             }
             
-            // Recharger la liste des activités
-            await this.displayActivitiesOfDestination(destinationId);
-            
-            // Mettre à jour l'icône d'activité selon les activités existantes
-            if (window.Destination && window.Destination.updateActivityIcon) {
-                await window.Destination.updateActivityIcon(destinationId);
-            }
-            
-            // Vérifier s'il reste des activités après suppression
-            const activities = await window.localStorageService.getActivities(destinationId);
-            if (activities.length === 0) {
-                // Plus d'activités : replier la section si elle est dépliée
-                const activitiesSection = document.getElementById(`activities-${destinationId}`);
-                if (activitiesSection && activitiesSection.style.display !== 'none') {
-                    window.Destination.collapseActivitiesSection(destinationId);
-                }
-            }
-            
+            // Rafraîchir la popup après suppression
+            this.refreshActivityList(destinationId);
         } catch (error) {
             console.error('❌ Erreur lors de la suppression de l\'activité:', error);
             if (window.showErrorSnackBar) {
@@ -90,153 +74,183 @@ const Activities = {
     /**
      * Créer le HTML pour une activité
      */
-    createActivityHTML(activity, destinationId) {
-        const time = activity.time || '';
-        const price = activity.price ? `${activity.price}€` : '';
-        
-        let activityHTML = `
+    createActivityItem(activity, destinationId) {
+        return `
             <div class="activity-item" data-activity-id="${activity.id}">
                 <div class="activity-header">
-                    <div class="activity-info">
-                        <div class="activity-name-and-price">
-                            <strong>${activity.name}</strong>
-                            ${price ? `<span class="activity-price">${price}</span>` : ''}
-                        </div>
-                        ${time ? `<div class="activity-time"><span class="material-icons">schedule</span> ${time}</div>` : ''}
-                    </div>
+                    <h4>${activity.name}</h4>
                     <div class="activity-actions">
-                        <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier l'activité">
+                        <button class="btn-edit" onclick="Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier">
                             <span class="material-icons">edit</span>
                         </button>
-                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}', this)" title="Supprimer l'activité">
+                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}')" title="Supprimer">
                             <span class="material-icons">delete</span>
                         </button>
                     </div>
                 </div>
+                <div class="activity-info">
+                    ${activity.price ? `
+                        <div class="activity-price">
+                            ${activity.price}€
+                            ${activity.localCurrencyPrice ? ` / ${activity.localCurrencyPrice}` : ''}
+                        </div>
+                    ` : ''}
+                    ${activity.startTime && activity.endTime && (activity.startTime !== '00:00' || activity.endTime !== '00:00') ? `
+                        <div class="activity-time">
+                            <span class="material-icons">schedule</span>
+                            ${activity.startTime} - ${activity.endTime}
+                        </div>
+                    ` : ''}
+                    ${activity.type ? `
+                        <div class="activity-type">
+                            <span class="material-icons">${this.getActivityIcon(activity.type)}</span>
+                            ${activity.type}
+                        </div>
+                    ` : ''}
+                    ${activity.notes ? `
+                        <div class="activity-notes">${activity.notes}</div>
+                    ` : ''}
+                    ${activity.links && activity.links.length > 0 ? `
+                        <div class="links-list">
+                            ${activity.links.map(link => LinksService.createLinkCard(link, true)).join('')}
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
-        
-        return activityHTML;
     },
 
     /**
-     * Afficher les activités d'une destination spécifique
+     * Créer le HTML pour la liste des activités
      */
-    async displayActivitiesOfDestination(destinationId) {
-        const currentItinerary = await window.localStorageService.getCurrentItinerary();
-        const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
-        const destination = destinations.find(d => d.id === destinationId);
-        if (!destination || !destination.id) return;
+    createActivityList(activities, destinationId) {
+        if (activities.length === 0) {
+            return `
+                <div class="no-activities">
+                    <span class="material-icons">attractions</span>
+                    <p>Aucune activité pour cette destination</p>
+                </div>
+            `;
+        }
         
-        try {
-            // Utiliser le nouveau service pour charger les activités
-            const activities = await window.localStorageService.getActivities(destination.id);
-            console.log('🔍 Activités chargées pour destination', destination.id, ':', activities);
+        return activities.map(activity => this.createActivityItem(activity, destinationId)).join('');
+    },
+
+    /**
+     * Afficher la popup des activités
+     */
+    async showActivitiesPopup(destinationId) {
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const destination = destinations.find(d => d.id === destinationId);
+        
+        if (!destination) {
+            console.error('❌ Destination non trouvée avec l\'ID', destinationId);
+            return;
+        }
+
+        // Charger les activités à l'ouverture de la popup
+        const activities = await window.localStorageService.getActivities(destinationId);
+        
+        // Créer la popup
+        const popup = document.createElement('div');
+        popup.className = 'modal-overlay';
+        popup.id = 'activitiesPopup';
+        
+        popup.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Activités - ${destination.name}</h3>
+                    <button class="btn-close" onclick="Activities.hideActivitiesPopup()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${this.createActivityList(activities, destination.id)}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-add" onclick="Activities.addActivity('${destinationId}')">
+                        <span class="material-icons">add</span>
+                        Ajouter une activité
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        // Afficher la popup avec animation
+        setTimeout(() => {
+            popup.classList.add('open');
+        }, 10);
+    },
+
+    /**
+     * Rafraîchir le contenu de la popup des activités
+     */
+    async refreshActivityList(destinationId, scrollToActivityId = null) {
+        const popup = document.getElementById('activitiesPopup');
+        if (!popup) return;
+        
+        // Charger les activités fraîches
+        const activities = await window.localStorageService.getActivities(destinationId);
+        
+        // Mettre à jour le contenu de la popup
+        const modalBody = popup.querySelector('.modal-body');
+        if (modalBody) {
+            modalBody.innerHTML = this.createActivityList(activities, destinationId);
             
-            const activitiesList = document.getElementById(`activities-list-${destinationId}`);
-            activitiesList.innerHTML = '';
-            
-            if (activities.length === 0) {
-                activitiesList.innerHTML = '<p style="color: var(--gray-light); padding: 10px;">Aucune activité pour cette destination</p>';
-                return;
-            }
-            
-            // Trier les activités par ordre
-            activities.sort((a, b) => (a.order || 0) - (b.order || 0));
-            
-            activities.forEach(activity => {
-                
-                const activityElement = document.createElement('div');
-                activityElement.className = 'activity-item';
-                
-                // Créer le contenu HTML proprement
-                let activityHTML = `
-                    <div class="activity-info">
-                        <div class="activity-header flex-between">
-                        <div class="activity-name-and-price">
-                            <strong>${activity.name}</strong>`;
-                            
-                            // Afficher le prix (TOUJOURS simple valeur) et devise locale si présente
-                            if (activity.price) {
-                                const displayPrice = activity.price || 0;
-                                
-                                if (activity.localCurrency !== undefined && activity.localCurrencyCode) {
-                                    // Devise étrangère : afficher conversion
-                                    const displayCurrency = activity.localCurrency || 0;
-                                    const displayCurrencyCode = activity.localCurrencyCode || '';
-                                    
-                                    if (displayPrice > 0 || displayCurrency > 0) {
-                                        activityHTML += `
-                                            <span class="activity-price">${displayPrice}€ → ${displayCurrency} ${displayCurrencyCode}</span>
-                                            `;
-                                    }
-                                } else {
-                                    // EUR : afficher seulement le prix en euros
-                                    if (displayPrice > 0) {
-                                        activityHTML += `
-                                            <span class="activity-price">${displayPrice}€</span>
-                                            `;
-                                    }
-                                }
-                            }
-                        
-                        activityHTML += `
-                            </div> <!-- Fin activity-name-and-price -->
-                            <div class="activity-actions">
-                                <button class="btn-edit" onclick="window.Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier l'activité">
-                                    <span class="material-icons">edit</span>
-                                </button>
-                                <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}', this)" title="Supprimer l'activité">
-                                    <span class="material-icons">delete</span>
-                                </button>
-                            </div>
-                        </div>
-                `;
-                
-                if (activity.startTime && activity.endTime) {
-                    activityHTML += `<span class="activity-time">${activity.startTime} - ${activity.endTime}</span>`;
-                }
-                
-                // Afficher le type d'activité si présent
-                if (activity.type) {
-                    activityHTML += `
-                        <span class="activity-type">${activity.type}</span>
-                        `;
-                }
-                
-                // Afficher les notes si présentes
-                if (activity.notes && activity.notes.trim()) {
-                    activityHTML += `
-                        <div class="activity-notes">${activity.notes.replace(/\n/g, '<br>')}</div>
-                        `;
-                }
-                
-                // Afficher les liens si présents
-                if (activity.links && activity.links.length > 0) {
-                    activityHTML += `
-                        <div class="activity-links">
-                            <div class="links-list">
-                                ${activity.links.map(link => LinksService.createLinkCard(link, true, '${activity.id}')).join('')}
-                            </div>
-                        </div>
-                        `;
-                }
-                
-                activityHTML += `
-                    </div>
-                `;
-                
-                activityElement.innerHTML = activityHTML;
-                activitiesList.appendChild(activityElement);
-            });
-            
-        } catch (error) {
-            console.error('Erreur lors du chargement des activités:', error);
-            const activitiesList = document.getElementById(`activities-list-${destinationId}`);
-            if (activitiesList) {
-                activitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des activités</p>';
+            // Si un ID d'activité est fourni, faire défiler jusqu'à cette activité
+            if (scrollToActivityId) {
+                this.scrollToActivity(scrollToActivityId);
             }
         }
+    },
+
+    /**
+     * Faire défiler jusqu'à une activité spécifique
+     */
+    scrollToActivity(activityId) {
+        const popup = document.getElementById('activitiesPopup');
+        if (!popup) return;
+        
+        // Attendre que le DOM soit mis à jour
+        setTimeout(() => {
+            // Chercher l'élément de l'activité par son ID
+            const activityElement = popup.querySelector(`[data-activity-id="${activityId}"]`);
+            if (activityElement) {
+                // Faire défiler jusqu'à l'élément
+                activityElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }, 100);
+    },
+
+    /**
+     * Cacher la popup des activités
+     */
+    hideActivitiesPopup() {
+        const popup = document.getElementById('activitiesPopup');
+        if (popup) {
+            popup.classList.remove('open');
+            setTimeout(() => {
+                popup.remove();
+            }, 300);
+        }
+    },
+
+    /**
+     * Obtenir l'icône pour un type d'activité
+     */
+    getActivityIcon(type) {
+        const icons = {
+            culture: 'museum',
+            gastronomie: 'restaurant',
+            nature: 'nature',
+            sport: 'fitness_center'
+        };
+        return icons[type] || 'event';
     }
 };
 
