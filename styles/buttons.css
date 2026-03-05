@@ -45,24 +45,10 @@
     font-size: 14px;
 }
 
-/* Boutons d'action (edit, delete, expand) */
-.btn-edit, .btn-location, .btn-delete {
+/* Boutons d'action (edit, location, delete, activities) */
+.btn-edit, .btn-location, .btn-delete, .btn-add-activity, .btn-activities {
     font-family: 'Material Icons', sans-serif;
     font-size: 18px;
-    background: none;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-expand {
-    font-family: 'Material Symbols Outlined', sans-serif;
-    font-size: 10px;
     background: none;
     border: none;
     border-radius: 6px;
@@ -78,7 +64,11 @@
     color: var(--primary-blue);
 }
 
-.btn-edit:hover, .btn-location:hover {
+.btn-add-activity, .btn-activities {
+    color: var(--primary-blue);
+}
+
+.btn-edit:hover, .btn-location:hover, .btn-add-activity:hover, .btn-activities:hover {
     background: var(--gray);
 }
 
@@ -91,14 +81,6 @@
 .btn-delete:hover {
     background: var(--error-red-transparent);
     color: var(--error-red-dark);
-}
-
-.btn-expand {
-    color: var(--primary-blue);
-}
-
-.btn-expand:hover {
-    background: var(--gray);
 }
 
 /* Spinners */

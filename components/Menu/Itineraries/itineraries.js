@@ -283,14 +283,14 @@ class Itineraries {
                 f.style.display = 'none';
                 const otherCard = f.closest('.card');
                 if (otherCard) {
-                    otherCard.classList.remove('expanded', 'editing');
+                    otherCard.classList.remove('editing');
                 }
             }
         });
         
         // Forcer le dépliage
         form.style.display = 'block';
-        card.classList.add('expanded', 'editing');
+        card.classList.add('editing');
         
         // Focus automatique sur le champ nom
         setTimeout(() => {
@@ -313,7 +313,7 @@ class Itineraries {
         
         // Forcer le repli
         form.style.display = 'none';
-        card.classList.remove('expanded', 'editing');
+        card.classList.remove('editing');
     }
 
     /**

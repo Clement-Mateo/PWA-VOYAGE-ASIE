@@ -353,35 +353,51 @@ const LocationService = {
      */
 
     async convertLocalCurrencyToEur(amountInLocal, localCurrencyCode) {
+        // Conversion en nombre avec fallback à 0
+        const amount = parseFloat(amountInLocal) || 0;
+        
         if (!localCurrencyCode || localCurrencyCode === 'EUR') {
-            return amountInLocal;
+            return amount;
         }
         
         const rates = await this.loadExchangeRates();
         if (!rates) {
-            return amountInLocal;
+            return 0;
         }
         
         const rate = rates[localCurrencyCode];
-        if (rate && rate > 0) {
-            return amountInLocal / rate;
+        if (rate && typeof rate === 'number' && rate > 0) {
+            return amount / rate;
         }
         
-        return amountInLocal;
+        return 0;
     },
 
     /**
      * Mettre à jour le champ EUR depuis la devise locale
      */
 
+    // Flag pour éviter les conversions en boucle
+    isConverting: false,
+
     async updateEurFromLocalCurrency(localAmount, localCurrencyCode) {
+        // Éviter les conversions en boucle
+        if (this.isConverting) {
+            return;
+        }
+        
+        this.isConverting = true;
+        
         const eurAmount = await this.convertLocalCurrencyToEur(localAmount, localCurrencyCode);
         const eurField = document.getElementById('priceAmount');
         
         if (eurField) {
             eurField.value = eurAmount.toFixed(2);
-            eurField.dispatchEvent(new Event('input'));
+            // Ne pas déclencher l'événement input pour éviter la boucle
+            eurField.dispatchEvent(new Event('input', { bubbles: false }));
         }
+        
+        this.isConverting = false;
     },
 
     /**

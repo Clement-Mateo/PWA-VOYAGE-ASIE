@@ -203,7 +203,7 @@ const Activity = {
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="localCurrency">Prix (${localCurrency.symbol} - ${localCurrency.name})</label>
-                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="LocationService.updateEurFromLocalCurrency(this.value, localCurrency.code)" style="display: none;" />
+                            <input type="number" class="form-input" id="localCurrency" placeholder="0" min="0" step="1" oninput="Activity.updateEurFromLocalCurrency(this.value)" style="display: none;" />
                         </div>
                     </div>
                     <div class="form-group full-width">
@@ -249,6 +249,11 @@ const Activity = {
 
     // Mettre à jour le champ de devise locale lors de la saisie du prix en euros
     async updateLocalCurrency() {
+        // Éviter les conversions en boucle
+        if (window.LocationService.isConverting) {
+            return;
+        }
+        
         const priceAmount = document.getElementById('priceAmount');
         const localCurrencyField = document.getElementById('localCurrency');
         
@@ -265,6 +270,19 @@ const Activity = {
         } else {
             localCurrencyField.value = '';
         }
+    },
+
+    // Mettre à jour le champ EUR depuis la devise locale
+    async updateEurFromLocalCurrency(localAmount) {
+        // Éviter les conversions en boucle
+        if (window.LocationService.isConverting) {
+            return;
+        }
+        
+        // Récupérer la devise locale de la destination actuelle
+        const localCurrency = await window.LocationService.getLocalCurrency(this.currentDestination.id);
+        
+        await window.LocationService.updateEurFromLocalCurrency(localAmount, localCurrency.code);
     },
 
     // Cacher le popup d'activité
@@ -385,22 +403,12 @@ const Activity = {
         // Sauvegarder la destination mise à jour via localStorage
         await window.localStorageService.updateDestination(destination.id, destination);
         
+        // Fermer uniquement la popup d'édition/ajout d'activité
         this.hideActivityPopup();
         
-        // Recharger les activités pour la destination actuelle
-        if (this.currentDestination && this.currentDestination.id) {
-            await window.Activities.displayActivitiesOfDestination(this.currentDestination.id);
-            
-            // Déplier automatiquement la liste des activités si ce n'est pas déjà le cas
-            const activitiesSection = document.getElementById(`activities-${this.currentDestination.id}`);
-            if (activitiesSection && activitiesSection.style.display === 'none') {
-                window.Destination.expandActivitiesSection(this.currentDestination.id);
-            }
-        }
-        
-        // Mettre à jour l'icône d'activité selon les activités existantes
-        if (window.Destination && window.Destination.updateActivityIcon) {
-            await window.Destination.updateActivityIcon(this.currentDestination.id);
+        // Rafraîchir la popup activités si elle est ouverte (pour les deux modes)
+        if (window.Activities && document.getElementById('activitiesPopup')) {
+            window.Activities.refreshActivityList(this.currentDestination.id, activity.id);
         }
         
         } catch (error) {
@@ -533,9 +541,16 @@ const Activity = {
 
     // Modifier une activité existante
     async editActivity(activityId, destinationId) {
+        console.log("activityId", activityId);
+        console.log("destinationId", destinationId);
+        
         const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        console.log("currentItinerary", currentItinerary);
         const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
+        console.log("destinations", destinations);
         const destination = destinations.find(d => d.id === destinationId);
+        console.log("destination", destination);
+
         if (!destination || !destination.id) return;
 
         try {        
@@ -563,6 +578,11 @@ const Activity = {
                 const localCurrencyField = document.getElementById('localCurrency');
                 const typeField = document.getElementById('activityType');
                 const notesField = document.getElementById('activityNotes');
+                
+                if (!nameField || !priceField || !localCurrencyField || !typeField || !notesField) {
+                    console.error('❌ Champs du formulaire d\'activité non trouvés');
+                    return;
+                }
                 
                 if (nameField) {
                     nameField.value = this.currentActivity.name || '';

@@ -7,6 +7,11 @@
    ACTIVITY FORM
    ======================================== */
 
+/* Modal d'activité (au-dessus de la popup activités) */
+#activityPopup {
+    z-index: 2100;
+}
+
 .activity-form {
     padding: 20px;
 }
