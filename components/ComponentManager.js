@@ -281,6 +281,12 @@ export const ComponentManager = {
     async updateUserPanel() {
         console.log('🔄 ComponentManager: Mise à jour du panneau utilisateur...');
         
+        // Si une synchronisation est en cours, ne pas faire la mise à jour
+        if (window.SyncService && window.SyncService.syncInProgress) {
+            console.log('⏳ Synchronisation en cours, attente avant mise à jour du panneau...');
+            return;
+        }
+        
         if (!window.firebaseService || !window.firebaseService.isReady()) {
             console.warn('⚠️ FirebaseService non prêt, attente...');
             return;
@@ -317,8 +323,8 @@ export const ComponentManager = {
             // Utiliser IndexedDB comme source de données principale
             const itineraries = await window.localStorageService.getItineraries();
             
-            // Créer un itinéraire si aucun n'existe
-            if (itineraries.length === 0) {
+            // Créer un itinéraire si aucun n'existe ET seulement si pas de synchro en cours
+            if (itineraries.length === 0 && (!window.SyncService || !window.SyncService.syncInProgress)) {
                 await window.localStorageService.createItinerary();
                 
                 // Après création, charger les destinations
