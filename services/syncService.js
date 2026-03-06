@@ -125,8 +125,8 @@ class SyncService {
             const firebaseItinerary = firebaseMap.get(id);
             if (!firebaseItinerary) continue; // Déjà traité dans l'étape 1
             
-            const cacheUpdatedAt = new Date(cacheItinerary.updatedAt_string || cacheItinerary.updatedAt);
-            const firebaseUpdatedAt = new Date(firebaseItinerary.updatedAt_string || firebaseItinerary.updatedAt);
+            const cacheUpdatedAt = window.DateService.isoStringToDate(cacheItinerary.updatedAt_string || cacheItinerary.updatedAt);
+            const firebaseUpdatedAt = window.DateService.isoStringToDate(firebaseItinerary.updatedAt_string || firebaseItinerary.updatedAt);
             
             if (cacheUpdatedAt > firebaseUpdatedAt) {
                 console.log(`⬆️  Cache plus récent: ${cacheItinerary.name} (${cacheUpdatedAt} > ${firebaseUpdatedAt})`);
@@ -213,7 +213,7 @@ class SyncService {
         try {
             const firebaseId = await window.firebaseService.createItinerary({
                 name: itinerary.name,
-                startDate: itinerary.startDate,
+                startDate: window.DateService.dateToISOString(itinerary.startDate),
                 notes: itinerary.notes,
                 destinations: itinerary.destinations || []
             });
@@ -227,7 +227,7 @@ class SyncService {
                 await window.localStorageService.db.itineraries.add({
                     ...itinerary,
                     id: firebaseId,
-                    updatedAt_string: new Date().toISOString()
+                    updatedAt_string: window.DateService.todayISOString()
                 });
                 
                 console.log(`✅ Itinéraire créé dans Firebase: ${itinerary.name} (${itinerary.id} → ${firebaseId})`);
@@ -249,7 +249,7 @@ class SyncService {
         try {
             await window.localStorageService.db.itineraries.add({
                 ...itinerary,
-                updatedAt_string: new Date().toISOString()
+                updatedAt_string: window.DateService.todayISOString()
             });
             
             console.log(`✅ Itinéraire créé dans le cache: ${itinerary.name}`);
@@ -272,7 +272,7 @@ class SyncService {
             
             // Mettre à jour le cache avec la nouvelle date de modification
             await window.localStorageService.db.itineraries.update(itinerary.id, {
-                updatedAt_string: new Date().toISOString()
+                updatedAt_string: window.DateService.todayISOString()
             });
             
             console.log(`✅ Itinéraire mis à jour dans Firebase: ${itinerary.name}`);
@@ -287,8 +287,7 @@ class SyncService {
     async updateItineraryInCache(itinerary) {
         try {
             await window.localStorageService.db.itineraries.update(itinerary.id, {
-                ...itinerary,
-                updatedAt_string: new Date().toISOString()
+                updatedAt_string: window.DateService.todayISOString()
             });
             
             console.log(`✅ Itinéraire mis à jour dans le cache: ${itinerary.name}`);
@@ -317,7 +316,7 @@ class SyncService {
         return {
             isOnline: this.isOnline,
             syncInProgress: this.syncInProgress,
-            lastSync: new Date()
+            lastSync: window.DateService.todayISOString()
         };
     }
 }

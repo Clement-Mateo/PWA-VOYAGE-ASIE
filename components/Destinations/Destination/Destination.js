@@ -157,8 +157,8 @@ const Destination = {
                     name: '',
                     address: '',
                     duration: { days: 3, hours: 0, minutes: 0 },
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    createdAt: window.DateService.todayISOString(),
+                    updatedAt: window.DateService.todayISOString()
                 };
             }
             

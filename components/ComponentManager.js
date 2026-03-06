@@ -37,6 +37,34 @@ export const ComponentManager = {
     },
 
     /**
+     * Charger un script de manière asynchrone
+     * @param {string} src - Source du script
+     * @returns {Promise<void>}
+     */
+    async loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Vérifier si le script est déjà chargé
+            if (document.querySelector(`script[src="${src}"]`)) {
+                console.log(`Script déjà chargé: ${src}`);
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => {
+                console.log(`Script chargé: ${src}`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error(`Erreur chargement script: ${src}`);
+                reject(new Error(`Impossible de charger ${src}`));
+            };
+            document.head.appendChild(script);
+        });
+    },
+
+    /**
      * Charger un composant de manière asynchrone
      * @param {string} name - Nom du composant
      * @returns {Promise<Object>} Composant chargé
@@ -86,16 +114,20 @@ export const ComponentManager = {
         console.log('🚀 ComponentManager: Démarrage de l\'initialisation séquentielle...');
         
         try {
+            // 0. Charger DateService en premier (dépendance critique)
+            console.log('📅 0/14 Chargement de DateService...');
+            await this.loadScript('services/dateService.js');
+            
             // 1. Vérifier la version
             if (window.CacheVersionManager) {
-                console.log('📋 1/13 Vérification de la version...');
+                console.log('📋 1/14 Vérification de la version...');
                 const versionManager = new window.CacheVersionManager();
                 await versionManager.init();
             }
             
             // 2. Initialiser l'architecture offline-first
             if (window.OfflineFirstApp) {
-                console.log('🏗️ 2/13 Initialisation de l\'architecture offline-first...');
+                console.log('🏗️ 2/14 Initialisation de l\'architecture offline-first...');
                 const app = new window.OfflineFirstApp();
                 await app.init();
                 window.offlineFirstApp = app;
@@ -103,19 +135,19 @@ export const ComponentManager = {
             
             // 3. Initialiser Login
             if (window.Login) {
-                console.log('🔐 3/13 Initialisation de Login...');
+                console.log('🔐 3/14 Initialisation de Login...');
                 window.Login.init();
             }
             
             // 4. Initialiser Settings
             if (window.Settings) {
-                console.log('⚙️ 4/13 Initialisation de Settings...');
+                console.log('⚙️ 4/14 Initialisation de Settings...');
                 window.Settings.init();
             }
             
             // 5. Initialiser LeafletMap
             if (window.LeafletMap) {
-                console.log('🗺️ 5/13 Initialisation de LeafletMap...');
+                console.log('🗺️ 5/14 Initialisation de LeafletMap...');
                 const mapInstance = new window.LeafletMap();
                 mapInstance.init();
                 mapInstance.exportForLegacy();
@@ -125,7 +157,7 @@ export const ComponentManager = {
             
             // 6. Vérifier les taux de change
             if (window.LocationService && navigator.onLine) {
-                console.log('💱 6/13 Vérification des taux de change...');
+                console.log('💱 6/14 Vérification des taux de change...');
                 try {
                     await window.LocationService.loadExchangeRates();
                     console.log('✅ Taux de change vérifiés au démarrage');
@@ -136,37 +168,37 @@ export const ComponentManager = {
             
             // 7. Initialiser Sidebar
             if (window.Sidebar) {
-                console.log('📋 7/13 Initialisation de Sidebar...');
+                console.log('📋 7/14 Initialisation de Sidebar...');
                 await window.Sidebar.init(); // Attendre la fin du rendu complet
             }
             
             // 8. Initialiser ChooseAddress
             if (window.ChooseAddress) {
-                console.log('📍 8/13 Initialisation de ChooseAddress...');
+                console.log('📍 8/14 Initialisation de ChooseAddress...');
                 window.ChooseAddress.init();
             }
             
             // 9. Initialiser Destinations (après que Sidebar soit complètement rendue)
             if (window.Destinations) {
-                console.log('🎯 9/13 Initialisation de Destinations...');
+                console.log('🎯 9/14 Initialisation de Destinations...');
                 await window.Destinations.loadDestinations();
             }
             
             // 10. Initialiser Activity
             if (window.Activity) {
-                console.log('🎪 10/13 Initialisation de Activity...');
+                console.log('🎪 10/14 Initialisation de Activity...');
                 window.Activity.init();
             }
             
             // 11. Initialiser Menu
             if (window.Menu) {
-                console.log('📱 11/13 Initialisation de Menu...');
+                console.log('📱 11/14 Initialisation de Menu...');
                 // Menu est déjà initialisé globalement, pas besoin de .init()
             }
             
             // 12. Initialiser Itineraries
             if (window.Itineraries) {
-                console.log('🗂️ 12/13 Initialisation de Itineraries...');
+                console.log('🗂️ 12/14 Initialisation de Itineraries...');
                 // Itineraries est déjà initialisé globalement, pas besoin de .init()
             }
             

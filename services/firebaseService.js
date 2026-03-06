@@ -185,12 +185,12 @@ class FirebaseService {
         try {
             const itinerary = {
                 name: itineraryData.name || 'Nouvel Itinéraire',
-                startDate: itineraryData.startDate || null,
+                startDate: window.DateService.dateToISOString(itineraryData.startDate) || null,
                 notes: itineraryData.notes || '',
                 userId: this.user.uid,
                 // Préfixer pour empêcher la conversion Firestore
-                createdAt_string: new Date().toISOString(),
-                updatedAt_string: new Date().toISOString(),
+                createdAt_string: window.DateService.todayISOString(),
+                updatedAt_string: window.DateService.todayISOString(),
                 destinations: [],
             };
             
@@ -218,7 +218,7 @@ class FirebaseService {
             const updateData = {
                 ...updates,
                 // Préfixer pour empêcher la conversion Firestore
-                updatedAt_string: new Date().toISOString()
+                updatedAt_string: window.DateService.todayISOString()
             };
             
             await window.firebase.updateDoc(window.firebase.doc(this.db, 'itineraries', id), updateData);
