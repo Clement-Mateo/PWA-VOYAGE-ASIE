@@ -231,14 +231,55 @@ const Synthèse = {
      * Calculer le temps total des activités
      */
     async calculateActivitiesTime() {
-        const costData = await this.calculateTotalCost();
-        const totalMinutes = Object.values(costData.activitiesByType)
-            .reduce((sum, type) => sum + type.duration, 0);
-        
-        return {
-            hours: Math.floor(totalMinutes / 60),
-            minutes: Math.round(totalMinutes % 60)
-        };
+        try {
+            const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+            let totalMinutes = 0;
+            
+            for (const destination of destinations) {
+                if (destination.id) {
+                    const activities = await window.localStorageService.getActivities(destination.id);
+                    for (const activity of activities) {
+                        if (activity.duration) {
+                            totalMinutes += window.durationToMinutes(activity.duration);
+                        }
+                    }
+                }
+            }
+            
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            
+            return { hours, minutes };
+        } catch (error) {
+            console.error('Erreur calcul temps activités:', error);
+            return { hours: 0, minutes: 0 };
+        }
+    },
+    
+    /**
+     * Calculer le coût total des activités
+     */
+    async calculateActivitiesTotalCost() {
+        try {
+            const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+            let totalCost = 0;
+            
+            for (const destination of destinations) {
+                if (destination.id) {
+                    const activities = await window.localStorageService.getActivities(destination.id);
+                    for (const activity of activities) {
+                        if (activity.price) {
+                            totalCost += parseFloat(activity.price) || 0;
+                        }
+                    }
+                }
+            }
+            
+            return totalCost;
+        } catch (error) {
+            console.error('Erreur calcul coût activités:', error);
+            return 0;
+        }
     },
     
     /**
@@ -304,7 +345,193 @@ const Synthèse = {
     },
     
     /**
-     * Créer le contenu HTML de la synthèse
+     * Créer le contenu HTML de l'onglet Itinéraire
+     */
+    async createItinerarySynthese() {
+        const currentItinerary = await window.localStorageService.getCurrentItinerary();
+        if (!currentItinerary) {
+            return '<p>Aucun itinéraire sélectionné</p>';
+        }
+
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        const duration = await this.calculateTotalDuration();
+        const totalDistance = await this.calculateTotalDistance();
+        const costData = await this.calculateTotalCost();
+        const activitiesTime = await this.calculateActivitiesTime();
+        const activitiesCost = await this.calculateActivitiesTotalCost();
+        
+        // Calculer date de fin (dernière date de départ)
+        let endDate = currentItinerary.startDate;
+        if (destinations.length > 0) {
+            const lastDestination = destinations[destinations.length - 1];
+            if (lastDestination.departureDate) {
+                endDate = lastDestination.departureDate;
+            }
+        }
+        
+        return `
+            <div class="itinerary-synthese">
+                <!-- Première ligne : 3 cartes -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">flight_takeoff</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Date de Début</div>
+                            <div class="card-value">${window.DateService.formatDateForDisplay(currentItinerary.startDate)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">flight_land</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Date de Fin</div>
+                            <div class="card-value">${window.DateService.formatDateForDisplay(endDate)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">schedule</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Durée Total</div>
+                            <div class="card-value">${window.formatDuration(duration, true)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deuxième ligne : 2 cartes larges -->
+                <div class="stats-row wide">
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">straighten</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Distance Total</div>
+                            <div class="card-value">${totalDistance.toFixed(0)} km</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">euro</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Coût Total</div>
+                            <div class="card-value">${this.formatCost(costData.totalCost)}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Troisième ligne : 2 cartes -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">event</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Temps total des Activités</div>
+                            <div class="card-value">${activitiesTime.hours}h${activitiesTime.minutes > 0 ? activitiesTime.minutes : ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="card-icon">
+                            <span class="material-icons">euro</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">Coût total des Activités</div>
+                            <div class="card-value">${this.formatCost(activitiesCost)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Créer le contenu HTML de l'onglet Destinations
+     */
+    async createDestinationSynthese() {
+        return ''; // Vide pour le moment
+    },
+    
+    /**
+     * Créer le contenu HTML de l'onglet Activités
+     */
+    async createActivitiesSynthese() {
+        return ''; // Vide pour le moment
+    },
+    
+    /**
+     * Créer le contenu HTML de l'onglet Transport
+     */
+    async createTransportSynthese() {
+        return ''; // Vide pour le moment
+    },
+    
+    /**
+     * Créer le nouveau contenu HTML de la synthèse avec 4 onglets
+     */
+    async createNewSyntheseContent() {
+        const itineraryContent = await this.createItinerarySynthese();
+        const destinationContent = await this.createDestinationSynthese();
+        const activitiesContent = await this.createActivitiesSynthese();
+        const transportContent = await this.createTransportSynthese();
+        
+        return `
+            <div class="synthese-content">
+                <div class="synthese-header">
+                    <h2>Synthèse du voyage</h2>
+                </div>
+                
+                <!-- Onglets -->
+                <div class="synthese-tabs">
+                    <div class="tab-header">
+                        <button class="tab-button active" data-tab="itinerary">
+                            <span class="material-icons">map</span>
+                            Itinéraire
+                        </button>
+                        <button class="tab-button" data-tab="destinations">
+                            <span class="material-icons">place</span>
+                            Destinations
+                        </button>
+                        <button class="tab-button" data-tab="activities">
+                            <span class="material-icons">event</span>
+                            Activités
+                        </button>
+                        <button class="tab-button" data-tab="transport">
+                            <span class="material-icons">directions_car</span>
+                            Transport
+                        </button>
+                    </div>
+                    
+                    <!-- Contenu des onglets -->
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="itinerary-tab">
+                            ${itineraryContent}
+                        </div>
+                        <div class="tab-pane" id="destinations-tab">
+                            ${destinationContent}
+                        </div>
+                        <div class="tab-pane" id="activities-tab">
+                            ${activitiesContent}
+                        </div>
+                        <div class="tab-pane" id="transport-tab">
+                            ${transportContent}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    /**
+     * Créer le contenu HTML de la synthèse (ancienne méthode conservée)
      */
     async createSyntheseContent() {
         // Calculer les statistiques
@@ -613,15 +840,8 @@ const Synthèse = {
      */
     async render() {
         try {
-            let content = await this.createSyntheseContent();
-            
-            // Générer le détail des activités
-            const costData = await this.calculateTotalCost();
-            const activitiesBreakdown = this.generateActivitiesBreakdown(costData.activitiesByType);
-            
-            // Remplacer le placeholder par le contenu réel de manière plus robuste
-            const placeholderRegex = /<div class="activities-breakdown">\s*<!-- Détail des activités par type -->\s*<\/div>/gs;
-            content = content.replace(placeholderRegex, `<div class="activities-breakdown">${activitiesBreakdown}</div>`);
+            // Utiliser la nouvelle méthode avec les onglets
+            let content = await this.createNewSyntheseContent();
             
             return content;
             
@@ -637,10 +857,38 @@ const Synthèse = {
     },
     
     /**
+     * Initialiser les événements des onglets
+     */
+    initTabEvents() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Retirer la classe active de tous les boutons et panneaux
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                
+                // Ajouter la classe active au bouton cliqué et au panneau correspondant
+                button.classList.add('active');
+                const targetPane = document.getElementById(`${targetTab}-tab`);
+                if (targetPane) {
+                    targetPane.classList.add('active');
+                }
+            });
+        });
+    },
+    
+    /**
      * Initialiser les graphiques après l'affichage
      */
     async initCharts() {
         try {
+            // Initialiser les événements des onglets
+            this.initTabEvents();
+            
             const costData = await this.calculateTotalCost();
             
             // Créer les graphiques avec un petit délai pour s'assurer que le DOM est prêt

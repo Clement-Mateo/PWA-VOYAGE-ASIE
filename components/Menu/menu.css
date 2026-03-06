@@ -113,12 +113,8 @@
 }
 
 /* Contenu */
-.menu-section {
-    margin-bottom: 20px;
-}
-
 .section-content {
-    padding: 15px;
+    padding: 15px 15px 0 15px;
 }
 
 .section-content h4 {

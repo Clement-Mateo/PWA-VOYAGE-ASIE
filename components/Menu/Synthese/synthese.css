@@ -30,6 +30,178 @@
     color: var(--font-color);
 }
 
+/* Onglets */
+.synthese-tabs {
+    width: 100%;
+}
+
+.tab-header {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--font-color-gray);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tab-button:hover {
+    background: var(--hover-bg);
+    color: var(--font-color);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.tab-button .material-icons {
+    font-size: 18px;
+}
+
+.tab-content {
+    width: 100%;
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Contenu de l'onglet Itinéraire */
+.stats-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.stats-row.wide {
+    justify-content: space-between;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 50px;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stats-row .stat-card {
+    flex: 1;
+    max-width: 200px;
+}
+
+.stats-row.wide .stat-card {
+    flex: 1;
+    max-width: 280px;
+}
+
+.card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title {
+    font-size: 11px;
+    color: var(--font-color-gray);
+    font-weight: 500;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.card-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1A202C;
+    line-height: 1.1;
+}
+
+/* Couleurs spécifiques pour les icônes */
+/* Première ligne : tous bleus */
+.stats-row:first-child .stat-card:nth-child(1) .card-icon {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.stats-row:first-child .stat-card:nth-child(2) .card-icon {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.stats-row:first-child .stat-card:nth-child(3) .card-icon {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+/* Deuxième ligne : tous oranges */
+.stats-row.wide .stat-card:nth-child(1) .card-icon {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+.stats-row.wide .stat-card:nth-child(2) .card-icon {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+/* Troisième ligne : tous verts */
+.stats-row:nth-child(3) .stat-card:nth-child(1) .card-icon {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+.stats-row:nth-child(3) .stat-card:nth-child(2) .card-icon {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+}
+
+/* Responsive */
+
 /* Conteneurs de statistiques principaux */
 .synthese-main-stats {
     display: grid;
