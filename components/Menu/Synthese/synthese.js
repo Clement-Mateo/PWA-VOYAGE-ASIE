@@ -103,24 +103,8 @@ const Synthèse = {
                         activitiesByType[type].count++;
                         activitiesByType[type].cost += cost;
                         
-                        // Calculer la durée à partir de startTime et endTime
-                        let activityDuration = 0;
-                        if (activity.startTime && activity.endTime) {
-                            const start = this.parseTime(activity.startTime);
-                            const end = this.parseTime(activity.endTime);
-                            
-                            if (start !== null && end !== null) {
-                                let durationMinutes = end - start;
-                                
-                                // Gérer le cas où l'heure de fin est le jour suivant (ex: 22:00 -> 01:00)
-                                if (durationMinutes < 0) {
-                                    durationMinutes += 24 * 60; // Ajouter 24h
-                                }
-                                
-                                activityDuration = durationMinutes;
-                            }
-                        }
-                        
+                        // Calculer la durée avec la nouvelle méthode
+                        const activityDuration = this.calculateActivityDuration(activity);
                         activitiesByType[type].duration += activityDuration;
                     });
                 } catch (error) {
@@ -130,6 +114,46 @@ const Synthèse = {
         }
         
         return { totalCost, activitiesByType };
+    },
+    
+    /**
+     * Calculer la durée d'une activité à partir de startTime et endTime
+     */
+    calculateActivityDuration(activity) {
+        let activityDuration = 0;
+        if (activity.startTime && activity.endTime) {
+            const start = this.parseTime(activity.startTime);
+            const end = this.parseTime(activity.endTime);
+            
+            if (start !== null && end !== null) {
+                let durationMinutes = end - start;
+                
+                // Gérer le cas où l'heure de fin est le jour suivant (ex: 22:00 -> 01:00)
+                if (durationMinutes < 0) {
+                    durationMinutes += 24 * 60; // Ajouter 24h
+                }
+                
+                activityDuration = durationMinutes;
+            }
+        }
+        return activityDuration;
+    },
+    
+    /**
+     * Convertir une heure au format "HH:MM" en minutes
+     */
+    parseTime(timeString) {
+        if (!timeString) return null;
+        
+        const parts = timeString.split(':');
+        if (parts.length !== 2) return null;
+        
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        
+        if (isNaN(hours) || isNaN(minutes)) return null;
+        
+        return hours * 60 + minutes;
     },
     
     /**
@@ -239,9 +263,8 @@ const Synthèse = {
                 if (destination.id) {
                     const activities = await window.localStorageService.getActivities(destination.id);
                     for (const activity of activities) {
-                        if (activity.duration) {
-                            totalMinutes += window.durationToMinutes(activity.duration);
-                        }
+                        const activityDuration = this.calculateActivityDuration(activity);
+                        totalMinutes += activityDuration;
                     }
                 }
             }
@@ -464,7 +487,148 @@ const Synthèse = {
      * Créer le contenu HTML de l'onglet Activités
      */
     async createActivitiesSynthese() {
-        return ''; // Vide pour le moment
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        let allActivities = [];
+        
+        // Récupérer toutes les activités de toutes les destinations
+        for (const destination of destinations) {
+            if (destination.id) {
+                const activities = await window.localStorageService.getActivities(destination.id);
+                allActivities = allActivities.concat(activities.map(activity => ({
+                    ...activity,
+                    destinationName: destination.name
+                })));
+            }
+        }
+        
+        // Calculer les statistiques par type
+        const statsByType = {};
+        let totalDuration = 0;
+        let totalCost = 0;
+        
+        allActivities.forEach(activity => {
+            const type = activity.type || 'Autre';
+            if (!statsByType[type]) {
+                statsByType[type] = {
+                    count: 0,
+                    totalDuration: 0,
+                    totalCost: 0,
+                    activities: []
+                };
+            }
+            
+            statsByType[type].count++;
+            statsByType[type].activities.push(activity);
+            
+            // Calculer la durée
+            if (activity.duration) {
+                const duration = window.durationToMinutes(activity.duration);
+                statsByType[type].totalDuration += duration;
+                totalDuration += duration;
+            }
+            
+            // Calculer le coût
+            const cost = parseFloat(activity.price) || 0;
+            statsByType[type].totalCost += cost;
+            totalCost += cost;
+        });
+        
+        // Préparer les données pour les graphiques
+        const chartData = Object.entries(statsByType).map(([type, stats]) => ({
+            type,
+            count: stats.count,
+            duration: stats.totalDuration,
+            cost: stats.totalCost,
+            avgDuration: stats.count > 0 ? stats.totalDuration / stats.count : 0,
+            avgCost: stats.count > 0 ? stats.totalCost / stats.count : 0,
+            color: this.getActivityTypeColor(type, 0)
+        }));
+        
+        return `
+            <div class="activities-synthese">
+                <!-- Zone principale : Statistiques -->
+                <div class="stats-area-full">
+                    <!-- Première ligne : Répartitions -->
+                    <div class="stats-grid">
+                        <div class="chart-card">
+                            <h4>Répartition temps par type</h4>
+                            <div class="chart-container">
+                                <canvas id="time-distribution-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h4>Répartition budget type</h4>
+                            <div class="chart-container">
+                                <canvas id="budget-distribution-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Deuxième ligne : Totaux -->
+                    <div class="stats-grid">
+                        <div class="value-card">
+                            <h4>Durée totale activités</h4>
+                            <div>${Math.floor(totalDuration / 60)}H</div>
+                        </div>
+                        
+                        <div class="value-card">
+                            <h4>Coût total activités</h4>
+                            <div>${this.formatCost(totalCost)}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Troisième ligne : Moyennes -->
+                    <div class="stats-grid">
+                        <div class="chart-card">
+                            <h4>Durée moyenne par type</h4>
+                            <div class="chart-container">
+                                <canvas id="avg-duration-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h4>Coût moyen par type</h4>
+                            <div class="chart-container">
+                                <canvas id="avg-cost-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     },
     
     /**
@@ -477,7 +641,7 @@ const Synthèse = {
     /**
      * Créer le nouveau contenu HTML de la synthèse avec 4 onglets
      */
-    async createNewSyntheseContent() {
+    async createSyntheseContent() {
         const itineraryContent = await this.createItinerarySynthese();
         const destinationContent = await this.createDestinationSynthese();
         const activitiesContent = await this.createActivitiesSynthese();
@@ -531,165 +695,26 @@ const Synthèse = {
     },
     
     /**
-     * Créer le contenu HTML de la synthèse (ancienne méthode conservée)
+     * Créer le graphique camembert pour le budget par type d'activité
      */
-    async createSyntheseContent() {
-        // Calculer les statistiques
-        const duration = await this.calculateTotalDuration();
-        const costData = await this.calculateTotalCost();
-        const totalDistance = await this.calculateTotalDistance();
-        const transportTime = await this.calculateTransportTime();
-        const activitiesTime = await this.calculateActivitiesTime();
-        
-        return `
-            <div class="synthese-content">
-                <div class="synthese-header">
-                    <h2>Synthèse du voyage</h2>
-                    
-                    <!-- Conteneurs de statistiques principaux -->
-                    <div class="synthese-main-stats">
-                        <!-- Conteneur gauche : Temps -->
-                        <div class="stats-left">
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <span class="material-icons">schedule</span>
-                                </div>
-                                <div class="stat-info">
-                                    <div class="stat-value">${window.formatDuration(duration, true)}</div>
-                                    <div class="stat-label">Durée totale</div>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <span class="material-icons">directions_car</span>
-                                </div>
-                                <div class="stat-info">
-                                    <div class="stat-value">${transportTime.hours}h${transportTime.minutes > 0 ? transportTime.minutes : ''}</div>
-                                    <div class="stat-label">Transport</div>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <span class="material-icons">event</span>
-                                </div>
-                                <div class="stat-info">
-                                    <div class="stat-value">${activitiesTime.hours}h${activitiesTime.minutes > 0 ? activitiesTime.minutes : ''}</div>
-                                    <div class="stat-label">Activités</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Conteneur droit : Coût et Distance -->
-                        <div class="stats-right">
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <span class="material-icons">euro</span>
-                                </div>
-                                <div class="stat-info">
-                                    <div class="stat-value">${this.formatCost(costData.totalCost)}</div>
-                                    <div class="stat-label">Coût total</div>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <span class="material-icons">map</span>
-                                </div>
-                                <div class="stat-info">
-                                    <div class="stat-value">${totalDistance.toFixed(0)} km</div>
-                                    <div class="stat-label">Distance totale</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="synthese-charts">
-                    <div class="chart-section">
-                        <div class="chart-header">
-                            <h3>Répartition du budget</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="budgetChart" width="300" height="300"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-section">
-                        <div class="chart-header">
-                            <h3>Répartition du temps</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="durationChart" width="300" height="300"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="synthese-details">
-                    <div class="details-section">
-                        <h3>Détail par type d'activité</h3>
-                        <div class="activities-breakdown">
-                            <!-- Détail des activités par type -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
-    /**
-     * Générer le détail des activités par type
-     */
-    generateActivitiesBreakdown(activitiesByType) {
-        let html = '';
-        
-        for (const [type, data] of Object.entries(activitiesByType)) {
-            const avgCost = data.count > 0 ? data.cost / data.count : 0;
-            
-            html += `
-                <div class="activity-type-item">
-                    <div class="activity-type-header">
-                        <h4>${type}</h4>
-                        <span class="activity-count">${data.count} activité${data.count > 1 ? 's' : ''}</span>
-                    </div>
-                    <div class="activity-type-stats">
-                        <div class="activity-stat">
-                            <span class="stat-label">Coût total:</span>
-                            <span class="stat-value">${this.formatCost(data.cost)}</span>
-                        </div>
-                        <div class="activity-stat">
-                            <span class="stat-label">Coût moyen:</span>
-                            <span class="stat-value">${this.formatCost(avgCost)}</span>
-                        </div>
-                        ${data.duration > 0 ? `
-                        <div class="activity-stat">
-                            <span class="stat-label">Durée totale:</span>
-                            <span class="stat-value">${window.formatDuration({
-                                days: Math.floor(data.duration / (24 * 60)),
-                                hours: Math.floor((data.duration % (24 * 60)) / 60),
-                                minutes: data.duration % 60
-                            }, true)}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-        
-        return html || '<p>Aucune activité trouvée</p>';
-    },
-    
-    /**
-     * Créer le graphique camembert pour le budget
-     */
-    createBudgetChart(activitiesByType) {
-        const ctx = document.getElementById('budgetChart');
+    createBudgetByActivityTypeChart(activitiesByType, canvasId = 'budgetChart') {
+        const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
         
         // Préparer les données - trier les types par ordre alphabétique pour la consistance
         const labels = Object.keys(activitiesByType).sort();
-        const data = labels.map(type => activitiesByType[type].cost);
+        const data = labels.map(type => activitiesByType[type].totalCost || 0);
+        
+        // Vérifier s'il y a des données de coût
+        // Considérer que toutes les activités ont un coût (même 0€ pour les gratuites)
+        const hasData = data.length > 0; // Y a-t-il des types d'activités ?
+        console.log('Budget chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
         
         // Générer des couleurs consistantes basées sur l'index trié
         const colors = labels.map((type, index) => {
@@ -703,8 +728,9 @@ const Synthèse = {
             this.budgetChart.destroy();
         }
         
+        // Créer le nouveau graphique
         this.budgetChart = new Chart(ctx.getContext('2d'), {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
@@ -716,33 +742,23 @@ const Synthèse = {
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: { size: 12 }
-                        }
+                        display: false
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${value}€ (${percentage}%)`;
+                                const value = context.raw || 0;
+                                return `${label}: ${new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'EUR'
+                                }).format(value)}`;
                             }
                         }
-                    }
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const type = labels[index];
-                        // TODO: Filtrer les activités par type
                     }
                 }
             }
@@ -752,22 +768,27 @@ const Synthèse = {
     },
     
     /**
-     * Créer le graphique camembert pour la durée
+     * Créer le graphique camembert pour la durée par type d'activité
      */
-    createDurationChart(activitiesByType) {
-        const ctx = document.getElementById('durationChart');
+    createDurationByActivityTypeChart(activitiesByType, canvasId = 'durationChart') {
+        const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
         
-        // Préparer les données - utiliser le même ordre trié que le graphique budget
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
         const labels = Object.keys(activitiesByType).sort();
-        const data = labels.map(type => {
-            const minutes = activitiesByType[type].duration;
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return `${hours}h${mins > 0 ? mins : ''}`;
-        });
+        const data = labels.map(type => activitiesByType[type].totalDuration || 0);
         
-        // Utiliser les mêmes couleurs consistantes que le graphique budget (même ordre trié)
+        // Vérifier s'il y a des données de durée
+        const hasData = data.some(duration => duration > 0);
+        console.log('Duration chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
         const colors = labels.map((type, index) => {
             const color = this.getActivityTypeColor(type, index);
             return color;
@@ -779,12 +800,13 @@ const Synthèse = {
             this.durationChart.destroy();
         }
         
+        // Créer le nouveau graphique
         this.durationChart = new Chart(ctx.getContext('2d'), {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
-                    data: labels.map(type => activitiesByType[type].duration),
+                    data: data,
                     backgroundColor: colors,
                     borderColor: '#fff',
                     borderWidth: 2,
@@ -792,41 +814,23 @@ const Synthèse = {
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: false,
+                maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: { size: 12 }
-                        }
+                        display: false
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const label = context.label || '';
-                                const minutes = context.parsed || 0;
-                                const hours = Math.floor(minutes / 60);
-                                const mins = minutes % 60;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((minutes / total) * 100).toFixed(1);
-                                
-                                let durationStr = '';
-                                if (hours > 0) durationStr += `${hours}h`;
-                                if (mins > 0) durationStr += `${mins}min`;
-                                if (durationStr === '') durationStr = '0min';
-                                
-                                return `${label}: ${durationStr} (${percentage}%)`;
+                                const value = context.raw || 0;
+                                const hours = Math.floor(value / 60);
+                                const minutes = value % 60;
+                                const duration = hours > 0 ? `${hours}h${minutes > 0 ? minutes + 'min' : ''}` : `${minutes}min`;
+                                return `${label}: ${duration}`;
                             }
                         }
-                    }
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const type = labels[index];
-                        // TODO: Filtrer les activités par type
                     }
                 }
             }
@@ -836,12 +840,163 @@ const Synthèse = {
     },
     
     /**
+     * Créer le graphique camembert pour la durée moyenne par type d'activité
+     */
+    createAverageDurationByActivityTypeChart(activitiesByType) {
+        const ctx = document.getElementById('avg-duration-chart');
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(activitiesByType).sort();
+        const data = labels.map(type => {
+            const stats = activitiesByType[type];
+            return stats.count > 0 ? (stats.totalDuration || 0) / stats.count : 0;
+        });
+        
+        // Vérifier s'il y a des données de durée moyenne
+        const hasData = data.some(duration => duration > 0);
+        console.log('Avg duration chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getActivityTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.avgDurationChart) {
+            this.avgDurationChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.avgDurationChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const hours = Math.floor(value / 60);
+                                const minutes = Math.round(value % 60);
+                                const duration = hours > 0 ? `${hours}h${minutes > 0 ? minutes + 'min' : ''}` : `${minutes}min`;
+                                return `${label}: ${duration} (moyenne)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.avgDurationChart;
+    },
+    
+    /**
+     * Créer le graphique camembert pour le budget moyen par type d'activité
+     */
+    createAverageBudgetByActivityTypeChart(activitiesByType) {
+        const ctx = document.getElementById('avg-cost-chart');
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(activitiesByType).sort();
+        const data = labels.map(type => {
+            const stats = activitiesByType[type];
+            return stats.count > 0 ? (stats.totalCost || 0) / stats.count : 0;
+        });
+        
+        // Vérifier s'il y a des données de coût moyen
+        // Considérer que toutes les activités ont un coût (même 0€ pour les gratuites)
+        const hasData = data.length > 0; // Y a-t-il des types d'activités ?
+        console.log('Avg budget chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getActivityTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.avgBudgetChart) {
+            this.avgBudgetChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.avgBudgetChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'EUR'
+                                }).format(value)} (moyenne)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.avgBudgetChart;
+    },
+    
+    /**
      * Rendre le composant Synthèse
      */
     async render() {
         try {
             // Utiliser la nouvelle méthode avec les onglets
-            let content = await this.createNewSyntheseContent();
+            let content = await this.createSyntheseContent();
             
             return content;
             
@@ -892,12 +1047,76 @@ const Synthèse = {
             const costData = await this.calculateTotalCost();
             
             // Créer les graphiques avec un petit délai pour s'assurer que le DOM est prêt
-            setTimeout(() => {
-                this.createBudgetChart(costData.activitiesByType);
-                this.createDurationChart(costData.activitiesByType);
+            setTimeout(() => {                
+                // Graphiques de l'onglet Destinations
+                this.initDestinationCharts();
             }, 100);
         } catch (error) {
             console.error('Erreur lors de l\'initialisation des graphiques:', error);
+        }
+    },
+    
+    /**
+     * Initialiser les graphiques de l'onglet Destinations
+     */
+    async initDestinationCharts() {
+        try {
+            // Récupérer les données pour l'onglet Destinations
+            const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+            let allActivities = [];
+            
+            // Récupérer toutes les activités de toutes les destinations
+            for (const destination of destinations) {
+                if (destination.id) {
+                    const activities = await window.localStorageService.getActivities(destination.id);
+                    allActivities = allActivities.concat(activities.map(activity => ({
+                        ...activity,
+                        destinationName: destination.name
+                    })));
+                }
+            }
+            
+            // Calculer les statistiques par type
+            const statsByType = {};
+            allActivities.forEach(activity => {
+                const type = activity.type || 'Autre';
+                if (!statsByType[type]) {
+                    statsByType[type] = {
+                        count: 0,
+                        totalDuration: 0,
+                        totalCost: 0,
+                        activities: []
+                    };
+                }
+                
+                statsByType[type].count++;
+                statsByType[type].activities.push(activity);
+                
+                // Calculer la durée avec la nouvelle méthode
+                const activityDuration = this.calculateActivityDuration(activity);
+                if (activityDuration > 0) {
+                    statsByType[type].totalDuration += activityDuration;
+                    console.log(`Activité ${activity.name} - durée: ${activity.startTime} -> ${activity.endTime} = ${activityDuration}min`);
+                } else {
+                    console.log(`Activité ${activity.name} - PAS de durée (startTime: ${activity.startTime}, endTime: ${activity.endTime})`);
+                }
+                
+                // Calculer le coût
+                const cost = parseFloat(activity.price) || 0;
+                statsByType[type].totalCost += cost;
+            });
+            
+            console.log('Destination charts - statsByType:', statsByType);
+            console.log('Destination charts - allActivities count:', allActivities.length);
+            
+            // Créer les 4 graphiques de l'onglet Destinations
+            this.createBudgetByActivityTypeChart(statsByType, 'budget-distribution-chart');
+            this.createDurationByActivityTypeChart(statsByType, 'time-distribution-chart');
+            this.createAverageBudgetByActivityTypeChart(statsByType);
+            this.createAverageDurationByActivityTypeChart(statsByType);
+            
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation des graphiques destinations:', error);
         }
     },
     

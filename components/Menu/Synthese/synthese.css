@@ -38,7 +38,7 @@
 .tab-header {
     display: flex;
     border-bottom: 2px solid var(--border-color);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .tab-button {
@@ -90,270 +90,297 @@
 }
 
 /* Contenu de l'onglet Itinéraire */
-.stats-row {
+.itinerary-synthese .stats-row {
     display: flex;
-    gap: 20px;
-    margin-bottom: 10px;
+    gap: 25px;
+    margin-bottom: 12px;
     align-items: stretch;
     justify-content: center;
 }
 
-.stats-row.wide {
+.itinerary-synthese .stats-row.wide {
     justify-content: space-between;
 }
 
-.stat-card {
+.itinerary-synthese .stat-card {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 12px;
+    padding: 20px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    min-height: 50px;
+    min-height: 120px;
     border: 1px solid rgba(59, 130, 246, 0.1);
+    flex: 1;
 }
 
-.stat-card:hover {
+.itinerary-synthese .stat-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-.stats-row .stat-card {
-    flex: 1;
-    max-width: 200px;
+.itinerary-synthese .stats-row .stat-card {
+    max-width: 250px;
 }
 
-.stats-row.wide .stat-card {
-    flex: 1;
-    max-width: 280px;
+.itinerary-synthese .stats-row.wide .stat-card {
+    max-width: 350px;
 }
 
-.card-icon {
+.itinerary-synthese .card-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
     color: white;
-    border-radius: 6px;
-    font-size: 14px;
-    margin-bottom: 6px;
+    border-radius: 8px;
+    font-size: 20px;
+    margin-bottom: 12px;
     box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
-.card-content {
+.itinerary-synthese .card-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    flex: 1;
 }
 
-.card-title {
-    font-size: 11px;
+.itinerary-synthese .card-title {
+    font-size: 13px;
     color: var(--font-color-gray);
     font-weight: 500;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
 
-.card-value {
-    font-size: 16px;
+.itinerary-synthese .card-value {
+    font-size: 22px;
     font-weight: bold;
     color: #1A202C;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
-/* Couleurs spécifiques pour les icônes */
+/* Couleurs spécifiques pour les icônes - Onglet Itinéraire uniquement */
 /* Première ligne : tous bleus */
-.stats-row:first-child .stat-card:nth-child(1) .card-icon {
+.itinerary-synthese .stats-row:first-child .stat-card:nth-child(1) .card-icon {
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
 }
 
-.stats-row:first-child .stat-card:nth-child(2) .card-icon {
+.itinerary-synthese .stats-row:first-child .stat-card:nth-child(2) .card-icon {
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
 }
 
-.stats-row:first-child .stat-card:nth-child(3) .card-icon {
+.itinerary-synthese .stats-row:first-child .stat-card:nth-child(3) .card-icon {
     background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
 }
 
 /* Deuxième ligne : tous oranges */
-.stats-row.wide .stat-card:nth-child(1) .card-icon {
+.itinerary-synthese .stats-row.wide .stat-card:nth-child(1) .card-icon {
     background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
 }
 
-.stats-row.wide .stat-card:nth-child(2) .card-icon {
+.itinerary-synthese .stats-row.wide .stat-card:nth-child(2) .card-icon {
     background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
 }
 
 /* Troisième ligne : tous verts */
-.stats-row:nth-child(3) .stat-card:nth-child(1) .card-icon {
+.itinerary-synthese .stats-row:nth-child(3) .stat-card:nth-child(1) .card-icon {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%);
 }
 
-.stats-row:nth-child(3) .stat-card:nth-child(2) .card-icon {
+.itinerary-synthese .stats-row:nth-child(3) .stat-card:nth-child(2) .card-icon {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%);
 }
 
-/* Responsive */
-
-/* Conteneurs de statistiques principaux */
-.synthese-main-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
+/* Contenu de l'onglet Activités */
+.activities-synthese {
+    height: 100%;
+    max-height: calc(72vh - 50px);
+    overflow: hidden;
 }
 
-.stats-left {
+.activities-synthese .stats-area-full {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 8px;
 }
 
-.stats-right {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* Fallback pour anciennes statistiques */
-.synthese-stats {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background: var(--background-light);
-    border: 1px solid var(--border-color);
+.activities-sidebar {
+    width: 280px;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: 600px;
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--primary-blue);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.stat-icon .material-icons {
-    color: white;
-    font-size: 24px;
-}
-
-.stat-info {
-    flex: 1;
-}
-
-.stat-value {
-    font-size: 18px;
-    font-weight: 600;
+.activities-sidebar h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
     color: var(--font-color);
-    margin-bottom: 4px;
+    font-weight: 600;
 }
 
-.stat-label {
-    font-size: 14px;
-    color: var(--font-color-gray);
+.activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* Section des graphiques */
-.synthese-charts {
-    margin-bottom: 30px;
-}
-
-.chart-section {
-    background: var(--background-light);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.chart-header {
+.activity-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-}
-
-.chart-header h3 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--font-color);
-}
-
-.chart-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.chart-type-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--background);
-    color: var(--font-color);
-    font-size: 14px;
-}
-
-.chart-config-btn {
-    padding: 8px;
-    background: var(--background);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    cursor: pointer;
+    padding: 12px;
+    background: var(--secondary-bg);
+    border-radius: 8px;
     transition: background-color 0.2s ease;
 }
 
-.chart-config-btn:hover {
-    background: var(--background-hover);
+.activity-item:hover {
+    background: var(--hover-bg);
 }
 
-.chart-config-btn .material-icons {
-    font-size: 18px;
-    color: var(--font-color-gray);
+.activity-name {
+    font-size: 14px;
+    color: var(--font-color);
+    font-weight: 500;
+    flex: 1;
+    margin-right: 12px;
 }
 
-.chart-container {
-    position: relative;
-    height: 300px;
-    background: var(--background);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+.activity-price {
+    font-size: 14px;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.stats-area {
+    flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.chart-placeholder {
+.activities-synthese .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+}
+
+.activities-synthese .chart-card, .activities-synthese .value-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activities-synthese .chart-card {
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+}
+
+.activities-synthese .value-card {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    color: var(--font-color-gray);
 }
+
+.activities-synthese .value-card h4 {
+    margin: 0;
+    font-size: 12px;
+    color: var(--font-color);
+    font-weight: 600;
+}
+
+.activities-synthese .value-card div {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.activities-synthese .chart-card:hover, .activities-synthese .value-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.activities-synthese .chart-card h4 {
+    text-align: center;
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: var(--font-color);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.activities-synthese .chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    gap: 12px;
+    min-height: 140px;
+}
+
+.activities-synthese .chart-legend {
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.activities-synthese .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--font-color);
+    white-space: nowrap;
+}
+
+.activities-synthese .legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.activities-synthese .legend-label {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activities-synthese .no-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    width: 200px;
+    font-size: 14px;
+    color: var(--font-color-gray);
+    font-style: italic;
+    background: var(--secondary-bg);
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+}
+
+/* Responsive */
 
 .chart-placeholder-content {
     text-align: center;
@@ -378,27 +405,6 @@
 .chart-canvas {
     width: 100%;
     height: 100%;
-}
-
-.chart-legend {
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--font-color-gray);
-}
-
-.legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
 }
 
 /* Section des graphiques */
