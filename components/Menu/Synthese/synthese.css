@@ -7,6 +7,17 @@
     color: var(--font-color);
 }
 
+/* Solution plus douce : juste ajuster le z-index de la modal */
+.modal.open {
+    z-index: 1000;
+}
+
+/* Forcer le contenu de la modal à ne pas déborder */
+.modal.open .menu-container {
+    max-width: 1200px;
+    max-height: 800px;
+}
+
 .synthèse-content h2 {
     margin: 0 0 20px 0;
     font-size: 20px;
@@ -148,7 +159,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
     flex: 1;
 }
 
@@ -339,12 +349,16 @@
     min-height: 140px;
 }
 
-.activities-synthese .chart-legend {
+.chart-legend {
     max-height: 160px;
+    min-width: 90px;
     overflow-y: auto;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    margin-left: 5px;
 }
 
-.activities-synthese .legend-item {
+.legend-item {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -353,14 +367,16 @@
     white-space: nowrap;
 }
 
-.activities-synthese .legend-color {
+
+.legend-color {
+    display: block;
     width: 10px;
     height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
 }
 
-.activities-synthese .legend-label {
+.legend-label {
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -407,6 +423,55 @@
     height: 100%;
 }
 
+.destination-synthese .section-title {
+    text-align: center;
+}
+
+.destination-synthese .section-indicators {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    gap: 10px;
+    width: 100%;
+    margin: 10px;
+}
+
+.destination-synthese .value-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 15px 20px;
+    min-width: 160px;
+    text-align: center;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex: 1;
+    width: 50%;
+}
+
+.destination-synthese .value-card h4 {
+    margin: 0;
+    font-size: 12px;
+    color: var(--font-color);
+    font-weight: 600;
+}
+
+.destination-synthese .value-card div {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.destination-synthese .value-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Section des graphiques */
 .synthese-charts {
     display: grid;
@@ -432,17 +497,20 @@
     color: var(--font-color);
 }
 
-.chart-container {
+.destination-synthese .chart-container {
     position: relative;
     height: 250px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    max-width: 600px;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-.chart-container canvas {
-    max-width: 100%;
+.destination-synthese .chart-container canvas {
+    max-width: none;
     max-height: 100%;
+    min-width: 600px;
 }
 
 /* Section des détails */

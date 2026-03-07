@@ -480,7 +480,140 @@ const Synthèse = {
      * Créer le contenu HTML de l'onglet Destinations
      */
     async createDestinationSynthese() {
-        return ''; // Vide pour le moment
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        
+        // Calculer les statistiques pour toutes les destinations
+        let totalDuration = 0;
+        let totalCost = 0;
+        let destinationStats = [];
+        
+        for (const destination of destinations) {
+            let destDuration = 0;
+            let destCost = 0;
+            let accommodationCost = 0;
+            let activityCost = 0;
+            let transportCost = 0;
+            let accommodationDuration = 0;
+            let activityDuration = 0;
+            let transportDuration = 0;
+            
+            // Durée de la destination
+            if (destination.duration) {
+                // Convertir la durée de l'objet {days, hours, minutes} en minutes
+                if (typeof destination.duration === 'object') {
+                    destDuration = (destination.duration.days || 0) * 24 * 60 + 
+                                 (destination.duration.hours || 0) * 60 + 
+                                 (destination.duration.minutes || 0);
+                } else if (typeof destination.duration === 'string') {
+                    // Parser les chaînes comme "2j 3h 45min"
+                    const daysMatch = destination.duration.match(/(\d+)j/);
+                    const hoursMatch = destination.duration.match(/(\d+)h/);
+                    const minutesMatch = destination.duration.match(/(\d+)min/);
+                    destDuration = (daysMatch ? parseInt(daysMatch[1]) * 24 * 60 : 0) +
+                                  (hoursMatch ? parseInt(hoursMatch[1]) * 60 : 0) +
+                                  (minutesMatch ? parseInt(minutesMatch[1]) : 0);
+                }
+                totalDuration += destDuration;
+            }
+            
+            // Coût du transport
+            if (destination.transportation && destination.transportation.cost) {
+                transportCost = destination.transportation.cost;
+                destCost += transportCost;
+                totalCost += transportCost;
+            }
+            
+            // Durée du transport
+            if (destination.transportation && destination.transportation.time) {
+                const transportTime = destination.transportation.time;
+                transportDuration = (transportTime.hours || 0) * 60 + (transportTime.minutes || 0);
+                destDuration += transportDuration;
+                totalDuration += transportDuration;
+            }
+            
+            // Activités de la destination
+            if (destination.id) {
+                const activities = await window.localStorageService.getActivities(destination.id);
+                for (const activity of activities) {
+                    // Coût de l'activité
+                    const activityPrice = parseFloat(activity.price) || 0;
+                    activityCost += activityPrice;
+                    destCost += activityPrice;
+                    totalCost += activityPrice;
+                    
+                    // Durée de l'activité
+                    const activityDur = this.calculateActivityDuration(activity);
+                    activityDuration += activityDur;
+                    destDuration += activityDur;
+                    totalDuration += activityDur;
+                }
+            }
+            
+            // Coût et durée de l'hébergement (pas de données disponibles = 0)
+            accommodationDuration = Math.max(0, destDuration - activityDuration - transportDuration);
+            accommodationCost = 0; // Pas de coût de logement renseigné
+            destCost += accommodationCost;
+            totalCost += accommodationCost;
+            
+            destinationStats.push({
+                name: destination.name,
+                duration: destDuration,
+                cost: destCost,
+                accommodationDuration,
+                activityDuration,
+                transportDuration,
+                accommodationCost,
+                activityCost,
+                transportCost
+            });
+        }
+        
+        const avgDuration = destinations.length > 0 ? totalDuration / destinations.length : 0;
+        const avgCost = destinations.length > 0 ? totalCost / destinations.length : 0;
+        
+        return `
+            <div class="destination-synthese">
+                <!-- Section 1 : Durée par destination -->
+                <div class="destination-section">
+                    <div class="section-header">
+                        <div class="section-indicators">
+                            <div class="value-card">
+                                <h4>Durée Totale des Destination</h4>
+                                <div>${Math.floor(totalDuration / 60)}H</div>
+                            </div>
+                            <div class="value-card">
+                                <h4>Durée Moyenne des Destination</h4>
+                                <div>${Math.floor(avgDuration / 60)}H</div>
+                            </div>
+                        </div>
+                        <h3 class="section-title">Durée par destination</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="duration-by-destination-chart" width="800" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Section 2 : Coût par destination -->
+                <div class="destination-section">
+                    <div class="section-header">
+                        <div class="section-indicators">
+                            <div class="value-card">
+                                <h4>Cout Totale des Destination</h4>
+                                <div>${this.formatCost(totalCost)}</div>
+                            </div>
+                            <div class="value-card">
+                                <h4>Cout Moyenne des Destination</h4>
+                                <div>${this.formatCost(avgCost)}</div>
+                            </div>
+                        </div>
+                        <h3 class="section-title">Cout par destination</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cost-by-destination-chart" width="800" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
     },
     
     /**
@@ -1050,6 +1183,8 @@ const Synthèse = {
             setTimeout(() => {                
                 // Graphiques de l'onglet Destinations
                 this.initDestinationCharts();
+                // Graphiques de l'onglet Activités
+                this.initActivitiesCharts();
             }, 100);
         } catch (error) {
             console.error('Erreur lors de l\'initialisation des graphiques:', error);
@@ -1057,11 +1192,11 @@ const Synthèse = {
     },
     
     /**
-     * Initialiser les graphiques de l'onglet Destinations
+     * Initialiser les graphiques de l'onglet Activités
      */
-    async initDestinationCharts() {
+    async initActivitiesCharts() {
         try {
-            // Récupérer les données pour l'onglet Destinations
+            // Récupérer les données pour l'onglet Activités
             const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
             let allActivities = [];
             
@@ -1076,10 +1211,12 @@ const Synthèse = {
                 }
             }
             
-            // Calculer les statistiques par type
+            // Calculer les statistiques par type d'activité
             const statsByType = {};
+            
             allActivities.forEach(activity => {
                 const type = activity.type || 'Autre';
+                
                 if (!statsByType[type]) {
                     statsByType[type] = {
                         count: 0,
@@ -1106,22 +1243,264 @@ const Synthèse = {
                 statsByType[type].totalCost += cost;
             });
             
-            console.log('Destination charts - statsByType:', statsByType);
-            console.log('Destination charts - allActivities count:', allActivities.length);
+            console.log('Activities charts - statsByType:', statsByType);
+            console.log('Activities charts - allActivities count:', allActivities.length);
             
-            // Créer les 4 graphiques de l'onglet Destinations
+            // Créer les 4 graphiques de l'onglet Activités
             this.createBudgetByActivityTypeChart(statsByType, 'budget-distribution-chart');
             this.createDurationByActivityTypeChart(statsByType, 'time-distribution-chart');
             this.createAverageBudgetByActivityTypeChart(statsByType);
             this.createAverageDurationByActivityTypeChart(statsByType);
             
         } catch (error) {
-            console.error('Erreur lors de l\'initialisation des graphiques destinations:', error);
+            console.error('Erreur lors de l\'initialisation des graphiques activités:', error);
         }
     },
     
-};
+    /**
+     * Initialiser les graphiques de l'onglet Destinations
+     */
+    async initDestinationCharts() {
+    try {
+        // Récupérer les données pour l'onglet Destinations
+        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+        let destinationStats = [];
 
+        for (const destination of destinations) {
+            let destDuration = 0;
+            let destCost = 0;
+            let accommodationCost = 0;
+            let activityCost = 0;
+            let transportCost = 0;
+            let accommodationDuration = 0;
+            let activityDuration = 0;
+            let transportDuration = 0;
+
+            // Durée de la destination
+            if (destination.duration) {
+                // Convertir la durée de l'objet {days, hours, minutes} en minutes
+                if (typeof destination.duration === 'object') {
+                    destDuration = (destination.duration.days || 0) * 24 * 60 + 
+                                 (destination.duration.hours || 0) * 60 + 
+                                 (destination.duration.minutes || 0);
+                } else if (typeof destination.duration === 'string') {
+                    // Parser les chaînes comme "2j 3h 45min"
+                    const daysMatch = destination.duration.match(/(\d+)j/);
+                    const hoursMatch = destination.duration.match(/(\d+)h/);
+                    const minutesMatch = destination.duration.match(/(\d+)min/);
+                    destDuration = (daysMatch ? parseInt(daysMatch[1]) * 24 * 60 : 0) +
+                                  (hoursMatch ? parseInt(hoursMatch[1]) * 60 : 0) +
+                                  (minutesMatch ? parseInt(minutesMatch[1]) : 0);
+                }
+            }
+
+            // Coût et durée du transport
+            if (destination.transportation) {
+                if (destination.transportation.cost) {
+                    transportCost = destination.transportation.cost;
+                    destCost += transportCost;
+                }
+                if (destination.transportation.time) {
+                    const transportTime = destination.transportation.time;
+                    transportDuration = (transportTime.hours || 0) * 60 + (transportTime.minutes || 0);
+                    destDuration += transportDuration;
+                }
+            }
+
+            // Activités de la destination
+            if (destination.id) {
+                const activities = await window.localStorageService.getActivities(destination.id);
+                for (const activity of activities) {
+                    const activityPrice = parseFloat(activity.price) || 0;
+                    activityCost += activityPrice;
+                    destCost += activityPrice;
+
+                    const activityDur = this.calculateActivityDuration(activity);
+                    activityDuration += activityDur;
+                    destDuration += activityDur;
+                }
+            }
+
+            // Hébergement (pas de données disponibles = 0)
+            accommodationDuration = Math.max(0, destDuration - activityDuration - transportDuration);
+            accommodationCost = 0; // Pas de coût de logement renseigné
+            destCost += accommodationCost;
+
+            destinationStats.push({
+                name: destination.name,
+                duration: destDuration,
+                cost: destCost,
+                accommodationDuration,
+                activityDuration,
+                transportDuration,
+                accommodationCost,
+                activityCost,
+                transportCost
+            });
+        }
+
+        // Créer les graphiques de l'onglet Destinations
+        this.createDurationByDestinationChart(destinationStats);
+        this.createCostByDestinationChart(destinationStats);
+
+    } catch (error) {
+        console.error('Erreur lors de l\'initialisation des graphiques destinations:', error);
+    }
+},
+
+/**
+ * Créer le graphique en barres simples pour la durée par destination
+ */
+createDurationByDestinationChart(destinationStats) {
+    const ctx = document.getElementById('duration-by-destination-chart');
+    if (!ctx) return null;
+
+    const labels = destinationStats.map(d => d.name);
+    const durationData = destinationStats.map(d => d.duration / 60); // Convertir en heures
+
+    if (this.durationByDestinationChart) {
+        this.durationByDestinationChart.destroy();
+    }
+
+    this.durationByDestinationChart = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Durée (heures)',
+                    data: durationData,
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#3B82F6',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // Légende personnalisée dans le HTML
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y || 0;
+                            return `${label}: ${value.toFixed(1)}h`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Durée (heures)',
+                        font: {
+                            size: 14
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return this.durationByDestinationChart;
+},
+
+/**
+ * Créer le graphique en barres empilées pour le coût par destination
+ */
+createCostByDestinationChart(destinationStats) {
+    const ctx = document.getElementById('cost-by-destination-chart');
+    if (!ctx) return null;
+
+    const labels = destinationStats.map(d => d.name);
+    const activityData = destinationStats.map(d => d.activityCost);
+    const transportData = destinationStats.map(d => d.transportCost);
+
+    if (this.costByDestinationChart) {
+        this.costByDestinationChart.destroy();
+    }
+
+    this.costByDestinationChart = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Activité',
+                    data: activityData,
+                    backgroundColor: '#EC4899',
+                    borderColor: '#EC4899',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Transport',
+                    data: transportData,
+                    backgroundColor: '#F59E0B',
+                    borderColor: '#F59E0B',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false // Légende personnalisée dans le HTML
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y || 0;
+                            return `${label}: ${value.toFixed(2)}€`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Coût (€)',
+                        font: {
+                            size: 14
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return this.costByDestinationChart;
+},
+
+};
 
 // Exporter globalement
 window.Synthèse = Synthèse;
