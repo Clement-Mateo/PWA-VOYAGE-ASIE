@@ -2,9 +2,9 @@
    SYNTHESE COMPONENT
    ======================================== */
 
-.synthèse-content {
-    padding: 20px;
-    color: var(--font-color);
+/* Solution pour le bug de modal invisible qui bloque les interactions */
+.modal:not(.open) {
+    display: none !important;
 }
 
 /* Solution plus douce : juste ajuster le z-index de la modal */
@@ -16,29 +16,6 @@
 .modal.open .menu-container {
     max-width: 1200px;
     max-height: 800px;
-}
-
-.synthèse-content h2 {
-    margin: 0 0 20px 0;
-    font-size: 20px;
-    color: var(--font-color);
-}
-
-.synthèse-content p {
-    margin: 10px 0;
-    line-height: 1.5;
-    color: var(--font-color-gray);
-}
-
-/* Header avec statistiques */
-.synthese-header {
-    margin-bottom: 20px;
-}
-
-.synthese-header h2 {
-    margin: 0 0 20px 0;
-    font-size: 20px;
-    color: var(--font-color);
 }
 
 /* Onglets */
@@ -213,8 +190,7 @@
 /* Contenu de l'onglet Activités */
 .activities-synthese {
     height: 100%;
-    max-height: calc(72vh - 50px);
-    overflow: hidden;
+    max-height: 70vh;
 }
 
 .activities-synthese .stats-area-full {
@@ -223,57 +199,8 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-.activities-sidebar {
-    width: 280px;
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    max-height: 600px;
-}
-
-.activities-sidebar h3 {
-    margin: 0 0 16px 0;
-    font-size: 16px;
-    color: var(--font-color);
-    font-weight: 600;
-}
-
-.activities-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.activity-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background: var(--secondary-bg);
-    border-radius: 8px;
-    transition: background-color 0.2s ease;
-}
-
-.activity-item:hover {
-    background: var(--hover-bg);
-}
-
-.activity-name {
-    font-size: 14px;
-    color: var(--font-color);
-    font-weight: 500;
-    flex: 1;
-    margin-right: 12px;
-}
-
-.activity-price {
-    font-size: 14px;
-    color: var(--primary-color);
-    font-weight: bold;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .stats-area {
@@ -346,7 +273,6 @@
     justify-content: space-between;
     flex: 1;
     gap: 12px;
-    min-height: 140px;
 }
 
 .chart-legend {
@@ -394,28 +320,6 @@
     background: var(--secondary-bg);
     border-radius: 8px;
     border: 1px dashed var(--border-color);
-}
-
-/* Responsive */
-
-.chart-placeholder-content {
-    text-align: center;
-}
-
-.chart-placeholder-content .material-icons {
-    font-size: 48px;
-    margin-bottom: 10px;
-    opacity: 0.5;
-}
-
-.chart-placeholder-content p {
-    margin: 5px 0;
-    font-weight: 500;
-}
-
-.chart-placeholder-content small {
-    font-size: 12px;
-    opacity: 0.7;
 }
 
 .chart-canvas {

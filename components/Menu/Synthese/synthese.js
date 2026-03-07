@@ -18,25 +18,19 @@ const Synthèse = {
         const destinations = currentItinerary ? await window.localStorageService.getDestinationsOfCurrentItinerary() : [];
         let totalMinutes = 0;
         
-        console.log('🧮 Calcul durée totale - destinations:', destinations);
-        
         // Ajouter les durées des destinations
         destinations.forEach(destination => {
-            console.log(`📍 Destination ${destination.name} (order: ${destination.order})`);
-            
             if (destination.duration) {
                 const destMinutes = 
                     (destination.duration.days || 0) * 24 * 60 +
                     (destination.duration.hours || 0) * 60 +
                     (destination.duration.minutes || 0);
                 totalMinutes += destMinutes;
-                console.log(`  ⏱️ Durée destination: ${destMinutes}min`);
             }
             
             // Ajouter les durées de transport (sauf pour la première destination)
             if (destination.order > 0 && destination.transportation && destination.transportation.duration) {
                 const transportDuration = destination.transportation.duration;
-                console.log(`  🚗 Transport trouvé:`, transportDuration);
                 
                 // Gérer le format objet {hours, minutes}
                 if (typeof transportDuration === 'object' && transportDuration !== null) {
@@ -44,23 +38,20 @@ const Synthèse = {
                     const minutes = transportDuration.minutes || 0;
                     const transportMinutes = hours * 60 + minutes;
                     totalMinutes += transportMinutes;
-                    console.log(`  ⏱️ Durée transport: ${transportMinutes}min (${hours}h ${minutes}min)`);
                 } else if (typeof transportDuration === 'string') {
                     // Ancien format chaîne
                     const parsed = window.parseDuration(transportDuration);
-                    totalMinutes += parsed.hours * 60 + parsed.minutes;
-                    console.log(`  ⏱️ Durée transport (chaîne): ${parsed.hours * 60 + parsed.minutes}min`);
+                    if (parsed) {
+                        const transportMinutes = parsed.hours * 60 + parsed.minutes;
+                        totalMinutes += transportMinutes;
+                    }
                 }
-            } else {
-                console.log(`  ❌ Pas de transport (order: ${destination.order}, transportation: ${!!destination.transportation})`);
             }
         });
         
         const days = Math.floor(totalMinutes / (24 * 60));
         const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
         const minutes = totalMinutes % 60;
-        
-        console.log(`🎯 Durée totale calculée: ${days}j ${hours}h ${minutes}min (${totalMinutes}min total)`);
         
         return { days, hours, minutes, totalMinutes };
     },
@@ -768,7 +759,110 @@ const Synthèse = {
      * Créer le contenu HTML de l'onglet Transport
      */
     async createTransportSynthese() {
-        return ''; // Vide pour le moment
+        // Données factices pour commencer - sera remplacé par les vraies données plus tard
+        const chartData = [
+            { type: 'voiture', count: 7, duration: 4639, cost: 4060, avgDuration: 662.7, avgCost: 580, color: '#27AE60' },
+            { type: 'avion', count: 1, duration: 720, cost: 800, avgDuration: 720, avgCost: 800, color: '#FF6384' }
+        ];
+        
+        return `
+            <div class="activities-synthese">
+                <!-- Zone principale : Statistiques -->
+                <div class="stats-area-full">
+                    <!-- Première ligne : Répartitions -->
+                    <div class="stats-grid">
+                        <div class="chart-card">
+                            <h4>Répartition durée par type</h4>
+                            <div class="chart-container">
+                                <canvas id="transport-duration-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h4>Répartition coût par type</h4>
+                            <div class="chart-container">
+                                <canvas id="transport-cost-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Deuxième ligne : Totaux -->
+                    <div class="stats-grid">
+                        <div class="value-card">
+                            <h4>Durée totale transports</h4>
+                            <div>89H</div>
+                        </div>
+                        
+                        <div class="value-card">
+                            <h4>Coût total transports</h4>
+                            <div>${this.formatCost(4860)}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Troisième ligne : Moyennes -->
+                    <div class="stats-grid">
+                        <div class="chart-card">
+                            <h4>Durée moyenne par type</h4>
+                            <div class="chart-container">
+                                <canvas id="transport-avg-duration-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h4>Coût moyen par type</h4>
+                            <div class="chart-container">
+                                <canvas id="transport-avg-cost-chart" width="120" height="120"></canvas>
+                                <div class="chart-legend">
+                                    ${chartData.map(item => `
+                                        <div class="legend-item">
+                                            <span class="legend-color" style="background-color: ${item.color}"></span>
+                                            <span class="legend-label">${item.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quatrième ligne : Récapitulatif moyen -->
+                    <div class="stats-grid">
+                        <div class="value-card">
+                            <h4>Durée moyenne transports</h4>
+                            <div>44H</div>
+                        </div>
+                        
+                        <div class="value-card">
+                            <h4>Coût moyen transports</h4>
+                            <div>${this.formatCost(2430)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     },
     
     /**
@@ -828,8 +922,360 @@ const Synthèse = {
     },
     
     /**
-     * Créer le graphique camembert pour le budget par type d'activité
+     * Créer le graphique camembert pour la durée par type de transport
      */
+    createTransportDurationChart(transportStats, canvasId = 'transport-duration-chart') {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(transportStats).sort();
+        const data = labels.map(type => transportStats[type].duration / 60); // Convertir en heures
+        
+        // Vérifier s'il y a des données de durée
+        const hasData = data.some(duration => duration > 0);
+        console.log('Transport duration chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getTransportTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.transportDurationChart) {
+            this.transportDurationChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.transportDurationChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const hours = Math.floor(value);
+                                const minutes = Math.round((value - hours) * 60);
+                                const duration = hours > 0 ? `${hours}h${minutes > 0 ? minutes + 'min' : ''}` : `${minutes}min`;
+                                return `${label}: ${duration}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.transportDurationChart;
+    },
+    
+    /**
+     * Créer le graphique camembert pour le coût par type de transport
+     */
+    createTransportCostChart(transportStats, canvasId = 'transport-cost-chart') {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(transportStats).sort();
+        const data = labels.map(type => transportStats[type].cost || 0);
+        
+        // Vérifier s'il y a des données de coût
+        const hasData = data.length > 0; // Y a-t-il des types de transport ?
+        console.log('Transport cost chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getTransportTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.transportCostChart) {
+            this.transportCostChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.transportCostChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'EUR'
+                                }).format(value)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.transportCostChart;
+    },
+    
+    /**
+     * Créer le graphique camembert pour la durée moyenne par type de transport
+     */
+    createTransportAvgDurationChart(avgDurationByType, canvasId = 'transport-avg-duration-chart') {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(avgDurationByType).sort();
+        const data = labels.map(type => avgDurationByType[type] / 60); // Convertir en heures
+        
+        // Vérifier s'il y a des données de durée moyenne
+        const hasData = data.some(duration => duration > 0);
+        console.log('Transport avg duration chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getTransportTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.transportAvgDurationChart) {
+            this.transportAvgDurationChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.transportAvgDurationChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const hours = Math.floor(value);
+                                const minutes = Math.round((value - hours) * 60);
+                                const duration = hours > 0 ? `${hours}h${minutes > 0 ? minutes + 'min' : ''}` : `${minutes}min`;
+                                return `${label}: ${duration} (moyenne)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.transportAvgDurationChart;
+    },
+    
+    /**
+     * Créer le graphique camembert pour le coût moyen par type de transport
+     */
+    createTransportAvgCostChart(avgCostByType, canvasId = 'transport-avg-cost-chart') {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return null;
+        
+        // Préparer les données - trier les types par ordre alphabétique pour la consistance
+        const labels = Object.keys(avgCostByType).sort();
+        const data = labels.map(type => avgCostByType[type] || 0);
+        
+        // Vérifier s'il y a des données de coût moyen
+        const hasData = data.length > 0; // Y a-t-il des types de transport ?
+        console.log('Transport avg cost chart - hasData:', hasData, 'data:', data);
+        if (!hasData) {
+            // Afficher "aucune donnée" à la place du graphique
+            const container = ctx.parentElement;
+            container.innerHTML = '<div class="no-data">Aucune donnée</div>';
+            return null;
+        }
+        
+        // Générer des couleurs consistantes basées sur l'index trié
+        const colors = labels.map((type, index) => {
+            const color = this.getTransportTypeColor(type, index);
+            return color;
+        });
+        const hoverColors = colors.map(color => color + 'CC');
+        
+        // Détruire le graphique existant s'il y en a un
+        if (this.transportAvgCostChart) {
+            this.transportAvgCostChart.destroy();
+        }
+        
+        // Créer le nouveau graphique
+        this.transportAvgCostChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverBackgroundColor: hoverColors
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'EUR'
+                                }).format(value)} (moyenne)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        return this.transportAvgCostChart;
+    },
+    
+    /**
+     * Obtenir une couleur consistante pour un type de transport
+     */
+    getTransportTypeColor(type, index) {
+        // Mapping fixe pour les types de transport disponibles
+        const transportColorMap = {
+            'avion': '#FF6384',         // Rose
+            'train': '#36A2EB',         // Bleu
+            'voiture': '#27AE60',       // Vert
+            'bus': '#FFCE56',           // Jaune
+            'bateau': '#9966FF',        // Violet
+            'métro': '#4BC0C0',         // Turquoise
+            'taxi': '#E74C3C',          // Rouge
+            'vélo': '#95A5A6',          // Gris
+            'non spécifié': '#BDC3C7'   // Gris clair
+        };
+        
+        // Normaliser le type pour la comparaison
+        const normalizedType = type.toLowerCase().trim();
+                
+        // Retourner la couleur fixe si le type est connu
+        if (transportColorMap[normalizedType]) {
+            return transportColorMap[normalizedType];
+        }
+        
+        // Pour les types non prévus, utiliser l'index avec une palette de secours
+        const fallbackColors = ['#E67E22', '#34495E', '#16A085', '#F39C12', '#D35400', '#2C3E50'];
+        const fallbackColor = fallbackColors[index % fallbackColors.length];
+        return fallbackColor;
+    },
+    
+    /**
+     * Initialiser les graphiques de l'onglet Transports
+     */
+    async initTransportCharts() {
+        try {
+            console.log('🚀 Initialisation des graphiques transports...');
+            
+            // Données factices pour commencer
+            const transportStats = {
+                'voiture': { duration: 4639, cost: 4060 },
+                'avion': { duration: 720, cost: 800 }
+            };
+            
+            const avgDurationByType = {
+                'voiture': 662.7,
+                'avion': 720
+            };
+            
+            const avgCostByType = {
+                'voiture': 580,
+                'avion': 800
+            };
+            
+            // Créer les 4 graphiques de l'onglet Transports
+            this.createTransportDurationChart(transportStats, 'transport-duration-chart');
+            this.createTransportCostChart(transportStats, 'transport-cost-chart');
+            this.createTransportAvgDurationChart(avgDurationByType, 'transport-avg-duration-chart');
+            this.createTransportAvgCostChart(avgCostByType, 'transport-avg-cost-chart');
+            
+            console.log('✅ Graphiques transports créés avec succès!');
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'initialisation des graphiques transports:', error);
+        }
+    },
+     
     createBudgetByActivityTypeChart(activitiesByType, canvasId = 'budgetChart') {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
@@ -1158,12 +1604,24 @@ const Synthèse = {
                 // Retirer la classe active de tous les boutons et panneaux
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 tabPanes.forEach(pane => pane.classList.remove('active'));
-                
+
                 // Ajouter la classe active au bouton cliqué et au panneau correspondant
                 button.classList.add('active');
                 const targetPane = document.getElementById(`${targetTab}-tab`);
                 if (targetPane) {
                     targetPane.classList.add('active');
+                }
+                
+                // Initialiser les graphiques spécifiques à l'onglet cliqué
+                if (targetTab === 'transport') {
+                    console.log('🚌 Onglet Transport cliqué, initialisation des graphiques...');
+                    setTimeout(() => this.initTransportCharts(), 100);
+                } else if (targetTab === 'activities') {
+                    console.log('🎯 Onglet Activités cliqué, initialisation des graphiques...');
+                    setTimeout(() => this.initActivitiesCharts(), 100);
+                } else if (targetTab === 'destinations') {
+                    console.log('📍 Onglet Destinations cliqué, initialisation des graphiques...');
+                    setTimeout(() => this.initDestinationCharts(), 100);
                 }
             });
         });
