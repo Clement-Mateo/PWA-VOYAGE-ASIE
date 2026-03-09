@@ -237,7 +237,24 @@ const Destinations = {
             await window.localStorageService.deleteDestination(destination.id);
             
             console.log('✅ Destination supprimée');
+            
+            // Recharger les destinations (un seul appel)
             await this.loadDestinations();
+            
+            // Scroller vers la destination précédente si elle existe
+            if (destination.order > 0) {
+                setTimeout(async () => {
+                    try {
+                        const destinations = await window.localStorageService.getDestinationsOfCurrentItinerary();
+                        const previousDestination = destinations.find(d => d.order === destination.order - 1);
+                        if (previousDestination && window.Destinations && window.Destinations.scrollToDestination) {
+                            window.Destinations.scrollToDestination(previousDestination.id);
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Impossible de scroller vers la destination précédente:', error);
+                    }
+                }, 100);
+            }
             
             if (window.MapInstance && window.MapInstance.cleanMap) {
                 window.MapInstance.cleanMap();
@@ -399,8 +416,13 @@ const Destinations = {
             // Recalculer les transports affectés par le réorganisation
             await this.recalculateTransportsAfterReorder(destinations, draggedOrder, targetOrder);
             
-            // Recharger l'affichage
+            // Recharger l'affichage (un seul appel)
             await this.loadDestinations();
+            
+            // Scroller vers la destination déplacée après le rechargement
+            setTimeout(() => {
+                this.scrollToDestination(draggedId);
+            }, 100);
             
             // Nettoyer le transport de la nouvelle première destination si nécessaire
             if (window.Destinations && window.Destinations.cleanFirstDestinationTransport) {
@@ -657,20 +679,23 @@ const Destinations = {
     scrollToDestination(destinationId) {
         const card = document.getElementById(`destination-${destinationId}`);
         if (card) {
-            // Attendre un peu que le panneau soit visible
-            setTimeout(() => {
-                card.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }, 350);
+            console.log(`🎯 Scroll vers la destination: ${destinationId}`);
+            // S'assurer que l'élément est visible
+            card.style.scrollMarginTop = '20px';
+            // Scroll smooth avec animation
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        } else {
+            console.warn(`⚠️ Card de destination non trouvée: ${destinationId}`);
         }
     },
 
     /**
-     * Charger les destinations (version corrigée comme l'ancien système)
+     * Charger les destinations
      */
-    async loadDestinations() {
+    async loadDestinations(s) {
         try {
             // Éviter les chargements multiples
             if (this.isLoading) {

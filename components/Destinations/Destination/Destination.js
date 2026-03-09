@@ -282,6 +282,13 @@ const Destination = {
             // Réactiver le hover sur les autres destinations
             this.enableOtherCardsHover();
             
+            // Scroller vers la destination modifiée (sans recharger pour éviter les doublons)
+            setTimeout(() => {
+                if (window.Destinations && window.Destinations.scrollToDestination) {
+                    window.Destinations.scrollToDestination(updatedDestination.id);
+                }
+            }, 200); // Attendre que le rechargement soit terminé
+            
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de la destination:', error);
             window.showErrorSnackBar('Erreur lors de la sauvegarde: ' + error.message);
