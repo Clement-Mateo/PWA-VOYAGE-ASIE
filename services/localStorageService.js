@@ -653,11 +653,25 @@ class LocalStorageService {
         
         // Recalculer les dates des destinations restantes
         if (currentItinerary.destinations.length > 0) {
-            // Récupérer la date de début de l'itinéraire
-            let currentDate = currentItinerary.startDate && window.DateService.isValidDate(currentItinerary.startDate)
-                ? window.DateService.dateToISOString(window.DateService.isoStringToDate(currentItinerary.startDate)).split('T')[0] 
-                : window.DateService.todayISOString().split('T')[0];
-
+            // Récupérer la date de début de l'itinéraire avec fallback sécurisé
+            let currentDate;
+            
+            if (currentItinerary.startDate && window.DateService && window.DateService.isValidDate && window.DateService.isValidDate(currentItinerary.startDate)) {
+                // Si startDate est déjà un objet Date, le convertir directement en ISO
+                const isoDate = window.DateService.dateToISOString(currentItinerary.startDate);
+                currentDate = isoDate ? isoDate.split('T')[0] : null;
+            }
+            
+            // Fallback si currentDate est null
+            if (!currentDate) {
+                if (window.DateService && window.DateService.todayISOString) {
+                    const today = window.DateService.todayISOString();
+                    currentDate = today ? today.split('T')[0] : new Date().toISOString().split('T')[0];
+                } else {
+                    currentDate = new Date().toISOString().split('T')[0];
+                }
+            }
+            
             for (let i = 0; i < currentItinerary.destinations.length; i++) {
                 const destination = currentItinerary.destinations[i];
                 
