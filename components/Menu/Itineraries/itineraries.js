@@ -126,25 +126,8 @@ class Itineraries {
         const hasMultipleItineraries = itineraries.length > 1;
         
         // Formater la date de début pour l'affichage
-        let startDateText = 'Non définie';
-        let startDateValue = '';
-        
-        if (itinerary.startDate) {
-            try {
-                const date = new Date(itinerary.startDate);
-                if (!isNaN(date.getTime())) {
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    startDateText = `${day}/${month}/${year}`;
-                    startDateValue = date.toISOString().split('T')[0];
-                } else {
-                    console.warn('Date invalide dans l\'itinéraire:', itinerary.startDate);
-                }
-            } catch (error) {
-                console.warn('Date invalide dans l\'itinéraire:', itinerary.startDate);
-            }
-        }
+        const startDateText = window.DateService.formatDateForDisplay(itinerary.startDate);
+        const startDateValue = window.DateService.dateToISOString(itinerary.startDate) || '';
         
         return `
             <div class="card ${isActive ? 'card-active' : ''}" data-id="${itinerary.id}" onclick="if(!window.Itineraries.isEditingItinerary()) { window.Itineraries.setActiveItinerary('${itinerary.id}') }">
@@ -178,14 +161,14 @@ class Itineraries {
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">event</span>
-                                Date de création: ${itinerary.createdAt ? new Date(itinerary.createdAt).toLocaleString('fr-FR') : 'Date inconnue'}
+                                Date de création: ${itinerary.createdAt ? window.DateService.formatDateForDisplay(itinerary.createdAt) : 'Date inconnue'}
                             </span>
                         </div>
                         ${itinerary.updatedAt ? `
                         <div class="card-meta">
                             <span class="meta-item">
                                 <span class="material-icons">update</span>
-                                Dernière modification: ${new Date(itinerary.updatedAt).toLocaleString('fr-FR')}
+                                Dernière modification: ${window.DateService.formatDateForDisplay(itinerary.updatedAt)}
                             </span>
                         </div>
                         ` : ''}
@@ -378,9 +361,9 @@ class Itineraries {
             
             if (newStartDate) {
                 try {
-                    const parsedDate = new Date(newStartDate);
+                    const parsedDate = window.DateService.isoStringToDate(newStartDate);
                     // Validation de la date avant sauvegarde
-                    if (isNaN(parsedDate.getTime()) || 
+                    if (!parsedDate || 
                         parsedDate.getFullYear() < 1970 || 
                         parsedDate.getFullYear() > 9999) {
                         console.error('❌ Date invalide lors de la sauvegarde:', newStartDate);
@@ -442,9 +425,9 @@ class Itineraries {
             
             if (nameInput) nameInput.value = itinerary.name || '';
             
-            const startDate = itinerary.startDate ? new Date(itinerary.startDate) : null;
+            const startDate = window.DateService.isoStringToDate(itinerary.startDate);
             if (startDateInput) {
-                startDateInput.value = startDate ? startDate.toISOString().split('T')[0] : '';
+                startDateInput.value = startDate ? window.DateService.dateToISOString(startDate).split('T')[0] : '';
             }
             
             if (notesInput) notesInput.value = itinerary.notes || '';

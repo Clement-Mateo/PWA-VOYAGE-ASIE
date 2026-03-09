@@ -157,8 +157,8 @@ const Destination = {
                     name: '',
                     address: '',
                     duration: { days: 3, hours: 0, minutes: 0 },
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
+                    createdAt: window.DateService.todayISOString(),
+                    updatedAt: window.DateService.todayISOString()
                 };
             }
             
@@ -281,6 +281,13 @@ const Destination = {
             
             // Réactiver le hover sur les autres destinations
             this.enableOtherCardsHover();
+            
+            // Scroller vers la destination modifiée (sans recharger pour éviter les doublons)
+            setTimeout(() => {
+                if (window.Destinations && window.Destinations.scrollToDestination) {
+                    window.Destinations.scrollToDestination(updatedDestination.id);
+                }
+            }, 200); // Attendre que le rechargement soit terminé
             
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde de la destination:', error);

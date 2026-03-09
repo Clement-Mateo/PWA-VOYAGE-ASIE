@@ -37,6 +37,34 @@ export const ComponentManager = {
     },
 
     /**
+     * Charger un script de manière asynchrone
+     * @param {string} src - Source du script
+     * @returns {Promise<void>}
+     */
+    async loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Vérifier si le script est déjà chargé
+            if (document.querySelector(`script[src="${src}"]`)) {
+                console.log(`Script déjà chargé: ${src}`);
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => {
+                console.log(`Script chargé: ${src}`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error(`Erreur chargement script: ${src}`);
+                reject(new Error(`Impossible de charger ${src}`));
+            };
+            document.head.appendChild(script);
+        });
+    },
+
+    /**
      * Charger un composant de manière asynchrone
      * @param {string} name - Nom du composant
      * @returns {Promise<Object>} Composant chargé
@@ -86,6 +114,10 @@ export const ComponentManager = {
         console.log('🚀 ComponentManager: Démarrage de l\'initialisation séquentielle...');
         
         try {
+            // 0. Charger DateService en premier (dépendance critique)
+            console.log('📅 0/13 Chargement de DateService...');
+            await this.loadScript('services/dateService.js');
+            
             // 1. Vérifier la version
             if (window.CacheVersionManager) {
                 console.log('📋 1/13 Vérification de la version...');
@@ -281,6 +313,12 @@ export const ComponentManager = {
     async updateUserPanel() {
         console.log('🔄 ComponentManager: Mise à jour du panneau utilisateur...');
         
+        // Si une synchronisation est en cours, ne pas faire la mise à jour
+        if (window.SyncService && window.SyncService.syncInProgress) {
+            console.log('⏳ Synchronisation en cours, attente avant mise à jour du panneau...');
+            return;
+        }
+        
         if (!window.firebaseService || !window.firebaseService.isReady()) {
             console.warn('⚠️ FirebaseService non prêt, attente...');
             return;
@@ -317,8 +355,8 @@ export const ComponentManager = {
             // Utiliser IndexedDB comme source de données principale
             const itineraries = await window.localStorageService.getItineraries();
             
-            // Créer un itinéraire si aucun n'existe
-            if (itineraries.length === 0) {
+            // Créer un itinéraire si aucun n'existe ET seulement si pas de synchro en cours
+            if (itineraries.length === 0 && (!window.SyncService || !window.SyncService.syncInProgress)) {
                 await window.localStorageService.createItinerary();
                 
                 // Après création, charger les destinations
