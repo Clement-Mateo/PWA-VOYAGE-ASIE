@@ -56,7 +56,7 @@ const Activities = {
             }
             
             // Rafraîchir la popup après suppression
-            this.refreshActivityList(destinationId);
+            this.refreshActivityList(destination);
         } catch (error) {
             console.error('❌ Erreur lors de la suppression de l\'activité:', error);
             if (window.showErrorSnackBar) {
@@ -74,16 +74,18 @@ const Activities = {
     /**
      * Créer le HTML pour une activité
      */
-    createActivityItem(activity, destinationId) {
+    createActivityItem(activity, destination) {
+        const currencySymbol = destination?.address?.symbol || destination?.address?.countryCurrency?.symbol;
+
         return `
             <div class="activity-item" data-activity-id="${activity.id}">
                 <div class="activity-header">
                     <h4>${activity.name}</h4>
                     <div class="activity-actions">
-                        <button class="btn-edit" onclick="Activity.editActivity('${activity.id}', '${destinationId}')" title="Modifier">
+                        <button class="btn-edit" onclick="Activity.editActivity('${activity.id}', '${destination.id}')" title="Modifier">
                             <span class="material-icons">edit</span>
                         </button>
-                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destinationId}')" title="Supprimer">
+                        <button class="btn-delete" onclick="Activities.deleteActivity('${activity.id}', '${destination.id}')" title="Supprimer">
                             <span class="material-icons">delete</span>
                         </button>
                     </div>
@@ -92,7 +94,7 @@ const Activities = {
                     ${activity.price ? `
                         <div class="activity-price">
                             ${activity.price}€
-                            ${activity.localCurrencyPrice ? ` / ${activity.localCurrencyPrice}` : ''}
+                            ${activity.localCurrency && activity.localCurrencyCode ? ` / ${activity.localCurrency}${currencySymbol || activity.localCurrencyCode}` : ''}
                         </div>
                     ` : ''}
                     ${activity.startTime && activity.endTime && (activity.startTime !== '00:00' || activity.endTime !== '00:00') ? `
@@ -123,7 +125,7 @@ const Activities = {
     /**
      * Créer le HTML pour la liste des activités
      */
-    createActivityList(activities, destinationId) {
+    createActivityList(activities, destination) {
         if (activities.length === 0) {
             return `
                 <div class="no-activities">
@@ -133,7 +135,7 @@ const Activities = {
             `;
         }
         
-        return activities.map(activity => this.createActivityItem(activity, destinationId)).join('');
+        return activities.map(activity => this.createActivityItem(activity, destination)).join('');
     },
 
     /**
@@ -165,7 +167,7 @@ const Activities = {
                     </button>
                 </div>
                 <div class="modal-body">
-                    ${this.createActivityList(activities, destination.id)}
+                    ${this.createActivityList(activities, destination)}
                 </div>
                 <div class="modal-footer">
                     <button class="btn-add" onclick="Activities.addActivity('${destinationId}')">
@@ -187,7 +189,7 @@ const Activities = {
     /**
      * Rafraîchir le contenu de la popup des activités
      */
-    async refreshActivityList(destinationId, scrollToActivityId = null) {
+    async refreshActivityList(destination, scrollToActivityId = null) {
         const popup = document.getElementById('activitiesPopup');
         if (!popup) return;
         
@@ -197,7 +199,7 @@ const Activities = {
         // Mettre à jour le contenu de la popup
         const modalBody = popup.querySelector('.modal-body');
         if (modalBody) {
-            modalBody.innerHTML = this.createActivityList(activities, destinationId);
+            modalBody.innerHTML = this.createActivityList(activities, destination);
             
             // Si un ID d'activité est fourni, faire défiler jusqu'à cette activité
             if (scrollToActivityId) {
