@@ -7,11 +7,6 @@
     display: none !important;
 }
 
-/* Solution plus douce : juste ajuster le z-index de la modal */
-.modal.open {
-    z-index: 1000;
-}
-
 /* Forcer le contenu de la modal à ne pas déborder */
 .modal.open .menu-container {
     max-width: 1200px;

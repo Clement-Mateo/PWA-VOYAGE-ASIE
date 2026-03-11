@@ -300,6 +300,20 @@ const Transportation = {
             // Mettre à jour l'affichage
             this.refreshTransportationCard(destinationId, transportationData);
             
+            // Scroller vers la destination du transport modifié
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    console.log(`🎯 Scroll vers la destination: ${destinationId}`);
+                    
+                    // Utiliser la méthode Destinations.scrollToDestination
+                    if (window.Destinations && window.Destinations.scrollToDestination) {
+                        window.Destinations.scrollToDestination(destinationId);
+                    } else {
+                        console.warn('⚠️ window.Destinations.scrollToDestination non disponible');
+                    }
+                }, 200);
+            });
+            
         } catch (error) {
             console.error('❌ Erreur lors de la sauvegarde du transport:', error);
             window.showErrorSnackBar('Erreur lors de la sauvegarde: ' + error.message);

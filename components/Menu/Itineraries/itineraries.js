@@ -135,11 +135,11 @@ class Itineraries {
                     <div class="card-header">
                         <h4 class="card-title" id="itinerary-name-${itinerary.id}">${window.escapeHtml(itinerary.name)}</h4>
                         <div class="card-actions">
-                            <button class="btn-edit" onclick="window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier">
+                            <button class="btn-edit" onclick="event.stopPropagation(); window.Itineraries.editItinerary('${itinerary.id}')" title="Modifier">
                                 <span class="material-icons">edit</span>
                             </button>
                             ${hasMultipleItineraries ? `
-                            <button class="btn-delete" onclick="window.Itineraries.deleteItinerary('${itinerary.id}')" title="Supprimer">
+                            <button class="btn-delete" onclick="event.stopPropagation(); window.Itineraries.deleteItinerary('${itinerary.id}')" title="Supprimer">
                                 <span class="material-icons">delete</span>
                             </button>
                             ` : ''}
