@@ -294,27 +294,27 @@ const resolvedData = await syncService.resolveConflicts(local, remote);
 ### 📸 Application Screenshots
 
 ### 🏠 Main Interface
-![Main Interface](screenshots/main-interface.png)
+![Main Interface](Images/screenshots/main-interface.png)
 *Interactive world map with destination markers and comprehensive travel planning interface*
 
 ### 🔐 User Authentication
-![Authentication](screenshots/auth.png)
+![Authentication](Images/screenshots/auth.png)
 *Secure login and registration flow*
 
 ### 📋 Activity Management
-![Activity List](screenshots/activity-list.png)
+![Activity List](Images/screenshots/activity-list.png)
 *Comprehensive activity list with multi-currency support and intuitive editing interface*
 
 ### ✏️ Activity Details
-![Activity Details](screenshots/activity-details.png)
+![Activity Details](Images/screenshots/activity-details.png)
 *Detailed activity editing form with currency conversion and comprehensive information management*
 
 ### ⚙️ Settings & Data Management
-![Settings](screenshots/settings.png)
+![Settings](Images/screenshots/settings.png)
 *Comprehensive settings interface*
 
 ### 📊 Trip Analytics
-![Analytics](screenshots/analytics.png)
+![Analytics](Images/screenshots/analytics.png)
 *Comprehensive travel statistics and insights*
 
 ## 🔒 Security Considerations
