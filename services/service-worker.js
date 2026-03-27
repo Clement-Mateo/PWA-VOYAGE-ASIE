@@ -1,7 +1,7 @@
 // Service Worker avec versionnement automatique synchronisé
 
 // Importer la version depuis le gestionnaire de version
-const CACHE_VERSION = "1.2.40";
+const CACHE_VERSION = "1.2.41";
 const CACHE_NAME = `voyage-asie-v${CACHE_VERSION}`;
 
 // Fichiers essentiels à mettre en cache (uniquement ceux qui existent)
