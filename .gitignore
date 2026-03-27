@@ -1,2 +1,35 @@
 # Fichiers à ignorer pour Git
-env.local
+# Environment variables
+.env
+.env.local
+.env.production
+
+# API Keys and secrets
+*.key
+*.pem
+firebase-config.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/cal
