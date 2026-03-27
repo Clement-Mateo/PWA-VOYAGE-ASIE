@@ -408,7 +408,7 @@ const Activity = {
         
         // Rafraîchir la popup activités si elle est ouverte (pour les deux modes)
         if (window.Activities && document.getElementById('activitiesPopup')) {
-            window.Activities.refreshActivityList(this.currentDestination.id, activity.id);
+            window.Activities.refreshActivityList(this.currentDestination, activity.id);
         }
         
         } catch (error) {
